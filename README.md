@@ -1,3 +1,3 @@
-# CLI
+# RAP
 
-CLI for creating recordings and interfacing with recolude.
+Recolude's recording file format.

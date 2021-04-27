@@ -1,7 +1,6 @@
 # File Format V2 WIP
 
 New and improved file format.  
-
 ## Goals
 
  * Variable precision. If someone needs the highest precision possible, that's fine. If they don't, we can save them massive space.
@@ -13,6 +12,7 @@ New and improved file format.
    * A great way of organizing things. Can group all "enemies" in one capture at a certain frame rate, and all things about the player in another grouping (Headset, right hand, and left hand)
  * *Potentially*: Be able to support different "resolutions" in some form or fashion.
  * *Potentially*: Support recording traditional animations?
+ * Take into account *breaks* in stream. If a player teleports, we don't want to interpolate between two locations, we want to representant instantaneous change of position.
 
 ## Definitions
 
@@ -70,9 +70,9 @@ Contains a bunch of meta information about what the recording is, never compress
 
 The body is inspired by formats like APK, .unitypackage, nuget, etc that have to keep up with multiple different types of data within. The ZIP format seems like a perfect choice to provide structure, open ease of use by other people, and extensibility. 
 
-* [1 byte] uint8: header version (uncompressed)
-* V1
-  * A ZIP file
+* [1 byte] uint8: body version
+* version [0x1]
+  * A Tar-ish zip-ish file
 
 ```
 V1 ZIP Folder Structure
@@ -123,3 +123,28 @@ Ramer–Douglas–Peucker algorithm
 TD-TR Alrorithm
 
 Open Window Algorithm
+
+## Languages That Support In Memory Zipping
+
+* Golang
+  * [Reading](https://golang.org/pkg/archive/zip/#Reader)
+  * [Writing](https://golang.org/pkg/archive/zip/#Writer.Create)
+* C#
+  * Requires reference to System.IO.Compression.dll
+  * https://forum.unity.com/threads/c-compression-zip-missing.577492/#post-3849472
+  * [Reading](https://stackoverflow.com/questions/22604941/how-can-i-unzip-a-file-to-a-net-memory-stream)
+  * [Writing](https://stackoverflow.com/questions/17232414/creating-a-zip-archive-in-memory-using-system-io-compression)
+* Javascript
+  * [Reading](https://github.com/gildas-lormeau/zip.js)
+    * [In Angular](https://github.com/gildas-lormeau/zip.js/issues/191)
+
+
+## Research on Compression/Containers
+
+* Zip and Tar+Gz both use deflate
+* [Benchmarks](https://bashitout.com/2009/08/30/Linux-Compression-Comparison-GZIP-vs-BZIP2-vs-LZMA-vs-ZIP-vs-Compress.html)
+* Pros for ZIP
+  * Can right click a file and mess around with it.
+  * For some cases, can just build files from the file system explorer.
+* Pros for Tar-ish headers + Deflate
+  * Allows us to not have to import zip specific libraries into code (great for js client, less headache for unity c# package distribution)

@@ -1,0 +1,38 @@
+package rapv1
+
+import (
+	"io"
+
+	"github.com/recolude/rap/pkg/data"
+)
+
+type recordingV1 struct {
+	name           string
+	captureStreams []data.CaptureStream
+	recordings     []data.Recording
+	metadata       map[string]string
+}
+
+func (rec recordingV1) Name() string {
+	return rec.name
+}
+
+func (rec recordingV1) Binaries() []data.Binary {
+	return nil
+}
+
+func (rec recordingV1) Metadata() map[string]string {
+	return rec.metadata
+}
+
+func (rec recordingV1) Recordings() []data.Recording {
+	return rec.recordings
+}
+
+func (rec recordingV1) CaptureStreams() []data.CaptureStream {
+	return rec.captureStreams
+}
+
+func (rec recordingV1) Write(io.Writer) (int, error) {
+	return 0, nil
+}
