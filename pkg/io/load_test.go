@@ -3,6 +3,7 @@ package io
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -23,10 +24,11 @@ func Test_Load_ErrorsOnEmptyBuffer(t *testing.T) {
 	emptyBuffer := bytes.Buffer{}
 
 	// ACT ====================================================================
-	rec, err := Load(&emptyBuffer)
+	rec, bytesRead, err := Load(&emptyBuffer)
 
 	// ASSERT =================================================================
 	assert.Nil(t, rec)
+	assert.Equal(t, 0, bytesRead)
 	assert.EqualError(t, err, io.EOF.Error())
 }
 
@@ -36,26 +38,37 @@ func Test_Load_ErrorsOnUnrecognizedFileVersion(t *testing.T) {
 	buf.Write([]byte{3})
 
 	// ACT ====================================================================
-	rec, err := Load(&buf)
+	rec, bytesRead, err := Load(&buf)
 
 	// ASSERT =================================================================
 	assert.Nil(t, rec)
+	assert.Equal(t, 1, bytesRead)
 	assert.EqualError(t, err, "Unrecognized file version: 3")
 }
 
 func TestLoad(t *testing.T) {
 	f, err := os.Open(filepath.Join(v1DirectoryTestData, "Demo 38subj v1.rap"))
-
 	if assert.NoError(t, err) == false {
 		return
 	}
 
-	rec, err := Load(f)
+	allBytes, err := ioutil.ReadAll(f)
+	if assert.NoError(t, err) == false {
+		return
+	}
 
-	assert.NoError(t, err)
+	// ACT ====================================================================
+	rec, bytesRead, err := Load(bytes.NewReader(allBytes))
+
+	// ASSERT =================================================================
+	if assert.NoError(t, err) == false {
+		return
+	}
 	if assert.NotNil(t, rec) == false {
 		return
 	}
+
+	assert.Equal(t, len(allBytes), bytesRead)
 
 	assert.Equal(t, "Demo", rec.Name())
 	assert.Len(t, rec.CaptureStreams(), 1)

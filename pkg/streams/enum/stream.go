@@ -29,3 +29,7 @@ func (s Stream) Captures() []data.Capture {
 	}
 	return returnVal
 }
+
+func (Stream) Signature() string {
+	return "recolude.enum"
+}

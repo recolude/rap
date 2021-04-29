@@ -17,19 +17,19 @@ import (
 	"github.com/recolude/rap/pkg/streams/position"
 )
 
-func getNumberOfRecordings(file io.Reader) (int, error) {
+func getNumberOfRecordings(file io.Reader) (int, int, error) {
 	numberOfRecordings := make([]byte, 4)
 
 	bytesRead, err := file.Read(numberOfRecordings)
 	if err != nil {
-		return -1, err
+		return -1, bytesRead, err
 	}
 
 	if bytesRead != 4 {
-		return -1, fmt.Errorf("issue reading number of recordings, read %d bytes", bytesRead)
+		return -1, bytesRead, fmt.Errorf("issue reading number of recordings, read %d bytes", bytesRead)
 	}
 
-	return int(binary.LittleEndian.Uint32(numberOfRecordings)), nil
+	return int(binary.LittleEndian.Uint32(numberOfRecordings)), bytesRead, nil
 }
 
 func oldToNewEvents(oldEvents []*CustomEventCapture) event.Stream {
@@ -121,54 +121,58 @@ func protobufToStd(inRec *Recording) (data.Recording, error) {
 	}, nil
 }
 
-func ReadRecording(file io.Reader) (data.Recording, error) {
-	numberOfRecordings, err := getNumberOfRecordings(file)
+func ReadRecording(file io.Reader) (data.Recording, int, error) {
+	numberOfRecordings, bytesReadNumberRec, err := getNumberOfRecordings(file)
 	if err != nil {
-		return nil, err
+		return nil, bytesReadNumberRec, err
 	}
 
 	if numberOfRecordings != 1 {
-		return nil, fmt.Errorf("Can only upload one recording at a time, recieved %d", numberOfRecordings)
+		return nil, bytesReadNumberRec, fmt.Errorf("Can only upload one recording at a time, recieved %d", numberOfRecordings)
 	}
 
 	recordingSize := make([]byte, 8)
 
-	bytesRead, err := file.Read(recordingSize)
+	bytesRead := bytesReadNumberRec
+	bytesReadFileSize, err := file.Read(recordingSize)
+	bytesRead += bytesReadFileSize
 	if err != nil {
-		return nil, err
+		return nil, bytesRead, err
 	}
 
-	if bytesRead != 8 {
-		return nil, fmt.Errorf("Issue reading recording size, read %d bytes", bytesRead)
+	if bytesReadFileSize != 8 {
+		return nil, bytesRead, fmt.Errorf("Issue reading recording size, read %d bytes", bytesRead)
 	}
 
 	compressedSize := int64(binary.LittleEndian.Uint64(recordingSize))
 	compressedBytes := make([]byte, compressedSize)
-	bytesRead, err = file.Read(compressedBytes)
-
+	compressedBytesRead, err := file.Read(compressedBytes)
+	bytesRead += compressedBytesRead
 	if err != nil {
-		return nil, err
+		return nil, bytesRead, err
 	}
 
-	if int64(bytesRead) != compressedSize {
-		return nil, fmt.Errorf("Issue reading recording size, read %d bytes out of %d", bytesRead, compressedSize)
+	if int64(compressedBytesRead) != compressedSize {
+		return nil, bytesRead, fmt.Errorf("Issue reading recording size, read %d bytes out of %d", bytesRead, compressedSize)
 	}
 
 	deflateReader := flate.NewReader(bytes.NewReader(compressedBytes))
 
 	uncompresseRecording, err := ioutil.ReadAll(deflateReader)
 	if err != nil {
-		return nil, err
+		return nil, bytesRead, err
 	}
 
 	recording := &Recording{}
 
 	err = proto.Unmarshal(uncompresseRecording, recording)
 	if err != nil {
-		return nil, err
+		return nil, bytesRead, err
 	}
 
-	return protobufToStd(recording)
+	rec, err := protobufToStd(recording)
+
+	return rec, bytesRead, err
 }
 
 func GetStartOfRecording(recording Recording) float64 {

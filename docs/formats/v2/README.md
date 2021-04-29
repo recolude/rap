@@ -102,6 +102,31 @@ V1 ZIP Folder Structure
             └── rotation
 ```
 
+## Thoughts on Format
+
+Stream Types : [
+  "recolude.position"
+  "recolude.euler"
+  "recolude.event"
+]
+
+Encoders : [
+  "recolude.position" : { "version": 1, "streams": [ 0 ] }
+  "recolude.euler" :  { "version": 1, "streams": [ 1 ] }
+  "recolude.event" :  { "version": 1, "streams": [ 2 ] }
+]
+
+Recording : [
+  Streams : [
+    {
+      Type: 0 // index of stream type registered globally
+      Version: 1 // version of the encoder used to encode stream
+      Name: "Position" // Name of stream
+      Data: <data/> // 
+    }
+  ]
+]
+
 ## Working Notes
 
 As I research compression, I'm not sure how much savings we'll get being super smart about float ranges VS just always zipping the data up. I think the real reason we want float ranges would be for proper streaming/quality specification (420p vs 1080), which is desirable in its own right. Even continuous entropy uses the concept of binning, which makes me think "round to nearest X decimal places". 

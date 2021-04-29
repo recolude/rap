@@ -1,8 +1,6 @@
 package rapv1
 
 import (
-	"io"
-
 	"github.com/recolude/rap/pkg/data"
 )
 
@@ -31,8 +29,4 @@ func (rec recordingV1) Recordings() []data.Recording {
 
 func (rec recordingV1) CaptureStreams() []data.CaptureStream {
 	return rec.captureStreams
-}
-
-func (rec recordingV1) Write(io.Writer) (int, error) {
-	return 0, nil
 }
