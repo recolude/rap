@@ -1,4 +1,4 @@
-package encoding
+package position
 
 import (
 	"bytes"
@@ -11,12 +11,12 @@ import (
 	"github.com/recolude/rap/pkg/streams/position"
 )
 
-type PositionStorageTechnique int
+type StorageTechnique int
 
 const (
 	// Raw64 encodes all values at fullest precision, costing 256 bits per
 	// capture
-	Raw64 PositionStorageTechnique = iota
+	Raw64 StorageTechnique = iota
 
 	// Raw32 encodes all values at 32bit precision, costing 128 bits per
 	// capture
@@ -27,12 +27,12 @@ const (
 	Oct48
 )
 
-type PositionEncoder struct {
-	technique PositionStorageTechnique
+type Encoder struct {
+	technique StorageTechnique
 }
 
-func NewPositionEncoder(technique PositionStorageTechnique) PositionEncoder {
-	return PositionEncoder{technique: technique}
+func NewEncoder(technique StorageTechnique) Encoder {
+	return Encoder{technique: technique}
 }
 
 func encodeRaw64(captures []position.Capture) []byte {
@@ -55,7 +55,7 @@ func encodeRaw64(captures []position.Capture) []byte {
 	return streamData.Bytes()
 }
 
-func (p PositionEncoder) encode(stream data.CaptureStream) ([]byte, error) {
+func (p Encoder) encode(stream data.CaptureStream) ([]byte, error) {
 	streamData := new(bytes.Buffer)
 
 	streamData.Write(rapbinary.StringToBytes(stream.Name()))
@@ -93,7 +93,7 @@ func (p PositionEncoder) encode(stream data.CaptureStream) ([]byte, error) {
 	return streamData.Bytes(), nil
 }
 
-func (p PositionEncoder) Encode(streams []data.CaptureStream) ([]byte, [][]byte, error) {
+func (p Encoder) Encode(streams []data.CaptureStream) ([]byte, [][]byte, error) {
 	allStreamData := make([][]byte, len(streams))
 
 	for i, stream := range streams {
@@ -161,7 +161,7 @@ func decode(data []byte) (data.CaptureStream, error) {
 		return nil, err
 	}
 
-	encodingTechnique := PositionStorageTechnique(typeByte)
+	encodingTechnique := StorageTechnique(typeByte)
 
 	switch encodingTechnique {
 	case Raw64:
@@ -175,28 +175,18 @@ func decode(data []byte) (data.CaptureStream, error) {
 	return nil, fmt.Errorf("Unknown positional encoding technique: %d", int(encodingTechnique))
 }
 
-func (p PositionEncoder) Decode(header []byte, streamData [][]byte) ([]data.CaptureStream, error) {
-	allStreams := make([]data.CaptureStream, len(streamData))
-
-	for i, data := range streamData {
-		stream, err := decode(data)
-		if err != nil {
-			return nil, err
-		}
-		allStreams[i] = stream
-	}
-
-	return allStreams, nil
+func (p Encoder) Decode(header []byte, streamData []byte) (data.CaptureStream, error) {
+	return decode(streamData)
 }
 
-func (p PositionEncoder) Accepts(stream data.CaptureStream) bool {
+func (p Encoder) Accepts(stream data.CaptureStream) bool {
 	return stream.Signature() == "recolude.position"
 }
 
-func (p PositionEncoder) Signature() string {
+func (p Encoder) Signature() string {
 	return "recolude.position"
 }
 
-func (p PositionEncoder) Version() uint {
+func (p Encoder) Version() uint {
 	return 0
 }
