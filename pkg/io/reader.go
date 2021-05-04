@@ -5,7 +5,6 @@ import (
 	"compress/flate"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/recolude/rap/internal/io/binary"
 	"github.com/recolude/rap/internal/io/rapv1"
@@ -76,7 +75,27 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 	return encoders, encoderHeaders, totalBytesRead, nil
 }
 
-func recursiveBuidRecordings(recordingData []byte, encoders []encoding.Encoder, headers [][]byte) (data.Recording, error) {
+func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (map[string]string, error) {
+	metadata := make(map[string]string)
+
+	keyIndecies, _, err := binary.ReadUintArray(in)
+	if err != nil {
+		return nil, err
+	}
+
+	valuesBlock, _, err := binary.ReadStringArray(in)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, key := range keyIndecies {
+		metadata[metadataKeys[key]] = valuesBlock[i]
+	}
+
+	return metadata, nil
+}
+
+func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (data.Recording, error) {
 	in := bytes.NewReader(recordingData)
 
 	// Read Recording name
@@ -86,15 +105,7 @@ func recursiveBuidRecordings(recordingData []byte, encoders []encoding.Encoder, 
 	}
 
 	// Read Recording metadata
-	meatadataBlock, _, err := binary.ReadStringArray(in)
-	if err != nil {
-		return nil, err
-	}
-
-	metadata := make(map[string]string)
-	for i := 0; i < len(meatadataBlock); i += 2 {
-		metadata[meatadataBlock[i]] = meatadataBlock[i+1]
-	}
+	metadata, err := readRecordingMetadataBlock(in, metadataKeys)
 
 	// read num streams
 	numStreams, _, err := binary.ReadUvarint(in)
@@ -136,7 +147,7 @@ func recursiveBuidRecordings(recordingData []byte, encoders []encoding.Encoder, 
 		if err != nil {
 			return nil, err
 		}
-		childRec, err := recursiveBuidRecordings(childRecData, encoders, headers)
+		childRec, err := recursiveBuidRecordings(childRecData, metadataKeys, encoders, headers)
 		allChildRecordings[i] = childRec
 	}
 
@@ -173,20 +184,23 @@ func (r Reader) Read() (data.Recording, int, error) {
 		return nil, totalBytesRead, err
 	}
 
-	compressedRecData, bytesRead, err := binary.ReadBytesArray(r.in)
+	deflateReader := flate.NewReader(r.in)
+
+	// Read off metadata keys
+	metdataKeys, bytesRead, err := binary.ReadStringArray(deflateReader)
 	totalBytesRead += bytesRead
 	if err != nil {
 		return nil, totalBytesRead, err
 	}
 
-	deflateReader := flate.NewReader(bytes.NewReader(compressedRecData))
-
-	uncompresseRecordingData, err := ioutil.ReadAll(deflateReader)
+	// Read off recordings
+	uncompresseRecordingData, bytesRead, err := binary.ReadBytesArray(deflateReader)
+	totalBytesRead += bytesRead
 	if err != nil {
 		return nil, totalBytesRead, err
 	}
 
-	rec, err := recursiveBuidRecordings(uncompresseRecordingData, encodersToUse, encoderHeaders)
+	rec, err := recursiveBuidRecordings(uncompresseRecordingData, metdataKeys, encodersToUse, encoderHeaders)
 
 	return rec, totalBytesRead, err
 }

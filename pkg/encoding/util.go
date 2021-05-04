@@ -6,7 +6,7 @@ import (
 	"github.com/recolude/rap/pkg/data"
 )
 
-func streamDuration(stream data.CaptureStream) float64 {
+func StreamDuration(stream data.CaptureStream) float64 {
 	startingTime := math.Inf(1)
 	endingTime := math.Inf(-1)
 

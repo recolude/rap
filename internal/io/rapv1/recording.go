@@ -19,6 +19,10 @@ func (rec recordingV1) Binaries() []data.Binary {
 	return nil
 }
 
+func (rec recordingV1) BinaryReferences() []data.BinaryReference {
+	return nil
+}
+
 func (rec recordingV1) Metadata() map[string]string {
 	return rec.metadata
 }

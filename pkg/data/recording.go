@@ -13,7 +13,15 @@ type Binary interface {
 	Name() string
 	Data() io.Reader
 	Size() uint64
+	Metadata() map[string]string
 	Write(io.Writer) (int, error)
+}
+
+type BinaryReference interface {
+	Name() string
+	URI() string
+	Size() uint64
+	Metadata() map[string]string
 }
 
 type CaptureStream interface {
@@ -28,6 +36,7 @@ type Recording interface {
 	Recordings() []Recording
 	Metadata() map[string]string
 	Binaries() []Binary
+	BinaryReferences() []BinaryReference
 }
 
 func NewRecording(
@@ -71,4 +80,8 @@ func (r recording) Metadata() map[string]string {
 
 func (r recording) Binaries() []Binary {
 	return r.binaries
+}
+
+func (r recording) BinaryReferences() []BinaryReference {
+	return nil
 }

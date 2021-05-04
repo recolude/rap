@@ -28,8 +28,12 @@ func ReadBytesArray(r io.Reader) ([]byte, int, error) {
 
 	out := make([]byte, len)
 	read, err := r.Read(out)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return nil, read + bytesRead, err
+	}
+
+	if read != int(len) {
+		return nil, read + bytesRead, io.ErrUnexpectedEOF
 	}
 
 	return out, read + bytesRead, nil

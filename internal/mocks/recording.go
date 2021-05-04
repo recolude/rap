@@ -48,6 +48,20 @@ func (mr *MockRecordingMockRecorder) Binaries() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Binaries", reflect.TypeOf((*MockRecording)(nil).Binaries))
 }
 
+// BinaryReferences mocks base method.
+func (m *MockRecording) BinaryReferences() []data.BinaryReference {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BinaryReferences")
+	ret0, _ := ret[0].([]data.BinaryReference)
+	return ret0
+}
+
+// BinaryReferences indicates an expected call of BinaryReferences.
+func (mr *MockRecordingMockRecorder) BinaryReferences() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BinaryReferences", reflect.TypeOf((*MockRecording)(nil).BinaryReferences))
+}
+
 // CaptureStreams mocks base method.
 func (m *MockRecording) CaptureStreams() []data.CaptureStream {
 	m.ctrl.T.Helper()
