@@ -23,6 +23,8 @@ const (
 	// Oct48 stores all values in a oct tree of depth 16, costing 64 bits per
 	// capture (time is stored in 16 bits)
 	Oct48
+
+	Oct24
 )
 
 type Encoder struct {
@@ -51,6 +53,14 @@ func (p Encoder) encode(stream data.CaptureStream) ([]byte, error) {
 		break
 	case Raw32:
 		streamData.Write(encodeRaw32(castedCaptureData))
+		break
+
+	case Oct24:
+		d, err := encodeOct24(castedCaptureData)
+		if err != nil {
+			return nil, err
+		}
+		streamData.Write(d)
 		break
 	}
 
@@ -96,6 +106,13 @@ func decode(data []byte) (data.CaptureStream, error) {
 
 	case Raw32:
 		captures, err := decodeRaw32(reader)
+		if err != nil {
+			return nil, err
+		}
+		return position.NewStream(name, captures), nil
+
+	case Oct24:
+		captures, err := decodeOct24(reader)
 		if err != nil {
 			return nil, err
 		}
