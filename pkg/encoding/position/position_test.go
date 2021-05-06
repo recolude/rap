@@ -1,6 +1,7 @@
 package position_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -201,6 +202,63 @@ func Test_Raw32_MultipleStreams(t *testing.T) {
 	}
 }
 
+func Test_Oct24_SingleEntry(t *testing.T) {
+	// ARRANGE ================================================================
+	captures := []positionStream.Capture{
+		positionStream.NewCapture(1, 2, 3, 4),
+		positionStream.NewCapture(2, 4, 5, 6),
+		positionStream.NewCapture(3, 7, 8, 9),
+	}
+
+	streamIn := positionStream.NewStream("Pos", captures)
+
+	encoder := position.NewEncoder(position.Oct24)
+
+	// ACT ====================================================================
+	header, streamsData, encodeErr := encoder.Encode([]data.CaptureStream{streamIn})
+	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
+
+	// ASSERT =================================================================
+	assert.NoError(t, encodeErr)
+	assert.NoError(t, decodeErr)
+	assert.Len(t, header, 0)
+	assert.Len(t, streamsData, 1)
+	if assert.NotNil(t, streamOut) {
+		assert.Equal(t, streamIn.Name(), streamOut.Name())
+		if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
+			for i, c := range streamOut.Captures() {
+				positioniCapture, ok := c.(positionStream.Capture)
+				if assert.True(t, ok) == false {
+					break
+				}
+
+				assert.InDelta(t, captures[i].Time(), positioniCapture.Time(), 0.01, "times are not equal: %.2f != %.2f", captures[i].Time(), positioniCapture.Time())
+				assert.InDelta(
+					t,
+					captures[i].Position().X(),
+					positioniCapture.Position().X(),
+					0.01,
+					"X components not equal: %.2f != %.2f", captures[i].Position().X(), positioniCapture.Position().X(),
+				)
+				assert.InDelta(
+					t,
+					captures[i].Position().Y(),
+					positioniCapture.Position().Y(),
+					0.01,
+					"Y components not equal: %.2f != %.2f", captures[i].Position().Y(), positioniCapture.Position().Y(),
+				)
+				assert.InDelta(
+					t,
+					captures[i].Position().Z(),
+					positioniCapture.Position().Z(),
+					0.01,
+					"Z components not equal: %.2f != %.2f", captures[i].Position().Z(), positioniCapture.Position().Z(),
+				)
+			}
+		}
+	}
+}
+
 func Test_Oct24_MultipleStreams(t *testing.T) {
 	// ARRANGE ================================================================
 	captures := make([]positionStream.Capture, 1000)
@@ -208,9 +266,9 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 	for i := 0; i < len(captures); i++ {
 		captures[i] = positionStream.NewCapture(
 			curTime,
-			rand.Float64()*1000,
-			rand.Float64()*1000,
-			rand.Float64()*1000,
+			rand.Float64()*100,
+			rand.Float64()*100,
+			rand.Float64()*100,
 		)
 		curTime += rand.Float64() * 10.0
 	}
@@ -221,9 +279,9 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 	for i := 0; i < len(captures2); i++ {
 		captures2[i] = positionStream.NewCapture(
 			curTime,
-			rand.Float64()*1000,
-			rand.Float64()*1000,
-			rand.Float64()*1000,
+			rand.Float64()*100,
+			rand.Float64()*100,
+			rand.Float64()*100,
 		)
 		curTime2 += rand.Float64() * 10.0
 	}
@@ -251,10 +309,14 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 					break
 				}
 
-				assert.InEpsilon(t, captures[i].Time(), positioniCapture.Time(), 0.01)
-				assert.InEpsilon(t, captures[i].Position().X(), positioniCapture.Position().X(), 0.01)
-				assert.InEpsilon(t, captures[i].Position().Y(), positioniCapture.Position().Y(), 0.01)
-				assert.InEpsilon(t, captures[i].Position().Z(), positioniCapture.Position().Z(), 0.01)
+				correct := captures[i].Position()
+				answer := positioniCapture.Position()
+				failureMessage := fmt.Sprintf("(%.2f, %.2f, %.2f) != (%.2f, %.2f, %.2f)", correct.X(), correct.Y(), correct.Z(), answer.X(), answer.Y(), answer.Z())
+
+				assert.InDelta(t, captures[i].Time(), positioniCapture.Time(), 0.05, "Mismatched Time")
+				assert.InDelta(t, captures[i].Position().X(), positioniCapture.Position().X(), .2, failureMessage)
+				assert.InDelta(t, captures[i].Position().Y(), positioniCapture.Position().Y(), .2, failureMessage)
+				assert.InDelta(t, captures[i].Position().Z(), positioniCapture.Position().Z(), .2, failureMessage)
 			}
 		}
 	}
@@ -267,10 +329,10 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 				if assert.True(t, ok) == false {
 					break
 				}
-				assert.InEpsilon(t, captures2[i].Time(), positioniCapture.Time(), 0.01)
-				assert.InEpsilon(t, captures2[i].Position().X(), positioniCapture.Position().X(), 0.01)
-				assert.InEpsilon(t, captures2[i].Position().Y(), positioniCapture.Position().Y(), 0.01)
-				assert.InEpsilon(t, captures2[i].Position().Z(), positioniCapture.Position().Z(), 0.01)
+				assert.InDelta(t, captures2[i].Time(), positioniCapture.Time(), 0.05, "Mismatched Time")
+				assert.InDelta(t, captures2[i].Position().X(), positioniCapture.Position().X(), .2)
+				assert.InDelta(t, captures2[i].Position().Y(), positioniCapture.Position().Y(), .2)
+				assert.InDelta(t, captures2[i].Position().Z(), positioniCapture.Position().Z(), .2)
 			}
 		}
 	}

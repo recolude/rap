@@ -19,11 +19,11 @@ func floatBSTToBytes(value, start, duration float64, out []byte) {
 		out[byteIndex] = 0
 
 		for bitIndex := 0; bitIndex < 8; bitIndex++ {
-			if curValue > value {
+			if value < curValue {
+				curValue -= increment
+			} else {
 				out[byteIndex] = out[byteIndex] | (1 << bitIndex)
 				curValue += increment
-			} else {
-				curValue -= increment
 			}
 			increment /= 2.0
 		}
@@ -93,7 +93,7 @@ func bytesToOctCells24(cells []OctCell, buffer []byte) {
 	cells[7] = OctCell((buffer[2] & 0b11100000) >> 5)
 }
 
-func vec3ToOctCells(v, min, max vector.Vector3, cells []OctCell) {
+func Vec3ToOctCells(v, min, max vector.Vector3, cells []OctCell) {
 	center := min.Add(max).DivByConstant(2.0)
 	crossSection := max.Sub(min)
 	incrementX := crossSection.X() / 4.0
@@ -102,24 +102,24 @@ func vec3ToOctCells(v, min, max vector.Vector3, cells []OctCell) {
 
 	for cellIndex := 0; cellIndex < len(cells); cellIndex++ {
 		topBit := 0
-		newY := center.Y() - incrementY
-		if v.Y() > center.Y() {
+		newY := center.Y() + incrementY
+		if v.Y() < center.Y() {
 			topBit = 1
-			newY = center.Y() + incrementY
+			newY = center.Y() - incrementY
 		}
 
 		rightBit := 0
-		newX := center.X() - incrementX
-		if v.X() > center.X() {
+		newX := center.X() + incrementX
+		if v.X() < center.X() {
 			rightBit = 1
-			newX = center.X() + incrementX
+			newX = center.X() - incrementX
 		}
 
 		forwardBit := 0
-		newZ := center.Z() - incrementZ
-		if v.Z() > center.Z() {
+		newZ := center.Z() + incrementZ
+		if v.Z() < center.Z() {
 			forwardBit = 1
-			newZ = center.Z() + incrementZ
+			newZ = center.Z() - incrementZ
 		}
 		cells[cellIndex] = OctCell(topBit<<2 | rightBit<<1 | forwardBit)
 		center = vector.NewVector3(newX, newY, newZ)
@@ -129,7 +129,7 @@ func vec3ToOctCells(v, min, max vector.Vector3, cells []OctCell) {
 	}
 }
 
-func octCellsToVec3(min, max vector.Vector3, cells []OctCell) vector.Vector3 {
+func OctCellsToVec3(min, max vector.Vector3, cells []OctCell) vector.Vector3 {
 	center := min.Add(max).DivByConstant(2.0)
 	crossSection := max.Sub(min)
 	incrementX := crossSection.X() / 4.0
@@ -202,7 +202,7 @@ func decodeOct24(streamData *bytes.Reader) ([]position.Capture, error) {
 
 		streamData.Read(octBytesBuffer)
 		bytesToOctCells24(octBuffer, octBytesBuffer)
-		v := octCellsToVec3(min, max, octBuffer)
+		v := OctCellsToVec3(min, max, octBuffer)
 
 		captures[i] = position.NewCapture(time, v.X(), v.Y(), v.Z())
 	}
@@ -285,7 +285,7 @@ func encodeOct24(captures []position.Capture) ([]byte, error) {
 		}
 
 		// Write position
-		vec3ToOctCells(capture.Position(), min, max, octBuffer)
+		Vec3ToOctCells(capture.Position(), min, max, octBuffer)
 		octCellsToBytes24(octBuffer, octByteBuffer)
 		_, err = streamData.Write(octByteBuffer)
 		if err != nil {
