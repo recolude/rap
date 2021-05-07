@@ -166,8 +166,8 @@ func decodeOct24(streamData *bytes.Reader) ([]position.Capture, error) {
 		return nil, err
 	}
 
-	var duration float32
-	err = binary.Read(streamData, binary.LittleEndian, &duration)
+	var maxTimeDifference float32
+	err = binary.Read(streamData, binary.LittleEndian, &maxTimeDifference)
 	if err != nil {
 		return nil, err
 	}
@@ -196,15 +196,17 @@ func decodeOct24(streamData *bytes.Reader) ([]position.Capture, error) {
 	timeBuffer := make([]byte, 2)
 	octBuffer := make([]OctCell, 8)
 	octBytesBuffer := make([]byte, 3)
+	currentTime := float64(startTime)
 	for i := 0; i < int(numCaptures); i++ {
 		streamData.Read(timeBuffer)
-		time := bytesToFloatBST(float64(startTime), float64(duration), timeBuffer)
+		time := bytesToFloatBST(0, float64(maxTimeDifference), timeBuffer)
+		currentTime += time
 
 		streamData.Read(octBytesBuffer)
 		bytesToOctCells24(octBuffer, octBytesBuffer)
 		v := OctCellsToVec3(min, max, octBuffer)
 
-		captures[i] = position.NewCapture(time, v.X(), v.Y(), v.Z())
+		captures[i] = position.NewCapture(currentTime, v.X(), v.Y(), v.Z())
 	}
 
 	return captures, nil
@@ -220,15 +222,25 @@ func encodeOct24(captures []position.Capture) ([]byte, error) {
 
 	startingTime := math.Inf(1)
 	endingTime := math.Inf(-1)
+	maxTimeDifference := math.Inf(-1)
+
+	// TODO: Eli do time trick with position as well
 
 	min := vector.NewVector3(math.Inf(1), math.Inf(1), math.Inf(1))
 	max := vector.NewVector3(math.Inf(-1), math.Inf(-1), math.Inf(-1))
-	for _, capture := range captures {
+	for i, capture := range captures {
 		if capture.Time() < startingTime {
 			startingTime = capture.Time()
 		}
 		if capture.Time() > endingTime {
 			endingTime = capture.Time()
+		}
+
+		if i > 0 {
+			timeDifference := capture.Time() - captures[i-1].Time()
+			if timeDifference > maxTimeDifference {
+				maxTimeDifference = timeDifference
+			}
 		}
 
 		if capture.Position().X() > max.X() {
@@ -252,9 +264,7 @@ func encodeOct24(captures []position.Capture) ([]byte, error) {
 		}
 	}
 
-	duration := endingTime - startingTime
-
-	err = binary.Write(streamData, binary.LittleEndian, float32(duration))
+	err = binary.Write(streamData, binary.LittleEndian, float32(maxTimeDifference))
 	if err != nil {
 		return nil, err
 	}
@@ -275,10 +285,13 @@ func encodeOct24(captures []position.Capture) ([]byte, error) {
 	timeBuffer := make([]byte, 2)
 	octBuffer := make([]OctCell, 8)
 	octByteBuffer := make([]byte, 3)
+	totalledQuantizedDuration := startingTime
 	for _, capture := range captures {
 
 		// Write Time
-		floatBSTToBytes(capture.Time(), startingTime, duration, timeBuffer)
+		duration := capture.Time() - totalledQuantizedDuration
+		floatBSTToBytes(duration, 0, maxTimeDifference, timeBuffer)
+		totalledQuantizedDuration += bytesToFloatBST(0, maxTimeDifference, timeBuffer)
 		_, err := streamData.Write(timeBuffer)
 		if err != nil {
 			return nil, err

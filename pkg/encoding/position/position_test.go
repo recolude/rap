@@ -313,7 +313,7 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 				answer := positioniCapture.Position()
 				failureMessage := fmt.Sprintf("(%.2f, %.2f, %.2f) != (%.2f, %.2f, %.2f)", correct.X(), correct.Y(), correct.Z(), answer.X(), answer.Y(), answer.Z())
 
-				assert.InDelta(t, captures[i].Time(), positioniCapture.Time(), 0.05, "Mismatched Time")
+				assert.InDelta(t, captures[i].Time(), positioniCapture.Time(), 0.0003, "Mismatched Time")
 				assert.InDelta(t, captures[i].Position().X(), positioniCapture.Position().X(), .2, failureMessage)
 				assert.InDelta(t, captures[i].Position().Y(), positioniCapture.Position().Y(), .2, failureMessage)
 				assert.InDelta(t, captures[i].Position().Z(), positioniCapture.Position().Z(), .2, failureMessage)
@@ -329,7 +329,7 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 				if assert.True(t, ok) == false {
 					break
 				}
-				assert.InDelta(t, captures2[i].Time(), positioniCapture.Time(), 0.05, "Mismatched Time")
+				assert.InDelta(t, captures2[i].Time(), positioniCapture.Time(), 0.0002, "Mismatched Time")
 				assert.InDelta(t, captures2[i].Position().X(), positioniCapture.Position().X(), .2)
 				assert.InDelta(t, captures2[i].Position().Y(), positioniCapture.Position().Y(), .2)
 				assert.InDelta(t, captures2[i].Position().Z(), positioniCapture.Position().Z(), .2)

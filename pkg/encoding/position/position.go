@@ -24,6 +24,8 @@ const (
 	// capture (time is stored in 16 bits)
 	Oct48
 
+	// Oct24 stores all values in a oct tree of depth 8, costing 40 bits per
+	// capture (time is stored in 16 bits)
 	Oct24
 )
 
