@@ -64,6 +64,14 @@ func (p Encoder) encode(stream format.CaptureStream) ([]byte, error) {
 		}
 		streamData.Write(d)
 		break
+
+	case Oct48:
+		d, err := encodeOct48(castedCaptureData)
+		if err != nil {
+			return nil, err
+		}
+		streamData.Write(d)
+		break
 	}
 
 	return streamData.Bytes(), nil
@@ -115,6 +123,13 @@ func decode(data []byte) (format.CaptureStream, error) {
 
 	case Oct24:
 		captures, err := decodeOct24(reader)
+		if err != nil {
+			return nil, err
+		}
+		return position.NewStream(name, captures), nil
+
+	case Oct48:
+		captures, err := decodeOct48(reader)
 		if err != nil {
 			return nil, err
 		}

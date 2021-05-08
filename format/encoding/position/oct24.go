@@ -9,13 +9,10 @@ import (
 	"github.com/recolude/rap/format/streams/position"
 )
 
-func octCellsToBytes48(cells []OctCell, buffer []byte) {
+func octCellsToBytes24(cells []OctCell, buffer []byte) {
 	buffer[0] = 0
 	buffer[1] = 0
 	buffer[2] = 0
-	buffer[3] = 0
-	buffer[4] = 0
-	buffer[5] = 0
 
 	buffer[0] = byte(cells[0])
 	buffer[0] |= byte(cells[1]) << 3
@@ -29,22 +26,9 @@ func octCellsToBytes48(cells []OctCell, buffer []byte) {
 	buffer[2] = byte(cells[5]) >> 1
 	buffer[2] |= byte(cells[6]) << 2
 	buffer[2] |= byte(cells[7]) << 5
-
-	buffer[3] = byte(cells[8])
-	buffer[3] |= byte(cells[9]) << 3
-	buffer[3] |= byte(cells[10]) << 6
-
-	buffer[4] = byte(cells[10]) >> 2
-	buffer[4] |= byte(cells[11]) << 1
-	buffer[4] |= byte(cells[12]) << 4
-	buffer[4] |= byte(cells[13]) << 7
-
-	buffer[5] = byte(cells[13]) >> 1
-	buffer[5] |= byte(cells[14]) << 2
-	buffer[5] |= byte(cells[15]) << 5
 }
 
-func bytesToOctCells48(cells []OctCell, buffer []byte) {
+func bytesToOctCells24(cells []OctCell, buffer []byte) {
 	cells[0] = OctCell(buffer[0] & 0b111)
 	cells[1] = OctCell((buffer[0] & 0b111000) >> 3)
 	cells[2] = OctCell((buffer[0] >> 6) | ((buffer[1] & 0b1) << 2))
@@ -53,17 +37,9 @@ func bytesToOctCells48(cells []OctCell, buffer []byte) {
 	cells[5] = OctCell((buffer[1] >> 7) | ((buffer[2] & 0b11) << 1))
 	cells[6] = OctCell((buffer[2] & 0b11100) >> 2)
 	cells[7] = OctCell((buffer[2] & 0b11100000) >> 5)
-	cells[8] = OctCell(buffer[3] & 0b111)
-	cells[9] = OctCell((buffer[3] & 0b111000) >> 3)
-	cells[10] = OctCell((buffer[3] >> 6) | ((buffer[4] & 0b1) << 2))
-	cells[11] = OctCell((buffer[4] & 0b1110) >> 1)
-	cells[12] = OctCell((buffer[4] & 0b1110000) >> 4)
-	cells[13] = OctCell((buffer[4] >> 7) | ((buffer[5] & 0b11) << 1))
-	cells[14] = OctCell((buffer[5] & 0b11100) >> 2)
-	cells[15] = OctCell((buffer[5] & 0b11100000) >> 5)
 }
 
-func encodeOct48(captures []position.Capture) ([]byte, error) {
+func encodeOct24(captures []position.Capture) ([]byte, error) {
 	streamData := new(bytes.Buffer)
 
 	// Write number of captures
@@ -157,8 +133,8 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 	binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().Z()))
 
 	timeBuffer := make([]byte, 2)
-	octBuffer := make([]OctCell, 16)
-	octByteBuffer := make([]byte, 6)
+	octBuffer := make([]OctCell, 8)
+	octByteBuffer := make([]byte, 3)
 	totalledQuantizedDuration := startingTime
 	quantizedPosition := captures[0].Position()
 	for i, capture := range captures {
@@ -179,7 +155,7 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 			// Write position
 			dir := capture.Position().Sub(quantizedPosition)
 			Vec3ToOctCells(dir, min, max, octBuffer)
-			octCellsToBytes48(octBuffer, octByteBuffer)
+			octCellsToBytes24(octBuffer, octByteBuffer)
 			_, err = streamData.Write(octByteBuffer)
 			if err != nil {
 				return nil, err
@@ -194,7 +170,7 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 	return streamData.Bytes(), nil
 }
 
-func decodeOct48(streamData *bytes.Reader) ([]position.Capture, error) {
+func decodeOct24(streamData *bytes.Reader) ([]position.Capture, error) {
 	numCaptures, err := binary.ReadUvarint(streamData)
 	if err != nil {
 		return nil, err
@@ -251,8 +227,8 @@ func decodeOct48(streamData *bytes.Reader) ([]position.Capture, error) {
 
 	captures := make([]position.Capture, numCaptures)
 	timeBuffer := make([]byte, 2)
-	octBuffer := make([]OctCell, 16)
-	octBytesBuffer := make([]byte, 6)
+	octBuffer := make([]OctCell, 8)
+	octBytesBuffer := make([]byte, 3)
 	currentTime := float64(startTime)
 	currentPosition := starting
 	for i := 0; i < int(numCaptures); i++ {
@@ -262,7 +238,7 @@ func decodeOct48(streamData *bytes.Reader) ([]position.Capture, error) {
 
 		if i > 0 {
 			streamData.Read(octBytesBuffer)
-			bytesToOctCells48(octBuffer, octBytesBuffer)
+			bytesToOctCells24(octBuffer, octBytesBuffer)
 			v := OctCellsToVec3(min, max, octBuffer)
 			currentPosition = currentPosition.Add(v)
 		}
