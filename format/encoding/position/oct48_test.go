@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/EliCDavis/vector"
-	"github.com/recolude/rap/pkg/encoding/position"
+	"github.com/recolude/rap/format/encoding/position"
 	"github.com/stretchr/testify/assert"
 )
 

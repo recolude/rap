@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/io"
 	"github.com/recolude/rap/internal/mocks"
-	"github.com/recolude/rap/pkg/data"
-	"github.com/recolude/rap/pkg/io"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +19,7 @@ func Test_ErrorsWithNoValidEncoders(t *testing.T) {
 	stream.EXPECT().Signature().Return("test.data")
 
 	rec := mocks.NewMockRecording(ctrl)
-	rec.EXPECT().CaptureStreams().AnyTimes().Return([]data.CaptureStream{stream})
+	rec.EXPECT().CaptureStreams().AnyTimes().Return([]format.CaptureStream{stream})
 
 	w := io.NewWriter(nil, nil)
 

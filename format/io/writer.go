@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/encoding"
 	rapbinary "github.com/recolude/rap/internal/io/binary"
-	"github.com/recolude/rap/pkg/data"
-	"github.com/recolude/rap/pkg/encoding"
 )
 
 type encoderStreamMapping struct {
 	encoder     encoding.Encoder
-	streams     []data.CaptureStream
+	streams     []format.CaptureStream
 	streamOrder []int
 }
 
@@ -31,8 +31,8 @@ func NewWriter(encoders []encoding.Encoder, out io.Writer) Writer {
 	}
 }
 
-func allRecordingsWithin(recording data.Recording) []data.Recording {
-	recs := make([]data.Recording, 1)
+func allRecordingsWithin(recording format.Recording) []format.Recording {
+	recs := make([]format.Recording, 1)
 	recs[0] = recording
 	for _, rec := range recording.Recordings() {
 		recs = append(recs, allRecordingsWithin(rec)...)
@@ -40,7 +40,7 @@ func allRecordingsWithin(recording data.Recording) []data.Recording {
 	return recs
 }
 
-func calcNumStreams(recording data.Recording) int {
+func calcNumStreams(recording format.Recording) int {
 	total := 0
 	for _, rec := range recording.Recordings() {
 		total += calcNumStreams(rec)
@@ -50,7 +50,7 @@ func calcNumStreams(recording data.Recording) int {
 
 // accumulateMetdataKeys builds out a mapping of metadata keys to some unique
 // index. Used to ensure the key is only ever written once to file.
-func accumulateMetdataKeys(recording data.Recording, keyMappingToIndex map[string]int) {
+func accumulateMetdataKeys(recording format.Recording, keyMappingToIndex map[string]int) {
 	keyCount := len(keyMappingToIndex)
 
 	for key, _ := range recording.Metadata() {
@@ -65,7 +65,7 @@ func accumulateMetdataKeys(recording data.Recording, keyMappingToIndex map[strin
 	}
 }
 
-func (w Writer) evaluateStreams(recording data.Recording, offset int) ([]encoderStreamMapping, int, error) {
+func (w Writer) evaluateStreams(recording format.Recording, offset int) ([]encoderStreamMapping, int, error) {
 	mappings := make([]encoderStreamMapping, 0)
 	streamsSatisfied := make([]bool, len(recording.CaptureStreams()))
 	for i := range recording.CaptureStreams() {
@@ -158,7 +158,7 @@ func writeEncoders(out io.Writer, encoders []encoderStreamMapping) (int, error) 
 	return writtenVersions + written, err
 }
 
-func recurseRecordingToBytes(recording data.Recording, keyMappingToIndex map[string]int, encodingBlocks [][]byte, streamIndexToEncoderUsedIndex []int, offset int) (int, []byte) {
+func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[string]int, encodingBlocks [][]byte, streamIndexToEncoderUsedIndex []int, offset int) (int, []byte) {
 	out := bytes.Buffer{}
 
 	// Write name
@@ -199,7 +199,7 @@ func recurseRecordingToBytes(recording data.Recording, keyMappingToIndex map[str
 	return newOffset, out.Bytes()
 }
 
-func (w Writer) Write(recording data.Recording) (int, error) {
+func (w Writer) Write(recording format.Recording) (int, error) {
 	if recording == nil {
 		panic(errors.New("can not write nil recording"))
 	}

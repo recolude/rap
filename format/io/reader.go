@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/encoding"
 	"github.com/recolude/rap/internal/io/binary"
 	"github.com/recolude/rap/internal/io/rapv1"
-	"github.com/recolude/rap/pkg/data"
-	"github.com/recolude/rap/pkg/encoding"
 )
 
 type Reader struct {
@@ -95,7 +95,7 @@ func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (map[st
 	return metadata, nil
 }
 
-func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (data.Recording, error) {
+func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (format.Recording, error) {
 	in := bytes.NewReader(recordingData)
 
 	// Read Recording name
@@ -114,7 +114,7 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 	}
 
 	// read streams
-	allStreams := make([]data.CaptureStream, numStreams)
+	allStreams := make([]format.CaptureStream, numStreams)
 	for i := 0; i < int(numStreams); i++ {
 
 		encoderIndex, _, err := binary.ReadUvarint(in)
@@ -141,7 +141,7 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 		return nil, err
 	}
 
-	allChildRecordings := make([]data.Recording, numRecordings)
+	allChildRecordings := make([]format.Recording, numRecordings)
 	for i := 0; i < int(numRecordings); i++ {
 		childRecData, _, err := binary.ReadBytesArray(in)
 		if err != nil {
@@ -151,10 +151,10 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 		allChildRecordings[i] = childRec
 	}
 
-	return data.NewRecording(recordingName, allStreams, allChildRecordings, metadata, nil), nil
+	return format.NewRecording("", recordingName, allStreams, allChildRecordings, metadata, nil), nil
 }
 
-func (r Reader) Read() (data.Recording, int, error) {
+func (r Reader) Read() (format.Recording, int, error) {
 	if r.in == nil {
 		panic("Attempting to load recording from nil reader")
 	}

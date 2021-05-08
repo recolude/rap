@@ -3,7 +3,7 @@ package io
 import (
 	"io"
 
-	"github.com/recolude/rap/pkg/data"
+	"github.com/recolude/rap/format"
 )
 
 func GetRecoringVersion(file io.Reader) (int, int, error) {
@@ -17,6 +17,6 @@ func GetRecoringVersion(file io.Reader) (int, int, error) {
 	return int(version[0]), bytesRead, nil
 }
 
-func Load(in io.Reader) (data.Recording, int, error) {
+func Load(in io.Reader) (format.Recording, int, error) {
 	return NewReader(nil, in).Read()
 }

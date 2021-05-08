@@ -1,7 +1,7 @@
-package position
+package euler
 
 import (
-	"github.com/recolude/rap/pkg/data"
+	"github.com/recolude/rap/format"
 )
 
 type Stream struct {
@@ -20,8 +20,8 @@ func (s Stream) Name() string {
 	return s.name
 }
 
-func (s Stream) Captures() []data.Capture {
-	returnVal := make([]data.Capture, len(s.captures))
+func (s Stream) Captures() []format.Capture {
+	returnVal := make([]format.Capture, len(s.captures))
 	for i := range s.captures {
 		returnVal[i] = s.captures[i]
 	}
@@ -29,5 +29,5 @@ func (s Stream) Captures() []data.Capture {
 }
 
 func (Stream) Signature() string {
-	return "recolude.position"
+	return "recolude.euler"
 }

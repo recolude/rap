@@ -1,5 +1,7 @@
 # RAP
 
+**THIS IS IN ALPHA. DO NOT USE AND EXPECT THINGS TO WORK**
+
 Recolude's recording file format.
 
 ## Testing Locally

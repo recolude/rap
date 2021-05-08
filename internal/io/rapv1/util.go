@@ -10,11 +10,11 @@ import (
 	math "math"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/recolude/rap/pkg/data"
-	"github.com/recolude/rap/pkg/streams/enum"
-	"github.com/recolude/rap/pkg/streams/euler"
-	"github.com/recolude/rap/pkg/streams/event"
-	"github.com/recolude/rap/pkg/streams/position"
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/streams/enum"
+	"github.com/recolude/rap/format/streams/euler"
+	"github.com/recolude/rap/format/streams/event"
+	"github.com/recolude/rap/format/streams/position"
 )
 
 func getNumberOfRecordings(file io.Reader) (int, int, error) {
@@ -56,8 +56,8 @@ func oldToNewEvents(oldEvents []*CustomEventCapture) event.Stream {
 	return event.NewStream("Custom Event", customEventCaptures)
 }
 
-func protobufToStd(inRec *Recording) (data.Recording, error) {
-	subjectRecordings := make([]data.Recording, 0)
+func protobufToStd(inRec *Recording) (format.Recording, error) {
+	subjectRecordings := make([]format.Recording, 0)
 	for _, rec := range inRec.GetSubjects() {
 		positionCaptures := make([]position.Capture, 0)
 		rotationCaptures := make([]euler.Capture, 0)
@@ -102,8 +102,9 @@ func protobufToStd(inRec *Recording) (data.Recording, error) {
 		lifeStream := enum.NewStream("Life Cycle", []string{"START", "ENABLE", "DISABLE", "DESTROY"}, lifeCycleCaptures)
 
 		subjectRecordings = append(subjectRecordings, &recordingV1{
+			id:   fmt.Sprint(rec.GetId()),
 			name: rec.GetName(),
-			captureStreams: []data.CaptureStream{
+			captureStreams: []format.CaptureStream{
 				positionStream,
 				rotationStream,
 				oldToNewEvents(rec.GetCustomEvents()),
@@ -114,14 +115,15 @@ func protobufToStd(inRec *Recording) (data.Recording, error) {
 	}
 
 	return &recordingV1{
+		id:             inRec.GetName(),
 		name:           inRec.GetName(),
-		captureStreams: []data.CaptureStream{oldToNewEvents(inRec.GetCustomEvents())},
+		captureStreams: []format.CaptureStream{oldToNewEvents(inRec.GetCustomEvents())},
 		recordings:     subjectRecordings,
 		metadata:       inRec.GetMetadata(),
 	}, nil
 }
 
-func ReadRecording(file io.Reader) (data.Recording, int, error) {
+func ReadRecording(file io.Reader) (format.Recording, int, error) {
 	numberOfRecordings, bytesReadNumberRec, err := getNumberOfRecordings(file)
 	if err != nil {
 		return nil, bytesReadNumberRec, err

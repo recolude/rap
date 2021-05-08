@@ -1,8 +1,8 @@
-package data
+package format
 
 import "io"
 
-//go:generate mockgen -destination=../../internal/mocks/recording.go -package=mocks github.com/recolude/rap/pkg/data Recording,CaptureStream
+//go:generate mockgen -destination=../internal/mocks/recording.go -package=mocks github.com/recolude/rap/format Recording,CaptureStream
 
 type Capture interface {
 	Time() float64
@@ -31,6 +31,7 @@ type CaptureStream interface {
 }
 
 type Recording interface {
+	ID() string
 	Name() string
 	CaptureStreams() []CaptureStream
 	Recordings() []Recording
@@ -40,12 +41,15 @@ type Recording interface {
 }
 
 func NewRecording(
-	name string, captureStreams []CaptureStream,
+	id string,
+	name string,
+	captureStreams []CaptureStream,
 	recordings []Recording,
 	metadata map[string]string,
 	binaries []Binary,
 ) recording {
 	return recording{
+		id:             id,
 		name:           name,
 		recordings:     recordings,
 		captureStreams: captureStreams,
@@ -55,11 +59,16 @@ func NewRecording(
 }
 
 type recording struct {
+	id             string
 	name           string
 	captureStreams []CaptureStream
 	recordings     []Recording
 	metadata       map[string]string
 	binaries       []Binary
+}
+
+func (r recording) ID() string {
+	return r.id
 }
 
 func (r recording) Name() string {

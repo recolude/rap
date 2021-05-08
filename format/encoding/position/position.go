@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/streams/position"
 	rapbinary "github.com/recolude/rap/internal/io/binary"
-	"github.com/recolude/rap/pkg/data"
-	"github.com/recolude/rap/pkg/streams/position"
 )
 
 type StorageTechnique int
@@ -37,7 +37,7 @@ func NewEncoder(technique StorageTechnique) Encoder {
 	return Encoder{technique: technique}
 }
 
-func (p Encoder) encode(stream data.CaptureStream) ([]byte, error) {
+func (p Encoder) encode(stream format.CaptureStream) ([]byte, error) {
 	streamData := new(bytes.Buffer)
 
 	streamData.Write(rapbinary.StringToBytes(stream.Name()))
@@ -69,7 +69,7 @@ func (p Encoder) encode(stream data.CaptureStream) ([]byte, error) {
 	return streamData.Bytes(), nil
 }
 
-func (p Encoder) Encode(streams []data.CaptureStream) ([]byte, [][]byte, error) {
+func (p Encoder) Encode(streams []format.CaptureStream) ([]byte, [][]byte, error) {
 	allStreamData := make([][]byte, len(streams))
 
 	for i, stream := range streams {
@@ -83,7 +83,7 @@ func (p Encoder) Encode(streams []data.CaptureStream) ([]byte, [][]byte, error) 
 	return nil, allStreamData, nil
 }
 
-func decode(data []byte) (data.CaptureStream, error) {
+func decode(data []byte) (format.CaptureStream, error) {
 	reader := bytes.NewReader(data)
 
 	name, _, err := rapbinary.ReadString(reader)
@@ -124,11 +124,11 @@ func decode(data []byte) (data.CaptureStream, error) {
 	return nil, fmt.Errorf("Unknown positional encoding technique: %d", int(encodingTechnique))
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte) (data.CaptureStream, error) {
+func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureStream, error) {
 	return decode(streamData)
 }
 
-func (p Encoder) Accepts(stream data.CaptureStream) bool {
+func (p Encoder) Accepts(stream format.CaptureStream) bool {
 	return stream.Signature() == "recolude.position"
 }
 

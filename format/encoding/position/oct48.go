@@ -6,7 +6,7 @@ import (
 	"math"
 
 	"github.com/EliCDavis/vector"
-	"github.com/recolude/rap/pkg/streams/position"
+	"github.com/recolude/rap/format/streams/position"
 )
 
 func floatBSTToBytes(value, start, duration float64, out []byte) {
@@ -172,31 +172,40 @@ func decodeOct24(streamData *bytes.Reader) ([]position.Capture, error) {
 		return nil, err
 	}
 
+	numCaptures, err := binary.ReadUvarint(streamData)
+	if err != nil {
+		return nil, err
+	}
+
 	var minX float32
 	var minY float32
 	var minZ float32
 	var maxX float32
 	var maxY float32
 	var maxZ float32
+	var startingX float32
+	var startingY float32
+	var startingZ float32
+
 	err = binary.Read(streamData, binary.LittleEndian, &minX)
 	err = binary.Read(streamData, binary.LittleEndian, &minY)
 	err = binary.Read(streamData, binary.LittleEndian, &minZ)
 	err = binary.Read(streamData, binary.LittleEndian, &maxX)
 	err = binary.Read(streamData, binary.LittleEndian, &maxY)
 	err = binary.Read(streamData, binary.LittleEndian, &maxZ)
+	err = binary.Read(streamData, binary.LittleEndian, &startingX)
+	err = binary.Read(streamData, binary.LittleEndian, &startingY)
+	err = binary.Read(streamData, binary.LittleEndian, &startingZ)
 	min := vector.NewVector3(float64(minX), float64(minY), float64(minZ))
 	max := vector.NewVector3(float64(maxX), float64(maxY), float64(maxZ))
-
-	numCaptures, err := binary.ReadUvarint(streamData)
-	if err != nil {
-		return nil, err
-	}
+	starting := vector.NewVector3(float64(startingX), float64(startingY), float64(startingZ))
 
 	captures := make([]position.Capture, numCaptures)
 	timeBuffer := make([]byte, 2)
 	octBuffer := make([]OctCell, 8)
 	octBytesBuffer := make([]byte, 3)
 	currentTime := float64(startTime)
+	currentPosition := starting
 	for i := 0; i < int(numCaptures); i++ {
 		streamData.Read(timeBuffer)
 		time := bytesToFloatBST(0, float64(maxTimeDifference), timeBuffer)
@@ -206,7 +215,8 @@ func decodeOct24(streamData *bytes.Reader) ([]position.Capture, error) {
 		bytesToOctCells24(octBuffer, octBytesBuffer)
 		v := OctCellsToVec3(min, max, octBuffer)
 
-		captures[i] = position.NewCapture(currentTime, v.X(), v.Y(), v.Z())
+		currentPosition = currentPosition.Add(v)
+		captures[i] = position.NewCapture(currentTime, currentPosition.X(), currentPosition.Y(), currentPosition.Z())
 	}
 
 	return captures, nil
@@ -224,8 +234,6 @@ func encodeOct24(captures []position.Capture) ([]byte, error) {
 	endingTime := math.Inf(-1)
 	maxTimeDifference := math.Inf(-1)
 
-	// TODO: Eli do time trick with position as well
-
 	min := vector.NewVector3(math.Inf(1), math.Inf(1), math.Inf(1))
 	max := vector.NewVector3(math.Inf(-1), math.Inf(-1), math.Inf(-1))
 	for i, capture := range captures {
@@ -241,33 +249,41 @@ func encodeOct24(captures []position.Capture) ([]byte, error) {
 			if timeDifference > maxTimeDifference {
 				maxTimeDifference = timeDifference
 			}
+
+			distance := capture.Position().Sub(captures[i].Position())
+
+			if distance.X() > max.X() {
+				max = max.SetX(distance.X())
+			}
+			if distance.Y() > max.Y() {
+				max = max.SetY(distance.Y())
+			}
+			if distance.Z() > max.Z() {
+				max = max.SetZ(distance.Z())
+			}
+
+			if distance.X() < min.X() {
+				min = min.SetX(distance.X())
+			}
+			if distance.Y() < min.Y() {
+				min = min.SetY(distance.Y())
+			}
+			if distance.Z() < min.Z() {
+				min = min.SetZ(distance.Z())
+			}
 		}
 
-		if capture.Position().X() > max.X() {
-			max = max.SetX(capture.Position().X())
-		}
-		if capture.Position().Y() > max.Y() {
-			max = max.SetY(capture.Position().Y())
-		}
-		if capture.Position().Z() > max.Z() {
-			max = max.SetZ(capture.Position().Z())
-		}
-
-		if capture.Position().X() < min.X() {
-			min = min.SetX(capture.Position().X())
-		}
-		if capture.Position().Y() < min.Y() {
-			min = min.SetY(capture.Position().Y())
-		}
-		if capture.Position().Z() < min.Z() {
-			min = min.SetZ(capture.Position().Z())
-		}
 	}
 
 	err = binary.Write(streamData, binary.LittleEndian, float32(maxTimeDifference))
 	if err != nil {
 		return nil, err
 	}
+
+	// Write number of captures
+	buf := make([]byte, 8)
+	size := binary.PutUvarint(buf, uint64(len(captures)))
+	streamData.Write(buf[:size])
 
 	// Write min and max positions
 	binary.Write(streamData, binary.LittleEndian, float32(min.X()))
@@ -277,33 +293,40 @@ func encodeOct24(captures []position.Capture) ([]byte, error) {
 	binary.Write(streamData, binary.LittleEndian, float32(max.Y()))
 	binary.Write(streamData, binary.LittleEndian, float32(max.Z()))
 
-	// Write number of captures
-	buf := make([]byte, 8)
-	size := binary.PutUvarint(buf, uint64(len(captures)))
-	streamData.Write(buf[:size])
+	// Write starting position
+	binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().X()))
+	binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().Y()))
+	binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().Z()))
 
 	timeBuffer := make([]byte, 2)
 	octBuffer := make([]OctCell, 8)
 	octByteBuffer := make([]byte, 3)
 	totalledQuantizedDuration := startingTime
+	quantizedPosition := captures[0].Position()
 	for _, capture := range captures {
 
 		// Write Time
 		duration := capture.Time() - totalledQuantizedDuration
 		floatBSTToBytes(duration, 0, maxTimeDifference, timeBuffer)
-		totalledQuantizedDuration += bytesToFloatBST(0, maxTimeDifference, timeBuffer)
 		_, err := streamData.Write(timeBuffer)
 		if err != nil {
 			return nil, err
 		}
 
+		// Read back quantized time to fix drifting
+		totalledQuantizedDuration += bytesToFloatBST(0, maxTimeDifference, timeBuffer)
+
 		// Write position
-		Vec3ToOctCells(capture.Position(), min, max, octBuffer)
+		dir := capture.Position().Sub(quantizedPosition)
+		Vec3ToOctCells(dir, min, max, octBuffer)
 		octCellsToBytes24(octBuffer, octByteBuffer)
 		_, err = streamData.Write(octByteBuffer)
 		if err != nil {
 			return nil, err
 		}
+
+		// Read back quantized position to fix drifting
+		quantizedPosition = quantizedPosition.Add(OctCellsToVec3(min, max, octBuffer))
 	}
 
 	return streamData.Bytes(), nil

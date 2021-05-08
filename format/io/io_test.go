@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/recolude/rap/pkg/data"
-	"github.com/recolude/rap/pkg/encoding"
-	positionEncoding "github.com/recolude/rap/pkg/encoding/position"
-	"github.com/recolude/rap/pkg/io"
-	"github.com/recolude/rap/pkg/streams/position"
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/encoding"
+	positionEncoding "github.com/recolude/rap/format/encoding/position"
+	"github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/format/streams/position"
 	"github.com/stretchr/testify/assert"
 )
 
-func assertRecordingsMatch(t *testing.T, recExpected, recActual data.Recording) bool {
+func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording) bool {
 	if assert.Equal(t, len(recExpected.Binaries()), len(recActual.Binaries())) == false {
 		return false
 	}
@@ -64,9 +64,10 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 	w := io.NewWriter(encoders, fileData)
 	r := io.NewReader(encoders, fileData)
 
-	recIn := data.NewRecording(
+	recIn := format.NewRecording(
+		"",
 		"Test Recording",
-		[]data.CaptureStream{
+		[]format.CaptureStream{
 			position.NewStream(
 				"Position",
 				[]position.Capture{
@@ -107,9 +108,10 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 	w := io.NewWriter(encoders, fileData)
 	r := io.NewReader(encoders, fileData)
 
-	recIn := data.NewRecording(
+	recIn := format.NewRecording(
+		"",
 		"Test Recording",
-		[]data.CaptureStream{
+		[]format.CaptureStream{
 			position.NewStream(
 				"Position",
 				[]position.Capture{
@@ -159,9 +161,10 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 	w := io.NewWriter(encoders, fileData)
 	r := io.NewReader(encoders, fileData)
 
-	recIn := data.NewRecording(
+	recIn := format.NewRecording(
+		"",
 		"Test Recording",
-		[]data.CaptureStream{
+		[]format.CaptureStream{
 			position.NewStream(
 				"Position",
 				[]position.Capture{
@@ -181,10 +184,11 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 				},
 			),
 		},
-		[]data.Recording{
-			data.NewRecording(
+		[]format.Recording{
+			format.NewRecording(
+				"",
 				"Child Recording",
-				[]data.CaptureStream{
+				[]format.CaptureStream{
 					position.NewStream(
 						"Child Position",
 						[]position.Capture{
