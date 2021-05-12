@@ -7,6 +7,7 @@ import (
 
 	"github.com/EliCDavis/vector"
 	"github.com/recolude/rap/format/streams/position"
+	binaryutil "github.com/recolude/rap/internal/io/binary"
 )
 
 func octCellsToBytes24(cells []OctCell, buffer []byte) {
@@ -141,14 +142,14 @@ func encodeOct24(captures []position.Capture) ([]byte, error) {
 
 		// Write Time
 		duration := capture.Time() - totalledQuantizedDuration
-		floatBSTToBytes(duration, 0, maxTimeDifference, timeBuffer)
+		binaryutil.UnsignedFloatBSTToBytes(duration, 0, maxTimeDifference, timeBuffer)
 		_, err := streamData.Write(timeBuffer)
 		if err != nil {
 			return nil, err
 		}
 
 		// Read back quantized time to fix drifting
-		totalledQuantizedDuration += bytesToFloatBST(0, maxTimeDifference, timeBuffer)
+		totalledQuantizedDuration += binaryutil.BytesToUnisngedFloatBST(0, maxTimeDifference, timeBuffer)
 
 		// Skip first since there will be no change in position from starting position
 		if i > 0 {
@@ -233,7 +234,7 @@ func decodeOct24(streamData *bytes.Reader) ([]position.Capture, error) {
 	currentPosition := starting
 	for i := 0; i < int(numCaptures); i++ {
 		streamData.Read(timeBuffer)
-		time := bytesToFloatBST(0, float64(maxTimeDifference), timeBuffer)
+		time := binaryutil.BytesToUnisngedFloatBST(0, float64(maxTimeDifference), timeBuffer)
 		currentTime += time
 
 		if i > 0 {

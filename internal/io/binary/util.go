@@ -34,3 +34,43 @@ func ReadUvarint(r io.Reader) (uint64, int, error) {
 	}
 	return x, totalRead, overflow
 }
+
+func UnsignedFloatBSTToBytes(value, start, duration float64, out []byte) {
+	curValue := start + (duration / 2.0)
+	increment := duration / 4.0
+
+	for byteIndex := 0; byteIndex < len(out); byteIndex++ {
+
+		// Clear whatever byte might be there
+		out[byteIndex] = 0
+
+		for bitIndex := 0; bitIndex < 8; bitIndex++ {
+			if value < curValue {
+				curValue -= increment
+			} else {
+				out[byteIndex] = out[byteIndex] | (1 << bitIndex)
+				curValue += increment
+			}
+			increment /= 2.0
+		}
+	}
+}
+
+func BytesToUnisngedFloatBST(start, duration float64, in []byte) float64 {
+	curValue := start + (duration / 2.0)
+	increment := duration / 4.0
+
+	for byteIndex := 0; byteIndex < len(in); byteIndex++ {
+		for bitIndex := 0; bitIndex < 8; bitIndex++ {
+			if (in[byteIndex]>>byte(bitIndex))&1 == 1 {
+				curValue += increment
+			} else {
+				curValue -= increment
+			}
+
+			increment /= 2.0
+		}
+	}
+
+	return curValue
+}
