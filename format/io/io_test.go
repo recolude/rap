@@ -6,8 +6,10 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/encoding"
+	eulerEncoding "github.com/recolude/rap/format/encoding/euler"
 	positionEncoding "github.com/recolude/rap/format/encoding/position"
 	"github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/format/streams/euler"
 	"github.com/recolude/rap/format/streams/position"
 	"github.com/stretchr/testify/assert"
 )
@@ -181,6 +183,100 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 					position.NewCapture(2, 4, 5, 6),
 					position.NewCapture(4, 7, 8, 9),
 					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+		},
+		[]format.Recording{
+			format.NewRecording(
+				"",
+				"Child Recording",
+				[]format.CaptureStream{
+					position.NewStream(
+						"Child Position",
+						[]position.Capture{
+							position.NewCapture(1, 1, 2, 3),
+							position.NewCapture(2, 4, 5, 6),
+							position.NewCapture(4, 7, 8, 9),
+							position.NewCapture(7, 10, 11, 12),
+						},
+					),
+					position.NewStream(
+						"Child Position2",
+						[]position.Capture{
+							position.NewCapture(1, 1, 2, 3),
+							position.NewCapture(2, 4, 5, 6),
+							position.NewCapture(4, 7, 8, 9),
+							position.NewCapture(7, 10, 11, 12),
+						},
+					),
+				},
+				nil,
+				map[string]string{
+					"a":  "bee",
+					"ce": "dee",
+				},
+				nil,
+			),
+		},
+		map[string]string{
+			"a":  "bee",
+			"ce": "dee",
+		},
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assert.Equal(t, n, nOut)
+	assertRecordingsMatch(t, recIn, recOut)
+}
+
+func Test_HandlesMultipleEncoders(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
+	}
+
+	w := io.NewWriter(encoders, fileData)
+	r := io.NewReader(encoders, fileData)
+
+	recIn := format.NewRecording(
+		"",
+		"Test Recording",
+		[]format.CaptureStream{
+			position.NewStream(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+			position.NewStream(
+				"Position2",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+			euler.NewStream(
+				"Rot",
+				[]euler.Capture{
+					euler.NewEulerZXYCapture(1, 1, 2, 3),
+					euler.NewEulerZXYCapture(2, 4, 5, 6),
+					euler.NewEulerZXYCapture(4, 7, 8, 9),
+					euler.NewEulerZXYCapture(7, 10, 11, 12),
 				},
 			),
 		},

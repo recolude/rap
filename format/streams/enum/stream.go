@@ -22,6 +22,10 @@ func (s Stream) Name() string {
 	return s.name
 }
 
+func (s Stream) EnumMembers() []string {
+	return s.enumMembers
+}
+
 func (s Stream) Captures() []format.Capture {
 	returnVal := make([]format.Capture, len(s.captures))
 	for i := range s.captures {

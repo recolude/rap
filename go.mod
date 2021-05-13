@@ -7,5 +7,6 @@ require (
 	github.com/golang/mock v1.5.0
 	github.com/golang/protobuf v1.5.2
 	github.com/stretchr/testify v1.7.0
+	github.com/urfave/cli/v2 v2.3.0
 	google.golang.org/protobuf v1.26.0
 )

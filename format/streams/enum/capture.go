@@ -20,6 +20,10 @@ func (c Capture) Time() float64 {
 	return c.time
 }
 
+func (c Capture) Value() int {
+	return c.value
+}
+
 func (c Capture) String() string {
 	return fmt.Sprintf("[%.2f] Enum - %d", c.time, c.value)
 }

@@ -28,6 +28,18 @@ func NewEncoder(technique StorageTechnique) Encoder {
 	return Encoder{technique}
 }
 
+func (p Encoder) Accepts(stream format.CaptureStream) bool {
+	return stream.Signature() == "recolude.event"
+}
+
+func (p Encoder) Signature() string {
+	return "recolude.event"
+}
+
+func (p Encoder) Version() uint {
+	return 0
+}
+
 func (p Encoder) Encode(streams []format.CaptureStream) ([]byte, [][]byte, error) {
 	eventNamesSet := make(map[string]int)
 	eventKeysSet := make(map[string]int)
