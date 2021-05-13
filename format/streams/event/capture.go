@@ -18,6 +18,14 @@ func NewCapture(time float64, name string, metadata map[string]string) Capture {
 	}
 }
 
+func (c Capture) Name() string {
+	return c.name
+}
+
+func (c Capture) Metadata() map[string]string {
+	return c.metadata
+}
+
 func (c Capture) Time() float64 {
 	return c.time
 }

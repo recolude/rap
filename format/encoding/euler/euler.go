@@ -52,7 +52,6 @@ func (p Encoder) encode(stream format.CaptureStream) ([]byte, error) {
 	case Raw32:
 		streamData.Write(encodeRaw32(castedCaptureData))
 		break
-
 	case Raw16:
 		streamData.Write(encodeRaw16(castedCaptureData))
 		break
