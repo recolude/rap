@@ -103,8 +103,8 @@ func main() {
 
 					encoders := []encoding.Encoder{
 						event.NewEncoder(event.Raw32),
-						position.NewEncoder(position.Oct48),
-						euler.NewEncoder(euler.Raw32),
+						position.NewEncoder(position.Oct24),
+						euler.NewEncoder(euler.Raw16),
 						enum.NewEncoder(enum.Raw32),
 					}
 

@@ -456,6 +456,100 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 	assertRecordingsMatch(t, recIn, recOut)
 }
 
+func Test_HandlesManyChildren(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
+		eventEncoding.NewEncoder(eventEncoding.Raw64),
+		enumEncoding.NewEncoder(enumEncoding.Raw64),
+	}
+
+	w := io.NewWriter(encoders, fileData)
+	r := io.NewReader(encoders, fileData)
+
+	childRec := format.NewRecording(
+		"",
+		"Child Recording",
+		[]format.CaptureStream{
+			event.NewStream("ahhh", []event.Capture{
+				event.NewCapture(1, "att", map[string]string{"1": "2"}),
+			}),
+			position.NewStream(
+				"Child Position",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+			euler.NewStream(
+				"Rot",
+				[]euler.Capture{
+					euler.NewEulerZXYCapture(1, 1, 2, 3),
+					euler.NewEulerZXYCapture(2, 4, 5, 6),
+					euler.NewEulerZXYCapture(4, 7, 8, 9),
+					euler.NewEulerZXYCapture(7, 10, 11, 12),
+				},
+			),
+			enum.NewStream(
+				"cmon",
+				[]string{"A", "n"},
+				[]enum.Capture{
+					enum.NewCapture(1, 1),
+				},
+			),
+		},
+		nil,
+		map[string]string{
+			"a":  "bee",
+			"ce": "dee",
+		},
+		nil,
+	)
+
+	numChildren := 1600
+	chilren := make([]format.Recording, numChildren)
+	for i := range chilren {
+		chilren[i] = childRec
+	}
+
+	recIn := format.NewRecording(
+		"",
+		"Test Recording",
+		[]format.CaptureStream{
+			position.NewStream(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+		},
+		chilren,
+		map[string]string{
+			"a":  "bee",
+			"ce": "dee",
+		},
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assert.Equal(t, n, nOut)
+	assertRecordingsMatch(t, recIn, recOut)
+}
+
 func Test_Uprade(t *testing.T) {
 	f, err := os.Open(filepath.Join(v1DirectoryTestData, "Demo 38subj v1.rap"))
 	if assert.NoError(t, err) == false {
