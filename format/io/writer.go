@@ -103,10 +103,16 @@ func (w Writer) evaluateStreams(recording format.Recording, offset int) ([]encod
 			return nil, 0, err
 		}
 		for _, childMap := range childMappings {
-			for _, ourMap := range mappings {
+			found := false
+			for i, ourMap := range mappings {
 				if ourMap.encoder.Signature() == childMap.encoder.Signature() {
-					ourMap.streams = append(ourMap.streams, childMap.streams...)
+					mappings[i].streams = append(ourMap.streams, childMap.streams...)
+					mappings[i].streamOrder = append(ourMap.streamOrder, childMap.streamOrder...)
+					found = true
 				}
+			}
+			if found == false {
+				mappings = append(mappings, childMap)
 			}
 		}
 	}
@@ -176,7 +182,7 @@ func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[s
 	for streamIndex := range recording.CaptureStreams() {
 		// Write index of the encoder used to encode stream
 		numStreams := make([]byte, 4)
-		read := binary.PutUvarint(numStreams, uint64(streamIndexToEncoderUsedIndex[streamIndex]))
+		read := binary.PutUvarint(numStreams, uint64(streamIndexToEncoderUsedIndex[offset+streamIndex]))
 		out.Write(numStreams[:read])
 
 		// Write stream data

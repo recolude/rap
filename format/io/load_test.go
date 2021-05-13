@@ -1,4 +1,4 @@
-package io
+package io_test
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	rapio "github.com/recolude/rap/format/io"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ var v1DirectoryTestData string = "../../test/data/io/v1"
 
 func Test_Load_PanicsOnNilReader(t *testing.T) {
 	assert.Panics(t, func() {
-		Load(nil)
+		rapio.Load(nil)
 	})
 }
 
@@ -24,7 +25,7 @@ func Test_Load_ErrorsOnEmptyBuffer(t *testing.T) {
 	emptyBuffer := bytes.Buffer{}
 
 	// ACT ====================================================================
-	rec, bytesRead, err := Load(&emptyBuffer)
+	rec, bytesRead, err := rapio.Load(&emptyBuffer)
 
 	// ASSERT =================================================================
 	assert.Nil(t, rec)
@@ -38,7 +39,7 @@ func Test_Load_ErrorsOnUnrecognizedFileVersion(t *testing.T) {
 	buf.Write([]byte{3})
 
 	// ACT ====================================================================
-	rec, bytesRead, err := Load(&buf)
+	rec, bytesRead, err := rapio.Load(&buf)
 
 	// ASSERT =================================================================
 	assert.Nil(t, rec)
@@ -58,7 +59,7 @@ func TestLoad(t *testing.T) {
 	}
 
 	// ACT ====================================================================
-	rec, bytesRead, err := Load(bytes.NewReader(allBytes))
+	rec, bytesRead, err := rapio.Load(bytes.NewReader(allBytes))
 
 	// ASSERT =================================================================
 	if assert.NoError(t, err) == false {

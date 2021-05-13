@@ -32,9 +32,11 @@ func ReadBytesArray(r io.Reader) ([]byte, int, error) {
 		return nil, read + bytesRead, err
 	}
 
-	if read != int(len) {
-		return nil, read + bytesRead, io.ErrUnexpectedEOF
-	}
+	// Commented out, reading from a compressed reader will read less bits than
+	// what the buffer gets populated with
+	// if read != int(len) {
+	// 	return nil, read + bytesRead, io.ErrUnexpectedEOF
+	// }
 
 	return out, read + bytesRead, nil
 }

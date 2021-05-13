@@ -148,6 +148,9 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 			return nil, err
 		}
 		childRec, err := recursiveBuidRecordings(childRecData, metadataKeys, encoders, headers)
+		if err != nil {
+			return nil, err
+		}
 		allChildRecordings[i] = childRec
 	}
 
