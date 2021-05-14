@@ -54,6 +54,31 @@ func main() {
 	app := &cli.App{
 		Commands: []*cli.Command{
 			{
+				Name: "summarize",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "file",
+						Aliases:  []string{"f"},
+						Required: true,
+						Usage:    "File to turn to summarize",
+					},
+				},
+				Usage: "Summarizes a file",
+				Action: func(c *cli.Context) error {
+					fileToLoad := c.String("file")
+					file, err := os.Open(fileToLoad)
+					if err != nil {
+						panic(err)
+					}
+					recording, _, err := rapio.Load(file)
+					if err != nil {
+						panic(err)
+					}
+					printSummary(c.App.Writer, recording)
+					return nil
+				},
+			},
+			{
 				Name: "json",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
