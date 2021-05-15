@@ -64,8 +64,8 @@ func printSummary(out io.Writer, recording format.Recording) {
 
 	recSummary := summarize(recording)
 	fmt.Fprintf(out, "Total Position Captures: %d\n", recSummary.positionCaptureCount)
-	fmt.Fprintf(out, "Total Euler Captures: %d\n", recSummary.eulerCaptureCount)
-	fmt.Fprintf(out, "Total Event Captures: %d\n", recSummary.eventCaptureCount)
-	fmt.Fprintf(out, "Total Enum Captures: %d\n", recSummary.enumCaptureCount)
-	fmt.Fprintf(out, "Total Other Captures: %d\n", recSummary.otherCaptureCount)
+	fmt.Fprintf(out, "Total Euler Captures:    %d\n", recSummary.eulerCaptureCount)
+	fmt.Fprintf(out, "Total Event Captures:    %d\n", recSummary.eventCaptureCount)
+	fmt.Fprintf(out, "Total Enum Captures:     %d\n", recSummary.enumCaptureCount)
+	fmt.Fprintf(out, "Total Other Captures:    %d\n", recSummary.otherCaptureCount)
 }

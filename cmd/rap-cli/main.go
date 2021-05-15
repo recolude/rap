@@ -50,8 +50,20 @@ func toJson(out io.Writer, recording format.Recording) {
 	fmt.Fprint(out, "}")
 }
 
-func main() {
-	app := &cli.App{
+func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
+	return &cli.App{
+		Name:  "RAP CLI",
+		Usage: "Utils around recolude file format",
+		Authors: []*cli.Author{
+			{
+				Name:  "Eli Davis",
+				Email: "eli@recolude.com",
+			},
+		},
+		Version:   "1.0.0",
+		Reader:    in,
+		Writer:    out,
+		ErrWriter: errOut,
 		Commands: []*cli.Command{
 			{
 				Name: "summarize",
@@ -68,12 +80,14 @@ func main() {
 					fileToLoad := c.String("file")
 					file, err := os.Open(fileToLoad)
 					if err != nil {
-						panic(err)
+						return err
 					}
+
 					recording, _, err := rapio.Load(file)
 					if err != nil {
-						panic(err)
+						return err
 					}
+
 					printSummary(c.App.Writer, recording)
 					return nil
 				},
@@ -93,11 +107,11 @@ func main() {
 					fileToLoad := c.String("file")
 					file, err := os.Open(fileToLoad)
 					if err != nil {
-						panic(err)
+						return err
 					}
 					recording, _, err := rapio.Load(file)
 					if err != nil {
-						panic(err)
+						return err
 					}
 					toJson(c.App.Writer, recording)
 
@@ -111,7 +125,7 @@ func main() {
 						Name:     "file",
 						Aliases:  []string{"f"},
 						Required: true,
-						Usage:    "File to turn to upgrade",
+						Usage:    "File to upgrade",
 					},
 				},
 				Usage: "Upgrades a file from v1 to v2",
@@ -119,11 +133,12 @@ func main() {
 					fileToLoad := c.String("file")
 					file, err := os.Open(fileToLoad)
 					if err != nil {
-						panic(err)
+						return err
 					}
+
 					recording, _, err := rapio.Load(file)
 					if err != nil {
-						panic(err)
+						return err
 					}
 
 					encoders := []encoding.Encoder{
@@ -138,8 +153,44 @@ func main() {
 					return err
 				},
 			},
+			{
+				Name: "from-csv",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "file",
+						Aliases:  []string{"f"},
+						Required: true,
+						Usage:    "File to turn to upgrade",
+					},
+				},
+				Usage: "Builds a recording from CSV",
+				Action: func(c *cli.Context) error {
+					fileToLoad := c.String("file")
+					csvStream, err := os.Open(fileToLoad)
+					if err != nil {
+						return err
+					}
+
+					recording, err := RecordingFromCSV(csvStream)
+					if err != nil {
+						return err
+					}
+
+					encoders := []encoding.Encoder{
+						position.NewEncoder(position.Raw64),
+					}
+
+					recordingWriter := rapio.NewWriter(encoders, c.App.Writer)
+					_, err = recordingWriter.Write(recording)
+					return err
+				},
+			},
 		},
 	}
+}
+
+func main() {
+	app := BuildApp(os.Stdin, os.Stdout, os.Stderr)
 
 	sort.Sort(cli.FlagsByName(app.Flags))
 	sort.Sort(cli.CommandsByName(app.Commands))
