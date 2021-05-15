@@ -24,20 +24,21 @@ type Writer struct {
 	out      io.Writer
 }
 
-func NewWriter(encoders []encoding.Encoder, out io.Writer) Writer {
+// NewRecoludeWriter builds a new recording writer with default recolude
+// encoders.
+func NewRecoludeWriter(encoders []encoding.Encoder, out io.Writer) Writer {
 	return Writer{
 		encoders: encoders,
 		out:      out,
 	}
 }
 
-func allRecordingsWithin(recording format.Recording) []format.Recording {
-	recs := make([]format.Recording, 1)
-	recs[0] = recording
-	for _, rec := range recording.Recordings() {
-		recs = append(recs, allRecordingsWithin(rec)...)
+// NewWriter builds a new writer using the encoders provided.
+func NewWriter(encoders []encoding.Encoder, out io.Writer) Writer {
+	return Writer{
+		encoders: encoders,
+		out:      out,
 	}
-	return recs
 }
 
 func calcNumStreams(recording format.Recording) int {
@@ -205,6 +206,8 @@ func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[s
 	return newOffset, out.Bytes()
 }
 
+// Write will take the recording provided and write it to the underlying stream
+// the writer was built with.
 func (w Writer) Write(recording format.Recording) (int, error) {
 	if recording == nil {
 		panic(errors.New("can not write nil recording"))
