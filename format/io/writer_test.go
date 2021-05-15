@@ -15,11 +15,11 @@ func Test_ErrorsWithNoValidEncoders(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	stream := mocks.NewMockCaptureStream(ctrl)
+	stream := mocks.NewMockCaptureCollection(ctrl)
 	stream.EXPECT().Signature().Return("test.data")
 
 	rec := mocks.NewMockRecording(ctrl)
-	rec.EXPECT().CaptureStreams().AnyTimes().Return([]format.CaptureStream{stream})
+	rec.EXPECT().CaptureCollections().AnyTimes().Return([]format.CaptureCollection{stream})
 
 	w := io.NewWriter(nil, nil)
 

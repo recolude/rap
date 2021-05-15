@@ -11,10 +11,10 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/recolude/rap/format"
-	"github.com/recolude/rap/format/streams/enum"
-	"github.com/recolude/rap/format/streams/euler"
-	"github.com/recolude/rap/format/streams/event"
-	"github.com/recolude/rap/format/streams/position"
+	"github.com/recolude/rap/format/collection/enum"
+	"github.com/recolude/rap/format/collection/euler"
+	"github.com/recolude/rap/format/collection/event"
+	"github.com/recolude/rap/format/collection/position"
 )
 
 func getNumberOfRecordings(file io.Reader) (int, int, error) {
@@ -104,7 +104,7 @@ func protobufToStd(inRec *Recording) (format.Recording, error) {
 		subjectRecordings = append(subjectRecordings, &recordingV1{
 			id:   fmt.Sprint(rec.GetId()),
 			name: rec.GetName(),
-			captureStreams: []format.CaptureStream{
+			captureStreams: []format.CaptureCollection{
 				positionStream,
 				rotationStream,
 				oldToNewEvents(rec.GetCustomEvents()),
@@ -117,7 +117,7 @@ func protobufToStd(inRec *Recording) (format.Recording, error) {
 	return &recordingV1{
 		id:             inRec.GetName(),
 		name:           inRec.GetName(),
-		captureStreams: []format.CaptureStream{oldToNewEvents(inRec.GetCustomEvents())},
+		captureStreams: []format.CaptureCollection{oldToNewEvents(inRec.GetCustomEvents())},
 		recordings:     subjectRecordings,
 		metadata:       inRec.GetMetadata(),
 	}, nil

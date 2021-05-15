@@ -25,10 +25,10 @@ func toJson(out io.Writer, recording format.Recording) {
 	fmt.Fprintf(out, "{ \"name\": \"%s\", ", recording.Name())
 
 	fmt.Fprint(out, "\"streams\": [")
-	for i, stream := range recording.CaptureStreams() {
+	for i, stream := range recording.CaptureCollections() {
 		fmt.Fprintf(out, "{ \"name\": \"%s\", ", stream.Name())
 		fmt.Fprintf(out, " \"signature\" : \"%s\" }", stream.Signature())
-		if i < len(recording.CaptureStreams())-1 {
+		if i < len(recording.CaptureCollections())-1 {
 			fmt.Fprintf(out, ",")
 		}
 	}

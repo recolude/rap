@@ -114,7 +114,7 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 	}
 
 	// read streams
-	allStreams := make([]format.CaptureStream, numStreams)
+	allStreams := make([]format.CaptureCollection, numStreams)
 	for i := 0; i < int(numStreams); i++ {
 
 		encoderIndex, _, err := binary.ReadUvarint(in)

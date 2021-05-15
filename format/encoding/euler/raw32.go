@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/recolude/rap/format/streams/euler"
+	"github.com/recolude/rap/format/collection/euler"
 )
 
 func encodeRaw32(captures []euler.Capture) []byte {

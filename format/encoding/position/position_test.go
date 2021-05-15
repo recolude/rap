@@ -7,8 +7,8 @@ import (
 
 	"github.com/EliCDavis/vector"
 	"github.com/recolude/rap/format"
+	positionStream "github.com/recolude/rap/format/collection/position"
 	"github.com/recolude/rap/format/encoding/position"
-	positionStream "github.com/recolude/rap/format/streams/position"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +29,7 @@ func Test_Position_Raw64(t *testing.T) {
 	encoder := position.NewEncoder(position.Raw64)
 
 	// ACT ====================================================================
-	header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn})
+	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
 	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 
 	// ASSERT =================================================================
@@ -85,7 +85,7 @@ func Test_Position_MultipleStreams(t *testing.T) {
 	encoder := position.NewEncoder(position.Raw64)
 
 	// ACT ====================================================================
-	header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn, streamIn2})
+	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn, streamIn2})
 	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 	streamOut2, decodeErr2 := encoder.Decode(header, streamsData[1])
 
@@ -159,7 +159,7 @@ func Test_Raw32_MultipleStreams(t *testing.T) {
 	encoder := position.NewEncoder(position.Raw32)
 
 	// ACT ====================================================================
-	header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn, streamIn2})
+	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn, streamIn2})
 	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 	streamOut2, decodeErr2 := encoder.Decode(header, streamsData[1])
 
@@ -212,7 +212,7 @@ func Test_Oct24_EmptyStream(t *testing.T) {
 	encoder := position.NewEncoder(position.Oct24)
 
 	// ACT ====================================================================
-	header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn})
+	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
 	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 
 	// ASSERT =================================================================
@@ -296,7 +296,7 @@ func Test_Positions(t *testing.T) {
 				encoder := position.NewEncoder(technique.technique)
 
 				// ACT ====================================================================
-				header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn})
+				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
 				streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 
 				// ASSERT =================================================================
@@ -380,7 +380,7 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 	encoder := position.NewEncoder(position.Oct24)
 
 	// ACT ====================================================================
-	header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn, streamIn2})
+	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn, streamIn2})
 	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 	streamOut2, decodeErr2 := encoder.Decode(header, streamsData[1])
 
@@ -453,7 +453,7 @@ func Test_Oct24_Continuous(t *testing.T) {
 	encoder := position.NewEncoder(position.Oct24)
 
 	// ACT ====================================================================
-	header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn})
+	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
 	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 
 	// ASSERT =================================================================

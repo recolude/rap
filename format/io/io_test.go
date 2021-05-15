@@ -8,16 +8,16 @@ import (
 	"testing"
 
 	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/collection/enum"
+	"github.com/recolude/rap/format/collection/euler"
+	"github.com/recolude/rap/format/collection/event"
+	"github.com/recolude/rap/format/collection/position"
 	"github.com/recolude/rap/format/encoding"
 	enumEncoding "github.com/recolude/rap/format/encoding/enum"
 	eulerEncoding "github.com/recolude/rap/format/encoding/euler"
 	eventEncoding "github.com/recolude/rap/format/encoding/event"
 	positionEncoding "github.com/recolude/rap/format/encoding/position"
 	"github.com/recolude/rap/format/io"
-	"github.com/recolude/rap/format/streams/enum"
-	"github.com/recolude/rap/format/streams/euler"
-	"github.com/recolude/rap/format/streams/event"
-	"github.com/recolude/rap/format/streams/position"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,15 +57,15 @@ func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording
 		assert.Equal(t, element, recActual.Metadata()[key])
 	}
 
-	if assert.Equal(t, len(recExpected.CaptureStreams()), len(recActual.CaptureStreams())) == false {
+	if assert.Equal(t, len(recExpected.CaptureCollections()), len(recActual.CaptureCollections())) == false {
 		return false
 	}
 
-	for streamIndex, stream := range recExpected.CaptureStreams() {
-		assert.Equal(t, stream.Name(), recActual.CaptureStreams()[streamIndex].Name())
+	for streamIndex, stream := range recExpected.CaptureCollections() {
+		assert.Equal(t, stream.Name(), recActual.CaptureCollections()[streamIndex].Name())
 
-		for i, correctCapture := range recExpected.CaptureStreams()[streamIndex].Captures() {
-			assert.Equal(t, correctCapture.Time(), recActual.CaptureStreams()[streamIndex].Captures()[i].Time())
+		for i, correctCapture := range recExpected.CaptureCollections()[streamIndex].Captures() {
+			assert.Equal(t, correctCapture.Time(), recActual.CaptureCollections()[streamIndex].Captures()[i].Time())
 		}
 
 	}
@@ -87,7 +87,7 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 	recIn := format.NewRecording(
 		"",
 		"Test Recording",
-		[]format.CaptureStream{
+		[]format.CaptureCollection{
 			position.NewStream(
 				"Position",
 				[]position.Capture{
@@ -131,7 +131,7 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 	recIn := format.NewRecording(
 		"",
 		"Test Recording",
-		[]format.CaptureStream{
+		[]format.CaptureCollection{
 			position.NewStream(
 				"Position",
 				[]position.Capture{
@@ -184,7 +184,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 	recIn := format.NewRecording(
 		"",
 		"Test Recording",
-		[]format.CaptureStream{
+		[]format.CaptureCollection{
 			position.NewStream(
 				"Position",
 				[]position.Capture{
@@ -208,7 +208,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 			format.NewRecording(
 				"",
 				"Child Recording",
-				[]format.CaptureStream{
+				[]format.CaptureCollection{
 					position.NewStream(
 						"Child Position",
 						[]position.Capture{
@@ -271,7 +271,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 	recIn := format.NewRecording(
 		"",
 		"Test Recording",
-		[]format.CaptureStream{
+		[]format.CaptureCollection{
 			position.NewStream(
 				"Position",
 				[]position.Capture{
@@ -283,7 +283,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 			format.NewRecording(
 				"",
 				"Child",
-				[]format.CaptureStream{
+				[]format.CaptureCollection{
 					event.NewStream("ahhh", []event.Capture{
 						event.NewCapture(1, "att", map[string]string{"1": "2"}),
 					}),
@@ -328,7 +328,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 	recIn := format.NewRecording(
 		"",
 		"Test Recording",
-		[]format.CaptureStream{
+		[]format.CaptureCollection{
 			position.NewStream(
 				"Position",
 				[]position.Capture{
@@ -352,7 +352,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 			format.NewRecording(
 				"",
 				"Child Recording",
-				[]format.CaptureStream{
+				[]format.CaptureCollection{
 					event.NewStream("ahhh", []event.Capture{
 						event.NewCapture(1, "att", map[string]string{"1": "2"}),
 					}),
@@ -401,7 +401,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 			format.NewRecording(
 				"",
 				"Child 2 Recording",
-				[]format.CaptureStream{
+				[]format.CaptureCollection{
 					position.NewStream(
 						"Child Position",
 						[]position.Capture{
@@ -473,7 +473,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 	childRec := format.NewRecording(
 		"",
 		"Child Recording",
-		[]format.CaptureStream{
+		[]format.CaptureCollection{
 			event.NewStream("ahhh", []event.Capture{
 				event.NewCapture(1, "att", map[string]string{"1": "2"}),
 			}),
@@ -520,7 +520,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 	recIn := format.NewRecording(
 		"",
 		"Test Recording",
-		[]format.CaptureStream{
+		[]format.CaptureCollection{
 			position.NewStream(
 				"Position",
 				[]position.Capture{

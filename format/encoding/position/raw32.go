@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/recolude/rap/format/streams/position"
+	"github.com/recolude/rap/format/collection/position"
 )
 
 func encodeRaw32(captures []position.Capture) []byte {

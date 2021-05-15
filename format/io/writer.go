@@ -10,12 +10,16 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/encoding"
+	"github.com/recolude/rap/format/encoding/enum"
+	"github.com/recolude/rap/format/encoding/euler"
+	"github.com/recolude/rap/format/encoding/event"
+	"github.com/recolude/rap/format/encoding/position"
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
 type encoderStreamMapping struct {
 	encoder     encoding.Encoder
-	streams     []format.CaptureStream
+	streams     []format.CaptureCollection
 	streamOrder []int
 }
 
@@ -26,10 +30,15 @@ type Writer struct {
 
 // NewRecoludeWriter builds a new recording writer with default recolude
 // encoders.
-func NewRecoludeWriter(encoders []encoding.Encoder, out io.Writer) Writer {
+func NewRecoludeWriter(out io.Writer) Writer {
 	return Writer{
-		encoders: encoders,
-		out:      out,
+		encoders: []encoding.Encoder{
+			event.NewEncoder(event.Raw32),
+			position.NewEncoder(position.Oct48),
+			euler.NewEncoder(euler.Raw32),
+			enum.NewEncoder(enum.Raw32),
+		},
+		out: out,
 	}
 }
 
@@ -46,7 +55,7 @@ func calcNumStreams(recording format.Recording) int {
 	for _, rec := range recording.Recordings() {
 		total += calcNumStreams(rec)
 	}
-	return len(recording.CaptureStreams()) + total
+	return len(recording.CaptureCollections()) + total
 }
 
 // accumulateMetdataKeys builds out a mapping of metadata keys to some unique
@@ -68,15 +77,15 @@ func accumulateMetdataKeys(recording format.Recording, keyMappingToIndex map[str
 
 func (w Writer) evaluateStreams(recording format.Recording, offset int) ([]encoderStreamMapping, int, error) {
 	mappings := make([]encoderStreamMapping, 0)
-	streamsSatisfied := make([]bool, len(recording.CaptureStreams()))
-	for i := range recording.CaptureStreams() {
+	streamsSatisfied := make([]bool, len(recording.CaptureCollections()))
+	for i := range recording.CaptureCollections() {
 		streamsSatisfied[i] = false
 	}
 
 	for i, encoder := range w.encoders {
 
 		mapping := encoderStreamMapping{encoder: w.encoders[i]}
-		for streamIndex, stream := range recording.CaptureStreams() {
+		for streamIndex, stream := range recording.CaptureCollections() {
 			if streamsSatisfied[streamIndex] == false && encoder.Accepts(stream) {
 				mapping.streams = append(mapping.streams, stream)
 				mapping.streamOrder = append(mapping.streamOrder, streamIndex+offset)
@@ -89,13 +98,13 @@ func (w Writer) evaluateStreams(recording format.Recording, offset int) ([]encod
 		}
 	}
 
-	for i, stream := range recording.CaptureStreams() {
+	for i, stream := range recording.CaptureCollections() {
 		if streamsSatisfied[i] == false {
 			return nil, 0, fmt.Errorf("no encoder registered to handle stream: %s", stream.Signature())
 		}
 	}
 
-	curOffset := offset + len(recording.CaptureStreams())
+	curOffset := offset + len(recording.CaptureCollections())
 
 	for _, childRecording := range recording.Recordings() {
 		childMappings, newOffset, err := w.evaluateStreams(childRecording, curOffset)
@@ -176,11 +185,11 @@ func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[s
 
 	// Write number of streams
 	numStreams := make([]byte, 4)
-	read := binary.PutUvarint(numStreams, uint64(len(recording.CaptureStreams())))
+	read := binary.PutUvarint(numStreams, uint64(len(recording.CaptureCollections())))
 	out.Write(numStreams[:read])
 
 	// Write all streams
-	for streamIndex := range recording.CaptureStreams() {
+	for streamIndex := range recording.CaptureCollections() {
 		// Write index of the encoder used to encode stream
 		numStreams := make([]byte, 4)
 		read := binary.PutUvarint(numStreams, uint64(streamIndexToEncoderUsedIndex[offset+streamIndex]))
@@ -196,7 +205,7 @@ func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[s
 	out.Write(numRecordings[:read])
 
 	// Write all child recordings
-	newOffset := offset + len(recording.CaptureStreams())
+	newOffset := offset + len(recording.CaptureCollections())
 	for _, rec := range recording.Recordings() {
 		updatedOffset, recordingData := recurseRecordingToBytes(rec, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, newOffset)
 		newOffset = updatedOffset

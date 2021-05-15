@@ -5,7 +5,7 @@ import "github.com/recolude/rap/format"
 type recordingV1 struct {
 	id             string
 	name           string
-	captureStreams []format.CaptureStream
+	captureStreams []format.CaptureCollection
 	recordings     []format.Recording
 	metadata       map[string]string
 }
@@ -34,6 +34,6 @@ func (rec recordingV1) Recordings() []format.Recording {
 	return rec.recordings
 }
 
-func (rec recordingV1) CaptureStreams() []format.CaptureStream {
+func (rec recordingV1) CaptureCollections() []format.CaptureCollection {
 	return rec.captureStreams
 }

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/recolude/rap/format"
-	"github.com/recolude/rap/format/streams/position"
+	"github.com/recolude/rap/format/collection/position"
 )
 
 func RecordingFromCSV(in io.Reader) (format.Recording, error) {
@@ -105,7 +105,7 @@ func RecordingFromCSV(in io.Reader) (format.Recording, error) {
 				format.NewRecording(
 					id,
 					name,
-					[]format.CaptureStream{
+					[]format.CaptureCollection{
 						position.NewStream("Position", captures),
 					},
 					nil,

@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/recolude/rap/format"
-	"github.com/recolude/rap/format/streams/event"
+	"github.com/recolude/rap/format/collection/event"
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
@@ -28,7 +28,7 @@ func NewEncoder(technique StorageTechnique) Encoder {
 	return Encoder{technique}
 }
 
-func (p Encoder) Accepts(stream format.CaptureStream) bool {
+func (p Encoder) Accepts(stream format.CaptureCollection) bool {
 	return stream.Signature() == "recolude.event"
 }
 
@@ -40,7 +40,7 @@ func (p Encoder) Version() uint {
 	return 0
 }
 
-func (p Encoder) Encode(streams []format.CaptureStream) ([]byte, [][]byte, error) {
+func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, error) {
 	eventNamesSet := make(map[string]int)
 	eventKeysSet := make(map[string]int)
 
@@ -125,7 +125,7 @@ func readHeader(header []byte) (names []string, metadataKeys []string, err error
 	return
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureStream, error) {
+func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollection, error) {
 	buf := bytes.NewBuffer(streamData)
 
 	eventNames, metadataKeys, err := readHeader(header)

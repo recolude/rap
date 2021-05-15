@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/recolude/rap/format"
+	enumStream "github.com/recolude/rap/format/collection/enum"
 	"github.com/recolude/rap/format/encoding/enum"
-	enumStream "github.com/recolude/rap/format/streams/enum"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -52,7 +52,7 @@ func Test_Singleenum(t *testing.T) {
 				encoder := enum.NewEncoder(technique.technique)
 
 				// ACT ====================================================================
-				header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn})
+				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
 				streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 
 				// ASSERT =================================================================

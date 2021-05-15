@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/recolude/rap/format"
+	eulerStream "github.com/recolude/rap/format/collection/euler"
 	"github.com/recolude/rap/format/encoding/euler"
-	eulerStream "github.com/recolude/rap/format/streams/euler"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,7 +75,7 @@ func Test_Euler(t *testing.T) {
 				encoder := euler.NewEncoder(technique.technique)
 
 				// ACT ====================================================================
-				header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn})
+				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
 				streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 
 				// ASSERT =================================================================

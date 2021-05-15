@@ -5,10 +5,10 @@ import (
 	"io"
 
 	"github.com/recolude/rap/format"
-	"github.com/recolude/rap/format/streams/enum"
-	"github.com/recolude/rap/format/streams/euler"
-	"github.com/recolude/rap/format/streams/event"
-	"github.com/recolude/rap/format/streams/position"
+	"github.com/recolude/rap/format/collection/enum"
+	"github.com/recolude/rap/format/collection/euler"
+	"github.com/recolude/rap/format/collection/event"
+	"github.com/recolude/rap/format/collection/position"
 )
 
 type summary struct {
@@ -31,7 +31,7 @@ func (s summary) Combine(other summary) summary {
 
 func summarize(recording format.Recording) summary {
 	curSummary := summary{}
-	for _, stream := range recording.CaptureStreams() {
+	for _, stream := range recording.CaptureCollections() {
 		switch v := stream.(type) {
 		case event.Stream:
 			curSummary.eventCaptureCount += len(v.Captures())

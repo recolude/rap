@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/recolude/rap/format"
+	eventStream "github.com/recolude/rap/format/collection/event"
 	"github.com/recolude/rap/format/encoding/event"
-	eventStream "github.com/recolude/rap/format/streams/event"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -66,7 +66,7 @@ func Test_SingleEvent(t *testing.T) {
 				encoder := event.NewEncoder(technique.technique)
 
 				// ACT ====================================================================
-				header, streamsData, encodeErr := encoder.Encode([]format.CaptureStream{streamIn})
+				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
 				streamOut, decodeErr := encoder.Decode(header, streamsData[0])
 
 				// ASSERT =================================================================

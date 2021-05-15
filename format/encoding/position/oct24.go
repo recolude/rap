@@ -6,7 +6,7 @@ import (
 	"math"
 
 	"github.com/EliCDavis/vector"
-	"github.com/recolude/rap/format/streams/position"
+	"github.com/recolude/rap/format/collection/position"
 	binaryutil "github.com/recolude/rap/internal/io/binary"
 )
 

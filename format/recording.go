@@ -2,7 +2,7 @@ package format
 
 import "io"
 
-//go:generate mockgen -destination=../internal/mocks/recording.go -package=mocks github.com/recolude/rap/format Recording,CaptureStream
+//go:generate mockgen -destination=../internal/mocks/recording.go -package=mocks github.com/recolude/rap/format Recording,CaptureCollection
 
 type Capture interface {
 	Time() float64
@@ -24,7 +24,7 @@ type BinaryReference interface {
 	Metadata() map[string]string
 }
 
-type CaptureStream interface {
+type CaptureCollection interface {
 	Name() string
 	Captures() []Capture
 	Signature() string
@@ -33,7 +33,7 @@ type CaptureStream interface {
 type Recording interface {
 	ID() string
 	Name() string
-	CaptureStreams() []CaptureStream
+	CaptureCollections() []CaptureCollection
 	Recordings() []Recording
 	Metadata() map[string]string
 	Binaries() []Binary
@@ -43,28 +43,28 @@ type Recording interface {
 func NewRecording(
 	id string,
 	name string,
-	captureStreams []CaptureStream,
+	captureCollections []CaptureCollection,
 	recordings []Recording,
 	metadata map[string]string,
 	binaries []Binary,
 ) recording {
 	return recording{
-		id:             id,
-		name:           name,
-		recordings:     recordings,
-		captureStreams: captureStreams,
-		metadata:       metadata,
-		binaries:       binaries,
+		id:                 id,
+		name:               name,
+		recordings:         recordings,
+		captureCollections: captureCollections,
+		metadata:           metadata,
+		binaries:           binaries,
 	}
 }
 
 type recording struct {
-	id             string
-	name           string
-	captureStreams []CaptureStream
-	recordings     []Recording
-	metadata       map[string]string
-	binaries       []Binary
+	id                 string
+	name               string
+	captureCollections []CaptureCollection
+	recordings         []Recording
+	metadata           map[string]string
+	binaries           []Binary
 }
 
 func (r recording) ID() string {
@@ -75,8 +75,8 @@ func (r recording) Name() string {
 	return r.name
 }
 
-func (r recording) CaptureStreams() []CaptureStream {
-	return r.captureStreams
+func (r recording) CaptureCollections() []CaptureCollection {
+	return r.captureCollections
 }
 
 func (r recording) Recordings() []Recording {

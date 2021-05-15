@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/recolude/rap/format"
-	"github.com/recolude/rap/format/streams/enum"
+	"github.com/recolude/rap/format/collection/enum"
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
@@ -28,7 +28,7 @@ func NewEncoder(technique StorageTechnique) Encoder {
 	return Encoder{technique}
 }
 
-func (p Encoder) Accepts(stream format.CaptureStream) bool {
+func (p Encoder) Accepts(stream format.CaptureCollection) bool {
 	return stream.Signature() == "recolude.enum"
 }
 
@@ -40,7 +40,7 @@ func (p Encoder) Version() uint {
 	return 0
 }
 
-func (p Encoder) Encode(streams []format.CaptureStream) ([]byte, [][]byte, error) {
+func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, error) {
 	streamDataBuffers := make([]bytes.Buffer, len(streams))
 	for bufferIndex, stream := range streams {
 
@@ -86,7 +86,7 @@ func (p Encoder) Encode(streams []format.CaptureStream) ([]byte, [][]byte, error
 	return nil, streamData, nil
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureStream, error) {
+func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollection, error) {
 	buf := bytes.NewBuffer(streamData)
 
 	// Read Name

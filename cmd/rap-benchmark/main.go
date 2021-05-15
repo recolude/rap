@@ -24,8 +24,8 @@ func kb(byteCount int) string {
 
 func printRecording(out io.Writer, recording format.Recording, depth int) {
 	fmt.Fprintf(out, "Name: %s\n", recording.Name())
-	fmt.Fprintf(out, "Streams: %d\n", len(recording.CaptureStreams()))
-	for _, stream := range recording.CaptureStreams() {
+	fmt.Fprintf(out, "Streams: %d\n", len(recording.CaptureCollections()))
+	for _, stream := range recording.CaptureCollections() {
 		fmt.Fprintf(out, "  Name: %s\n", stream.Name())
 		fmt.Fprintf(out, "  Signature: %s\n", stream.Signature())
 		fmt.Fprintf(out, "  Captures: %d\n", len(stream.Captures()))

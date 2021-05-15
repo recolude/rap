@@ -3,7 +3,7 @@ package event_test
 import (
 	"testing"
 
-	"github.com/recolude/rap/format/streams/event"
+	"github.com/recolude/rap/format/collection/event"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/recolude/rap/format/streams/position"
+	"github.com/recolude/rap/format/collection/position"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,11 +26,11 @@ func Test_CSV_Simple(t *testing.T) {
 		return
 	}
 
-	if assert.Len(t, recording.Recordings()[0].CaptureStreams(), 1) == false {
+	if assert.Len(t, recording.Recordings()[0].CaptureCollections(), 1) == false {
 		return
 	}
 
-	stream := recording.Recordings()[0].CaptureStreams()[0]
+	stream := recording.Recordings()[0].CaptureCollections()[0]
 	if assert.NotNil(t, stream) {
 		assert.Equal(t, "Position", stream.Name())
 		assert.Equal(t, "recolude.position", stream.Signature())

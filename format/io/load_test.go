@@ -72,15 +72,15 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, len(allBytes), bytesRead)
 
 	assert.Equal(t, "Demo", rec.Name())
-	assert.Len(t, rec.CaptureStreams(), 1)
-	assert.Equal(t, "Custom Event", rec.CaptureStreams()[0].Name())
+	assert.Len(t, rec.CaptureCollections(), 1)
+	assert.Equal(t, "Custom Event", rec.CaptureCollections()[0].Name())
 	assert.Len(t, rec.Recordings(), 38)
 
 	for _, subj := range rec.Recordings() {
-		assert.Len(t, subj.CaptureStreams(), 4)
-		assert.Equal(t, "Position", subj.CaptureStreams()[0].Name())
-		assert.Equal(t, "Rotation", subj.CaptureStreams()[1].Name())
-		assert.Equal(t, "Custom Event", subj.CaptureStreams()[2].Name())
-		assert.Equal(t, "Life Cycle", subj.CaptureStreams()[3].Name())
+		assert.Len(t, subj.CaptureCollections(), 4)
+		assert.Equal(t, "Position", subj.CaptureCollections()[0].Name())
+		assert.Equal(t, "Rotation", subj.CaptureCollections()[1].Name())
+		assert.Equal(t, "Custom Event", subj.CaptureCollections()[2].Name())
+		assert.Equal(t, "Life Cycle", subj.CaptureCollections()[3].Name())
 	}
 }
