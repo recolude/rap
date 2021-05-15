@@ -106,7 +106,7 @@ func RecordingFromCSV(in io.Reader) (format.Recording, error) {
 					id,
 					name,
 					[]format.CaptureCollection{
-						position.NewStream("Position", captures),
+						position.NewCollection("Position", captures),
 					},
 					nil,
 					nil,

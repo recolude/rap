@@ -6,16 +6,16 @@ import (
 	"testing"
 
 	"github.com/recolude/rap/format"
-	eulerStream "github.com/recolude/rap/format/collection/euler"
+	eulerCollection "github.com/recolude/rap/format/collection/euler"
 	"github.com/recolude/rap/format/encoding/euler"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_Euler(t *testing.T) {
-	continuousCaptures := make([]eulerStream.Capture, 1000)
+	continuousCaptures := make([]eulerCollection.Capture, 1000)
 	curTime := 1.0
 	for i := 0; i < len(continuousCaptures); i++ {
-		continuousCaptures[i] = eulerStream.NewEulerZXYCapture(
+		continuousCaptures[i] = eulerCollection.NewEulerZXYCapture(
 			curTime,
 			(-rand.Float64()*360)+360,
 			(-rand.Float64()*360)+360,
@@ -25,17 +25,17 @@ func Test_Euler(t *testing.T) {
 	}
 
 	tests := map[string]struct {
-		captures []eulerStream.Capture
+		captures []eulerCollection.Capture
 	}{
 		"nil rotations": {captures: nil},
-		"0-rotations":   {captures: []eulerStream.Capture{}},
-		"1-rotations":   {captures: []eulerStream.Capture{eulerStream.NewEulerZXYCapture(1.2, 1, 1, 1)}},
-		"2-rotations":   {captures: []eulerStream.Capture{eulerStream.NewEulerZXYCapture(1.2, 1, 1, 1), eulerStream.NewEulerZXYCapture(1.3, 4, 5, 6)}},
+		"0-rotations":   {captures: []eulerCollection.Capture{}},
+		"1-rotations":   {captures: []eulerCollection.Capture{eulerCollection.NewEulerZXYCapture(1.2, 1, 1, 1)}},
+		"2-rotations":   {captures: []eulerCollection.Capture{eulerCollection.NewEulerZXYCapture(1.2, 1, 1, 1), eulerCollection.NewEulerZXYCapture(1.3, 4, 5, 6)}},
 		"3-rotations": {
-			captures: []eulerStream.Capture{
-				eulerStream.NewEulerZXYCapture(1.2, 1, 1, 1),
-				eulerStream.NewEulerZXYCapture(1.3, 4, 5, 6),
-				eulerStream.NewEulerZXYCapture(1.4, 4.1, 5.7, 6.0),
+			captures: []eulerCollection.Capture{
+				eulerCollection.NewEulerZXYCapture(1.2, 1, 1, 1),
+				eulerCollection.NewEulerZXYCapture(1.3, 4, 5, 6),
+				eulerCollection.NewEulerZXYCapture(1.4, 4.1, 5.7, 6.0),
 			},
 		},
 		"1000-rotations": {captures: continuousCaptures},
@@ -70,7 +70,7 @@ func Test_Euler(t *testing.T) {
 	for name, tc := range tests {
 		for _, technique := range storageTechniques {
 			t.Run(fmt.Sprintf("%s/%s", name, technique.displayName), func(t *testing.T) {
-				streamIn := eulerStream.NewStream("Pos", tc.captures)
+				streamIn := eulerCollection.NewCollection("Pos", tc.captures)
 
 				encoder := euler.NewEncoder(technique.technique)
 
@@ -87,7 +87,7 @@ func Test_Euler(t *testing.T) {
 					assert.Equal(t, streamIn.Name(), streamOut.Name())
 					if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
 						for i, c := range streamOut.Captures() {
-							positioniCapture, ok := c.(eulerStream.Capture)
+							positioniCapture, ok := c.(eulerCollection.Capture)
 							if assert.True(t, ok) == false {
 								break
 							}

@@ -1,26 +1,26 @@
-package position
+package euler
 
 import (
 	"github.com/recolude/rap/format"
 )
 
-type Stream struct {
+type Collection struct {
 	name     string
 	captures []Capture
 }
 
-func NewStream(name string, captures []Capture) Stream {
-	return Stream{
+func NewCollection(name string, captures []Capture) Collection {
+	return Collection{
 		name:     name,
 		captures: captures,
 	}
 }
 
-func (s Stream) Name() string {
+func (s Collection) Name() string {
 	return s.name
 }
 
-func (s Stream) Captures() []format.Capture {
+func (s Collection) Captures() []format.Capture {
 	returnVal := make([]format.Capture, len(s.captures))
 	for i := range s.captures {
 		returnVal[i] = s.captures[i]
@@ -28,6 +28,6 @@ func (s Stream) Captures() []format.Capture {
 	return returnVal
 }
 
-func (Stream) Signature() string {
-	return "recolude.position"
+func (Collection) Signature() string {
+	return "recolude.euler"
 }

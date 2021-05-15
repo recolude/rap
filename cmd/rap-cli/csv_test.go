@@ -30,14 +30,14 @@ func Test_CSV_Simple(t *testing.T) {
 		return
 	}
 
-	stream := recording.Recordings()[0].CaptureCollections()[0]
-	if assert.NotNil(t, stream) {
-		assert.Equal(t, "Position", stream.Name())
-		assert.Equal(t, "recolude.position", stream.Signature())
-		if assert.Len(t, stream.Captures(), 3) {
-			assert.Equal(t, position.NewCapture(1, 2, 3, 4), stream.Captures()[0])
-			assert.Equal(t, position.NewCapture(2, 5, 6, 7), stream.Captures()[1])
-			assert.Equal(t, position.NewCapture(3, 8, 9, 10), stream.Captures()[2])
+	collection := recording.Recordings()[0].CaptureCollections()[0]
+	if assert.NotNil(t, collection) {
+		assert.Equal(t, "Position", collection.Name())
+		assert.Equal(t, "recolude.position", collection.Signature())
+		if assert.Len(t, collection.Captures(), 3) {
+			assert.Equal(t, position.NewCapture(1, 2, 3, 4), collection.Captures()[0])
+			assert.Equal(t, position.NewCapture(2, 5, 6, 7), collection.Captures()[1])
+			assert.Equal(t, position.NewCapture(3, 8, 9, 10), collection.Captures()[2])
 		}
 	}
 }

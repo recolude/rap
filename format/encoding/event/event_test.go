@@ -61,7 +61,7 @@ func Test_SingleEvent(t *testing.T) {
 	for name, tc := range tests {
 		for _, technique := range storageTechniques {
 			t.Run(fmt.Sprintf("%s/%s", name, technique.displayName), func(t *testing.T) {
-				streamIn := eventStream.NewStream(tc.streamName, tc.captures)
+				streamIn := eventStream.NewCollection(tc.streamName, tc.captures)
 
 				encoder := event.NewEncoder(technique.technique)
 

@@ -24,11 +24,11 @@ func kb(byteCount int) string {
 
 func printRecording(out io.Writer, recording format.Recording, depth int) {
 	fmt.Fprintf(out, "Name: %s\n", recording.Name())
-	fmt.Fprintf(out, "Streams: %d\n", len(recording.CaptureCollections()))
-	for _, stream := range recording.CaptureCollections() {
-		fmt.Fprintf(out, "  Name: %s\n", stream.Name())
-		fmt.Fprintf(out, "  Signature: %s\n", stream.Signature())
-		fmt.Fprintf(out, "  Captures: %d\n", len(stream.Captures()))
+	fmt.Fprintf(out, "Collections: %d\n", len(recording.CaptureCollections()))
+	for _, collection := range recording.CaptureCollections() {
+		fmt.Fprintf(out, "  Name: %s\n", collection.Name())
+		fmt.Fprintf(out, "  Signature: %s\n", collection.Signature())
+		fmt.Fprintf(out, "  Captures: %d\n", len(collection.Captures()))
 	}
 	fmt.Fprintf(out, "Sub Recordings: %d\n", len(recording.Recordings()))
 }
@@ -66,7 +66,7 @@ func main() {
 						event.NewEncoder(event.Raw32),
 						position.NewEncoder(position.Oct48),
 						euler.NewEncoder(euler.Raw32),
-						enum.NewEncoder(enum.Raw32),
+						enum.NewEncoder(),
 					}
 
 					recBuf := bytes.Buffer{}

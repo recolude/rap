@@ -188,5 +188,5 @@ func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollect
 		captures[i] = event.NewCapture(time, eventNames[int(eventNameIndex)], metadata)
 	}
 
-	return event.NewStream(streamName, captures), nil
+	return event.NewCollection(streamName, captures), nil
 }

@@ -65,33 +65,33 @@ func bytesToOctCells48(cells []OctCell, buffer []byte) {
 }
 
 func encodeOct48(captures []position.Capture) ([]byte, error) {
-	streamData := new(bytes.Buffer)
+	collectionData := new(bytes.Buffer)
 
 	// Write number of captures
 	buf := make([]byte, 8)
 	size := binary.PutUvarint(buf, uint64(len(captures)))
-	streamData.Write(buf[:size])
+	collectionData.Write(buf[:size])
 
 	if len(captures) == 0 {
-		return streamData.Bytes(), nil
+		return collectionData.Bytes(), nil
 	}
 
-	err := binary.Write(streamData, binary.LittleEndian, float32(captures[0].Time()))
+	err := binary.Write(collectionData, binary.LittleEndian, float32(captures[0].Time()))
 	if err != nil {
 		return nil, err
 	}
 
 	if len(captures) == 1 {
-		err = binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().X()))
+		err = binary.Write(collectionData, binary.LittleEndian, float32(captures[0].Position().X()))
 		if err != nil {
 			return nil, err
 		}
-		err = binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().Y()))
+		err = binary.Write(collectionData, binary.LittleEndian, float32(captures[0].Position().Y()))
 		if err != nil {
 			return nil, err
 		}
-		err = binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().Z()))
-		return streamData.Bytes(), err
+		err = binary.Write(collectionData, binary.LittleEndian, float32(captures[0].Position().Z()))
+		return collectionData.Bytes(), err
 	}
 
 	startingTime := math.Inf(1)
@@ -139,23 +139,23 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 
 	}
 
-	err = binary.Write(streamData, binary.LittleEndian, float32(maxTimeDifference))
+	err = binary.Write(collectionData, binary.LittleEndian, float32(maxTimeDifference))
 	if err != nil {
 		return nil, err
 	}
 
 	// Write min and max positions
-	binary.Write(streamData, binary.LittleEndian, float32(min.X()))
-	binary.Write(streamData, binary.LittleEndian, float32(min.Y()))
-	binary.Write(streamData, binary.LittleEndian, float32(min.Z()))
-	binary.Write(streamData, binary.LittleEndian, float32(max.X()))
-	binary.Write(streamData, binary.LittleEndian, float32(max.Y()))
-	binary.Write(streamData, binary.LittleEndian, float32(max.Z()))
+	binary.Write(collectionData, binary.LittleEndian, float32(min.X()))
+	binary.Write(collectionData, binary.LittleEndian, float32(min.Y()))
+	binary.Write(collectionData, binary.LittleEndian, float32(min.Z()))
+	binary.Write(collectionData, binary.LittleEndian, float32(max.X()))
+	binary.Write(collectionData, binary.LittleEndian, float32(max.Y()))
+	binary.Write(collectionData, binary.LittleEndian, float32(max.Z()))
 
 	// Write starting position
-	binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().X()))
-	binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().Y()))
-	binary.Write(streamData, binary.LittleEndian, float32(captures[0].Position().Z()))
+	binary.Write(collectionData, binary.LittleEndian, float32(captures[0].Position().X()))
+	binary.Write(collectionData, binary.LittleEndian, float32(captures[0].Position().Y()))
+	binary.Write(collectionData, binary.LittleEndian, float32(captures[0].Position().Z()))
 
 	timeBuffer := make([]byte, 2)
 	octBuffer := make([]OctCell, 16)
@@ -167,7 +167,7 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 		// Write Time
 		duration := capture.Time() - totalledQuantizedDuration
 		binaryutil.UnsignedFloatBSTToBytes(duration, 0, maxTimeDifference, timeBuffer)
-		_, err := streamData.Write(timeBuffer)
+		_, err := collectionData.Write(timeBuffer)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +181,7 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 			dir := capture.Position().Sub(quantizedPosition)
 			Vec3ToOctCells(dir, min, max, octBuffer)
 			octCellsToBytes48(octBuffer, octByteBuffer)
-			_, err = streamData.Write(octByteBuffer)
+			_, err = collectionData.Write(octByteBuffer)
 			if err != nil {
 				return nil, err
 			}
@@ -192,11 +192,11 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 
 	}
 
-	return streamData.Bytes(), nil
+	return collectionData.Bytes(), nil
 }
 
-func decodeOct48(streamData *bytes.Reader) ([]position.Capture, error) {
-	numCaptures, err := binary.ReadUvarint(streamData)
+func decodeOct48(collectionData *bytes.Reader) ([]position.Capture, error) {
+	numCaptures, err := binary.ReadUvarint(collectionData)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func decodeOct48(streamData *bytes.Reader) ([]position.Capture, error) {
 	}
 
 	var startTime float32
-	err = binary.Read(streamData, binary.LittleEndian, &startTime)
+	err = binary.Read(collectionData, binary.LittleEndian, &startTime)
 	if err != nil {
 		return nil, err
 	}
@@ -215,14 +215,14 @@ func decodeOct48(streamData *bytes.Reader) ([]position.Capture, error) {
 		var posX float32
 		var posY float32
 		var posZ float32
-		err = binary.Read(streamData, binary.LittleEndian, &posX)
-		err = binary.Read(streamData, binary.LittleEndian, &posY)
-		err = binary.Read(streamData, binary.LittleEndian, &posZ)
+		err = binary.Read(collectionData, binary.LittleEndian, &posX)
+		err = binary.Read(collectionData, binary.LittleEndian, &posY)
+		err = binary.Read(collectionData, binary.LittleEndian, &posZ)
 		return []position.Capture{position.NewCapture(float64(startTime), float64(posX), float64(posY), float64(posZ))}, err
 	}
 
 	var maxTimeDifference float32
-	err = binary.Read(streamData, binary.LittleEndian, &maxTimeDifference)
+	err = binary.Read(collectionData, binary.LittleEndian, &maxTimeDifference)
 	if err != nil {
 		return nil, err
 	}
@@ -237,15 +237,15 @@ func decodeOct48(streamData *bytes.Reader) ([]position.Capture, error) {
 	var startingY float32
 	var startingZ float32
 
-	err = binary.Read(streamData, binary.LittleEndian, &minX)
-	err = binary.Read(streamData, binary.LittleEndian, &minY)
-	err = binary.Read(streamData, binary.LittleEndian, &minZ)
-	err = binary.Read(streamData, binary.LittleEndian, &maxX)
-	err = binary.Read(streamData, binary.LittleEndian, &maxY)
-	err = binary.Read(streamData, binary.LittleEndian, &maxZ)
-	err = binary.Read(streamData, binary.LittleEndian, &startingX)
-	err = binary.Read(streamData, binary.LittleEndian, &startingY)
-	err = binary.Read(streamData, binary.LittleEndian, &startingZ)
+	err = binary.Read(collectionData, binary.LittleEndian, &minX)
+	err = binary.Read(collectionData, binary.LittleEndian, &minY)
+	err = binary.Read(collectionData, binary.LittleEndian, &minZ)
+	err = binary.Read(collectionData, binary.LittleEndian, &maxX)
+	err = binary.Read(collectionData, binary.LittleEndian, &maxY)
+	err = binary.Read(collectionData, binary.LittleEndian, &maxZ)
+	err = binary.Read(collectionData, binary.LittleEndian, &startingX)
+	err = binary.Read(collectionData, binary.LittleEndian, &startingY)
+	err = binary.Read(collectionData, binary.LittleEndian, &startingZ)
 	min := vector.NewVector3(float64(minX), float64(minY), float64(minZ))
 	max := vector.NewVector3(float64(maxX), float64(maxY), float64(maxZ))
 	starting := vector.NewVector3(float64(startingX), float64(startingY), float64(startingZ))
@@ -257,12 +257,12 @@ func decodeOct48(streamData *bytes.Reader) ([]position.Capture, error) {
 	currentTime := float64(startTime)
 	currentPosition := starting
 	for i := 0; i < int(numCaptures); i++ {
-		streamData.Read(timeBuffer)
+		collectionData.Read(timeBuffer)
 		time := binaryutil.BytesToUnisngedFloatBST(0, float64(maxTimeDifference), timeBuffer)
 		currentTime += time
 
 		if i > 0 {
-			streamData.Read(octBytesBuffer)
+			collectionData.Read(octBytesBuffer)
 			bytesToOctCells48(octBuffer, octBytesBuffer)
 			v := OctCellsToVec3(min, max, octBuffer)
 			currentPosition = currentPosition.Add(v)

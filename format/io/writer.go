@@ -17,10 +17,10 @@ import (
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
-type encoderStreamMapping struct {
-	encoder     encoding.Encoder
-	streams     []format.CaptureCollection
-	streamOrder []int
+type encoderCollectionMapping struct {
+	encoder         encoding.Encoder
+	collections     []format.CaptureCollection
+	collectionOrder []int
 }
 
 type Writer struct {
@@ -36,7 +36,7 @@ func NewRecoludeWriter(out io.Writer) Writer {
 			event.NewEncoder(event.Raw32),
 			position.NewEncoder(position.Oct48),
 			euler.NewEncoder(euler.Raw32),
-			enum.NewEncoder(enum.Raw32),
+			enum.NewEncoder(),
 		},
 		out: out,
 	}
@@ -75,8 +75,8 @@ func accumulateMetdataKeys(recording format.Recording, keyMappingToIndex map[str
 	}
 }
 
-func (w Writer) evaluateStreams(recording format.Recording, offset int) ([]encoderStreamMapping, int, error) {
-	mappings := make([]encoderStreamMapping, 0)
+func (w Writer) evaluateCollections(recording format.Recording, offset int) ([]encoderCollectionMapping, int, error) {
+	mappings := make([]encoderCollectionMapping, 0)
 	streamsSatisfied := make([]bool, len(recording.CaptureCollections()))
 	for i := range recording.CaptureCollections() {
 		streamsSatisfied[i] = false
@@ -84,16 +84,16 @@ func (w Writer) evaluateStreams(recording format.Recording, offset int) ([]encod
 
 	for i, encoder := range w.encoders {
 
-		mapping := encoderStreamMapping{encoder: w.encoders[i]}
+		mapping := encoderCollectionMapping{encoder: w.encoders[i]}
 		for streamIndex, stream := range recording.CaptureCollections() {
 			if streamsSatisfied[streamIndex] == false && encoder.Accepts(stream) {
-				mapping.streams = append(mapping.streams, stream)
-				mapping.streamOrder = append(mapping.streamOrder, streamIndex+offset)
+				mapping.collections = append(mapping.collections, stream)
+				mapping.collectionOrder = append(mapping.collectionOrder, streamIndex+offset)
 				streamsSatisfied[streamIndex] = true
 			}
 		}
 
-		if len(mapping.streams) > 0 {
+		if len(mapping.collections) > 0 {
 			mappings = append(mappings, mapping)
 		}
 	}
@@ -107,7 +107,7 @@ func (w Writer) evaluateStreams(recording format.Recording, offset int) ([]encod
 	curOffset := offset + len(recording.CaptureCollections())
 
 	for _, childRecording := range recording.Recordings() {
-		childMappings, newOffset, err := w.evaluateStreams(childRecording, curOffset)
+		childMappings, newOffset, err := w.evaluateCollections(childRecording, curOffset)
 		curOffset = newOffset
 		if err != nil {
 			return nil, 0, err
@@ -116,8 +116,8 @@ func (w Writer) evaluateStreams(recording format.Recording, offset int) ([]encod
 			found := false
 			for i, ourMap := range mappings {
 				if ourMap.encoder.Signature() == childMap.encoder.Signature() {
-					mappings[i].streams = append(ourMap.streams, childMap.streams...)
-					mappings[i].streamOrder = append(ourMap.streamOrder, childMap.streamOrder...)
+					mappings[i].collections = append(ourMap.collections, childMap.collections...)
+					mappings[i].collectionOrder = append(ourMap.collectionOrder, childMap.collectionOrder...)
 					found = true
 				}
 			}
@@ -154,7 +154,7 @@ func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, metadata map
 	return totalBytes, err
 }
 
-func writeEncoders(out io.Writer, encoders []encoderStreamMapping) (int, error) {
+func writeEncoders(out io.Writer, encoders []encoderCollectionMapping) (int, error) {
 	encoderSignatures := make([]string, len(encoders))
 	encoderVersions := make([]uint, len(encoders))
 	i := 0
@@ -222,7 +222,7 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 		panic(errors.New("can not write nil recording"))
 	}
 
-	encoderMappings, _, err := w.evaluateStreams(recording, 0)
+	encoderMappings, _, err := w.evaluateCollections(recording, 0)
 	if err != nil {
 		return 0, err
 	}
@@ -248,12 +248,12 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 	streamIndexToEncoderUsedIndex := make([]int, numStreams)
 
 	for encoderIndex, val := range encoderMappings {
-		header, streamsEncoded, err := val.encoder.Encode(val.streams)
+		header, streamsEncoded, err := val.encoder.Encode(val.collections)
 		if err != nil {
 			return totalBytesWritten, err
 		}
 
-		for i, order := range val.streamOrder {
+		for i, order := range val.collectionOrder {
 			encodingBlocks[order] = streamsEncoded[i]
 			streamIndexToEncoderUsedIndex[order] = encoderIndex
 		}

@@ -32,7 +32,7 @@ func getNumberOfRecordings(file io.Reader) (int, int, error) {
 	return int(binary.LittleEndian.Uint32(numberOfRecordings)), bytesRead, nil
 }
 
-func oldToNewEvents(oldEvents []*CustomEventCapture) event.Stream {
+func oldToNewEvents(oldEvents []*CustomEventCapture) event.Collection {
 	customEventCaptures := make([]event.Capture, 0)
 	for _, customEvent := range oldEvents {
 		dictToUse := customEvent.GetData()
@@ -53,7 +53,7 @@ func oldToNewEvents(oldEvents []*CustomEventCapture) event.Stream {
 			),
 		)
 	}
-	return event.NewStream("Custom Event", customEventCaptures)
+	return event.NewCollection("Custom Event", customEventCaptures)
 }
 
 func protobufToStd(inRec *Recording) (format.Recording, error) {
@@ -97,9 +97,9 @@ func protobufToStd(inRec *Recording) (format.Recording, error) {
 			)
 		}
 
-		positionStream := position.NewStream("Position", positionCaptures)
-		rotationStream := euler.NewStream("Rotation", rotationCaptures)
-		lifeStream := enum.NewStream("Life Cycle", []string{"START", "ENABLE", "DISABLE", "DESTROY"}, lifeCycleCaptures)
+		positionStream := position.NewCollection("Position", positionCaptures)
+		rotationStream := euler.NewCollection("Rotation", rotationCaptures)
+		lifeStream := enum.NewCollection("Life Cycle", enum.Raw32, []string{"START", "ENABLE", "DISABLE", "DESTROY"}, lifeCycleCaptures)
 
 		subjectRecordings = append(subjectRecordings, &recordingV1{
 			id:   fmt.Sprint(rec.GetId()),

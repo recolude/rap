@@ -6,11 +6,11 @@ import (
 	"github.com/recolude/rap/format"
 )
 
-func StreamDuration(stream format.CaptureCollection) float64 {
+func CollectionDuration(collection format.CaptureCollection) float64 {
 	startingTime := math.Inf(1)
 	endingTime := math.Inf(-1)
 
-	for _, capture := range stream.Captures() {
+	for _, capture := range collection.Captures() {
 		if capture.Time() < startingTime {
 			startingTime = capture.Time()
 		}

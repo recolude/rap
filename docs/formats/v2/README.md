@@ -15,8 +15,8 @@ New and improved file format.
 ## Definitions
 
 * **Capture** - Data associated with a specific point in time
-* **Capture Stream** - A collection of *Captures* around a specific type of data (think something like positional data). We can build many fundamental streams for people to use immediately: Vector3, float, int, dictionary, etc.
-* **Recording** - A collection of capture streams and recordings.
+* **Capture Collection** - A collection of *Captures* around a specific type of data (think something like positional data). We can build many fundamental collections for people to use immediately: Vector3, float, int, dictionary, etc.
+* **Recording** - A collection of capture collections and recordings.
 
 ## Binary File Spec
 

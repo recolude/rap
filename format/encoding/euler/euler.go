@@ -95,21 +95,21 @@ func decode(data []byte) (format.CaptureCollection, error) {
 		if err != nil {
 			return nil, err
 		}
-		return euler.NewStream(name, captures), nil
+		return euler.NewCollection(name, captures), nil
 
 	case Raw32:
 		captures, err := decodeRaw32(reader)
 		if err != nil {
 			return nil, err
 		}
-		return euler.NewStream(name, captures), nil
+		return euler.NewCollection(name, captures), nil
 
 	case Raw16:
 		captures, err := decodeRaw16(reader)
 		if err != nil {
 			return nil, err
 		}
-		return euler.NewStream(name, captures), nil
+		return euler.NewCollection(name, captures), nil
 	}
 
 	return nil, fmt.Errorf("Unknown euler encoding technique: %d", int(encodingTechnique))

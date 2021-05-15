@@ -7,17 +7,17 @@ import (
 
 	"github.com/EliCDavis/vector"
 	"github.com/recolude/rap/format"
-	positionStream "github.com/recolude/rap/format/collection/position"
+	positionCollection "github.com/recolude/rap/format/collection/position"
 	"github.com/recolude/rap/format/encoding/position"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_Position_Raw64(t *testing.T) {
 	// ARRANGE ================================================================
-	captures := make([]positionStream.Capture, 1000)
+	captures := make([]positionCollection.Capture, 1000)
 	curTime := 0.0
 	for i := 0; i < len(captures); i++ {
-		captures[i] = positionStream.NewCapture(
+		captures[i] = positionCollection.NewCapture(
 			curTime,
 			rand.Float64()*10000,
 			rand.Float64()*10000,
@@ -25,7 +25,7 @@ func Test_Position_Raw64(t *testing.T) {
 		)
 		curTime += rand.Float64() * 10.0
 	}
-	streamIn := positionStream.NewStream("Pos", captures)
+	streamIn := positionCollection.NewCollection("Pos", captures)
 	encoder := position.NewEncoder(position.Raw64)
 
 	// ACT ====================================================================
@@ -41,7 +41,7 @@ func Test_Position_Raw64(t *testing.T) {
 		assert.Equal(t, streamIn.Name(), streamOut.Name())
 		if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
 			for i, c := range streamOut.Captures() {
-				positioniCapture, ok := c.(positionStream.Capture)
+				positioniCapture, ok := c.(positionCollection.Capture)
 				if assert.True(t, ok) == false {
 					break
 				}
@@ -56,10 +56,10 @@ func Test_Position_Raw64(t *testing.T) {
 
 func Test_Position_MultipleStreams(t *testing.T) {
 	// ARRANGE ================================================================
-	captures := make([]positionStream.Capture, 1000)
+	captures := make([]positionCollection.Capture, 1000)
 	curTime := 0.0
 	for i := 0; i < len(captures); i++ {
-		captures[i] = positionStream.NewCapture(
+		captures[i] = positionCollection.NewCapture(
 			curTime,
 			rand.Float64()*10000,
 			rand.Float64()*10000,
@@ -67,12 +67,12 @@ func Test_Position_MultipleStreams(t *testing.T) {
 		)
 		curTime += rand.Float64() * 10.0
 	}
-	streamIn := positionStream.NewStream("Pos", captures)
+	streamIn := positionCollection.NewCollection("Pos", captures)
 
-	captures2 := make([]positionStream.Capture, 3000)
+	captures2 := make([]positionCollection.Capture, 3000)
 	curTime2 := 0.0
 	for i := 0; i < len(captures2); i++ {
-		captures2[i] = positionStream.NewCapture(
+		captures2[i] = positionCollection.NewCapture(
 			curTime,
 			rand.Float64()*10000,
 			rand.Float64()*10000,
@@ -80,7 +80,7 @@ func Test_Position_MultipleStreams(t *testing.T) {
 		)
 		curTime2 += rand.Float64() * 10.0
 	}
-	streamIn2 := positionStream.NewStream("Pos2", captures2)
+	streamIn2 := positionCollection.NewCollection("Pos2", captures2)
 
 	encoder := position.NewEncoder(position.Raw64)
 
@@ -99,7 +99,7 @@ func Test_Position_MultipleStreams(t *testing.T) {
 		assert.Equal(t, streamIn.Name(), streamOut.Name())
 		if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
 			for i, c := range streamOut.Captures() {
-				positioniCapture, ok := c.(positionStream.Capture)
+				positioniCapture, ok := c.(positionCollection.Capture)
 				if assert.True(t, ok) == false {
 					break
 				}
@@ -115,7 +115,7 @@ func Test_Position_MultipleStreams(t *testing.T) {
 		assert.Equal(t, streamIn2.Name(), streamOut2.Name())
 		if assert.Len(t, streamOut2.Captures(), len(streamIn2.Captures())) {
 			for i, c := range streamOut2.Captures() {
-				positioniCapture, ok := c.(positionStream.Capture)
+				positioniCapture, ok := c.(positionCollection.Capture)
 				if assert.True(t, ok) == false {
 					break
 				}
@@ -130,10 +130,10 @@ func Test_Position_MultipleStreams(t *testing.T) {
 
 func Test_Raw32_MultipleStreams(t *testing.T) {
 	// ARRANGE ================================================================
-	captures := make([]positionStream.Capture, 1000)
+	captures := make([]positionCollection.Capture, 1000)
 	curTime := 1.0
 	for i := 0; i < len(captures); i++ {
-		captures[i] = positionStream.NewCapture(
+		captures[i] = positionCollection.NewCapture(
 			curTime,
 			rand.Float64()*10000,
 			rand.Float64()*10000,
@@ -141,12 +141,12 @@ func Test_Raw32_MultipleStreams(t *testing.T) {
 		)
 		curTime += rand.Float64() * 10.0
 	}
-	streamIn := positionStream.NewStream("Pos", captures)
+	streamIn := positionCollection.NewCollection("Pos", captures)
 
-	captures2 := make([]positionStream.Capture, 3000)
+	captures2 := make([]positionCollection.Capture, 3000)
 	curTime2 := 1.0
 	for i := 0; i < len(captures2); i++ {
-		captures2[i] = positionStream.NewCapture(
+		captures2[i] = positionCollection.NewCapture(
 			curTime,
 			rand.Float64()*10000,
 			rand.Float64()*10000,
@@ -154,7 +154,7 @@ func Test_Raw32_MultipleStreams(t *testing.T) {
 		)
 		curTime2 += rand.Float64() * 10.0
 	}
-	streamIn2 := positionStream.NewStream("Pos2", captures2)
+	streamIn2 := positionCollection.NewCollection("Pos2", captures2)
 
 	encoder := position.NewEncoder(position.Raw32)
 
@@ -173,7 +173,7 @@ func Test_Raw32_MultipleStreams(t *testing.T) {
 		assert.Equal(t, streamIn.Name(), streamOut.Name())
 		if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
 			for i, c := range streamOut.Captures() {
-				positioniCapture, ok := c.(positionStream.Capture)
+				positioniCapture, ok := c.(positionCollection.Capture)
 				if assert.True(t, ok) == false {
 					break
 				}
@@ -190,7 +190,7 @@ func Test_Raw32_MultipleStreams(t *testing.T) {
 		assert.Equal(t, streamIn2.Name(), streamOut2.Name())
 		if assert.Len(t, streamOut2.Captures(), len(streamIn2.Captures())) {
 			for i, c := range streamOut2.Captures() {
-				positioniCapture, ok := c.(positionStream.Capture)
+				positioniCapture, ok := c.(positionCollection.Capture)
 				if assert.True(t, ok) == false {
 					break
 				}
@@ -205,9 +205,9 @@ func Test_Raw32_MultipleStreams(t *testing.T) {
 
 func Test_Oct24_EmptyStream(t *testing.T) {
 	// ARRANGE ================================================================
-	captures := []positionStream.Capture{}
+	captures := []positionCollection.Capture{}
 
-	streamIn := positionStream.NewStream("Pos", captures)
+	streamIn := positionCollection.NewCollection("Pos", captures)
 
 	encoder := position.NewEncoder(position.Oct24)
 
@@ -225,11 +225,11 @@ func Test_Oct24_EmptyStream(t *testing.T) {
 }
 
 func Test_Positions(t *testing.T) {
-	continuousCaptures := make([]positionStream.Capture, 1000)
+	continuousCaptures := make([]positionCollection.Capture, 1000)
 	curTime := 1.0
 	curPos := vector.Vector3Zero()
 	for i := 0; i < len(continuousCaptures); i++ {
-		continuousCaptures[i] = positionStream.NewCapture(
+		continuousCaptures[i] = positionCollection.NewCapture(
 			curTime,
 			curPos.X(),
 			curPos.Y(),
@@ -240,17 +240,17 @@ func Test_Positions(t *testing.T) {
 	}
 
 	tests := map[string]struct {
-		captures []positionStream.Capture
+		captures []positionCollection.Capture
 	}{
 		"nil positions": {captures: nil},
-		"0-positions":   {captures: []positionStream.Capture{}},
-		"1-positions":   {captures: []positionStream.Capture{positionStream.NewCapture(1.2, 1, 1, 1)}},
-		"2-positions":   {captures: []positionStream.Capture{positionStream.NewCapture(1.2, 1, 1, 1), positionStream.NewCapture(1.3, 4, 5, 6)}},
+		"0-positions":   {captures: []positionCollection.Capture{}},
+		"1-positions":   {captures: []positionCollection.Capture{positionCollection.NewCapture(1.2, 1, 1, 1)}},
+		"2-positions":   {captures: []positionCollection.Capture{positionCollection.NewCapture(1.2, 1, 1, 1), positionCollection.NewCapture(1.3, 4, 5, 6)}},
 		"3-positions": {
-			captures: []positionStream.Capture{
-				positionStream.NewCapture(1.2, 1, 1, 1),
-				positionStream.NewCapture(1.3, 4, 5, 6),
-				positionStream.NewCapture(1.4, 4.1, 5.7, 6.0),
+			captures: []positionCollection.Capture{
+				positionCollection.NewCapture(1.2, 1, 1, 1),
+				positionCollection.NewCapture(1.3, 4, 5, 6),
+				positionCollection.NewCapture(1.4, 4.1, 5.7, 6.0),
 			},
 		},
 		"1000-continuous-positions": {captures: continuousCaptures},
@@ -291,7 +291,7 @@ func Test_Positions(t *testing.T) {
 	for name, tc := range tests {
 		for _, technique := range storageTechniques {
 			t.Run(fmt.Sprintf("%s/%s", name, technique.displayName), func(t *testing.T) {
-				streamIn := positionStream.NewStream("Pos", tc.captures)
+				streamIn := positionCollection.NewCollection("Pos", tc.captures)
 
 				encoder := position.NewEncoder(technique.technique)
 
@@ -308,7 +308,7 @@ func Test_Positions(t *testing.T) {
 					assert.Equal(t, streamIn.Name(), streamOut.Name())
 					if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
 						for i, c := range streamOut.Captures() {
-							positioniCapture, ok := c.(positionStream.Capture)
+							positioniCapture, ok := c.(positionCollection.Capture)
 							if assert.True(t, ok) == false {
 								break
 							}
@@ -351,10 +351,10 @@ func Test_Positions(t *testing.T) {
 
 func Test_Oct24_MultipleStreams(t *testing.T) {
 	// ARRANGE ================================================================
-	captures := make([]positionStream.Capture, 1000)
+	captures := make([]positionCollection.Capture, 1000)
 	curTime := 1.0
 	for i := 0; i < len(captures); i++ {
-		captures[i] = positionStream.NewCapture(
+		captures[i] = positionCollection.NewCapture(
 			curTime,
 			rand.Float64()*100,
 			rand.Float64()*100,
@@ -362,12 +362,12 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 		)
 		curTime += rand.Float64() * 10.0
 	}
-	streamIn := positionStream.NewStream("Pos", captures)
+	streamIn := positionCollection.NewCollection("Pos", captures)
 
-	captures2 := make([]positionStream.Capture, 3000)
+	captures2 := make([]positionCollection.Capture, 3000)
 	curTime2 := 1.0
 	for i := 0; i < len(captures2); i++ {
-		captures2[i] = positionStream.NewCapture(
+		captures2[i] = positionCollection.NewCapture(
 			curTime,
 			rand.Float64()*100,
 			rand.Float64()*100,
@@ -375,7 +375,7 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 		)
 		curTime2 += rand.Float64() * 10.0
 	}
-	streamIn2 := positionStream.NewStream("Pos2", captures2)
+	streamIn2 := positionCollection.NewCollection("Pos2", captures2)
 
 	encoder := position.NewEncoder(position.Oct24)
 
@@ -394,7 +394,7 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 		assert.Equal(t, streamIn.Name(), streamOut.Name())
 		if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
 			for i, c := range streamOut.Captures() {
-				positioniCapture, ok := c.(positionStream.Capture)
+				positioniCapture, ok := c.(positionCollection.Capture)
 				if assert.True(t, ok) == false {
 					break
 				}
@@ -415,7 +415,7 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 		assert.Equal(t, streamIn2.Name(), streamOut2.Name())
 		if assert.Len(t, streamOut2.Captures(), len(streamIn2.Captures())) {
 			for i, c := range streamOut2.Captures() {
-				positioniCapture, ok := c.(positionStream.Capture)
+				positioniCapture, ok := c.(positionCollection.Capture)
 				if assert.True(t, ok) == false {
 					break
 				}
@@ -435,11 +435,11 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 
 func Test_Oct24_Continuous(t *testing.T) {
 	// ARRANGE ================================================================
-	captures := make([]positionStream.Capture, 1000)
+	captures := make([]positionCollection.Capture, 1000)
 	curTime := 1.0
 	curPos := vector.Vector3Zero()
 	for i := 0; i < len(captures); i++ {
-		captures[i] = positionStream.NewCapture(
+		captures[i] = positionCollection.NewCapture(
 			curTime,
 			curPos.X(),
 			curPos.Y(),
@@ -448,7 +448,7 @@ func Test_Oct24_Continuous(t *testing.T) {
 		curPos = curPos.Add(vector.NewVector3(rand.Float64()*10, rand.Float64()*10, rand.Float64()*10))
 		curTime += rand.Float64() * 10.0
 	}
-	streamIn := positionStream.NewStream("Pos", captures)
+	streamIn := positionCollection.NewCollection("Pos", captures)
 
 	encoder := position.NewEncoder(position.Oct24)
 
@@ -465,7 +465,7 @@ func Test_Oct24_Continuous(t *testing.T) {
 		assert.Equal(t, streamIn.Name(), streamOut.Name())
 		if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
 			for i, c := range streamOut.Captures() {
-				positioniCapture, ok := c.(positionStream.Capture)
+				positioniCapture, ok := c.(positionCollection.Capture)
 				if assert.True(t, ok) == false {
 					break
 				}

@@ -24,10 +24,10 @@ func kb(byteCount int) string {
 func toJson(out io.Writer, recording format.Recording) {
 	fmt.Fprintf(out, "{ \"name\": \"%s\", ", recording.Name())
 
-	fmt.Fprint(out, "\"streams\": [")
-	for i, stream := range recording.CaptureCollections() {
-		fmt.Fprintf(out, "{ \"name\": \"%s\", ", stream.Name())
-		fmt.Fprintf(out, " \"signature\" : \"%s\" }", stream.Signature())
+	fmt.Fprint(out, "\"collections\": [")
+	for i, collection := range recording.CaptureCollections() {
+		fmt.Fprintf(out, "{ \"name\": \"%s\", ", collection.Name())
+		fmt.Fprintf(out, " \"signature\" : \"%s\" }", collection.Signature())
 		if i < len(recording.CaptureCollections())-1 {
 			fmt.Fprintf(out, ",")
 		}
@@ -145,7 +145,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 						event.NewEncoder(event.Raw32),
 						position.NewEncoder(position.Oct24),
 						euler.NewEncoder(euler.Raw16),
-						enum.NewEncoder(enum.Raw32),
+						enum.NewEncoder(),
 					}
 
 					recordingWriter := rapio.NewWriter(encoders, c.App.Writer)

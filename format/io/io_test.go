@@ -88,7 +88,7 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 		"",
 		"Test Recording",
 		[]format.CaptureCollection{
-			position.NewStream(
+			position.NewCollection(
 				"Position",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -132,7 +132,7 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 		"",
 		"Test Recording",
 		[]format.CaptureCollection{
-			position.NewStream(
+			position.NewCollection(
 				"Position",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -141,7 +141,7 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 					position.NewCapture(7, 10, 11, 12),
 				},
 			),
-			position.NewStream(
+			position.NewCollection(
 				"Position2",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -185,7 +185,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 		"",
 		"Test Recording",
 		[]format.CaptureCollection{
-			position.NewStream(
+			position.NewCollection(
 				"Position",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -194,7 +194,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 					position.NewCapture(7, 10, 11, 12),
 				},
 			),
-			position.NewStream(
+			position.NewCollection(
 				"Position2",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -209,7 +209,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 				"",
 				"Child Recording",
 				[]format.CaptureCollection{
-					position.NewStream(
+					position.NewCollection(
 						"Child Position",
 						[]position.Capture{
 							position.NewCapture(1, 1, 2, 3),
@@ -218,7 +218,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 							position.NewCapture(7, 10, 11, 12),
 						},
 					),
-					position.NewStream(
+					position.NewCollection(
 						"Child Position2",
 						[]position.Capture{
 							position.NewCapture(1, 1, 2, 3),
@@ -262,7 +262,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(enumEncoding.Raw64),
+		enumEncoding.NewEncoder(),
 	}
 
 	w := io.NewWriter(encoders, fileData)
@@ -272,7 +272,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 		"",
 		"Test Recording",
 		[]format.CaptureCollection{
-			position.NewStream(
+			position.NewCollection(
 				"Position",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -284,7 +284,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 				"",
 				"Child",
 				[]format.CaptureCollection{
-					event.NewStream("ahhh", []event.Capture{
+					event.NewCollection("ahhh", []event.Capture{
 						event.NewCapture(1, "att", map[string]string{"1": "2"}),
 					}),
 				},
@@ -319,7 +319,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(enumEncoding.Raw64),
+		enumEncoding.NewEncoder(),
 	}
 
 	w := io.NewWriter(encoders, fileData)
@@ -329,7 +329,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 		"",
 		"Test Recording",
 		[]format.CaptureCollection{
-			position.NewStream(
+			position.NewCollection(
 				"Position",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -338,7 +338,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 					position.NewCapture(7, 10, 11, 12),
 				},
 			),
-			position.NewStream(
+			position.NewCollection(
 				"Position2",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -353,10 +353,10 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 				"",
 				"Child Recording",
 				[]format.CaptureCollection{
-					event.NewStream("ahhh", []event.Capture{
+					event.NewCollection("ahhh", []event.Capture{
 						event.NewCapture(1, "att", map[string]string{"1": "2"}),
 					}),
-					position.NewStream(
+					position.NewCollection(
 						"Child Position",
 						[]position.Capture{
 							position.NewCapture(1, 1, 2, 3),
@@ -365,7 +365,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 							position.NewCapture(7, 10, 11, 12),
 						},
 					),
-					position.NewStream(
+					position.NewCollection(
 						"Child Position2",
 						[]position.Capture{
 							position.NewCapture(1, 1, 2, 3),
@@ -374,7 +374,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 							position.NewCapture(7, 10, 11, 12),
 						},
 					),
-					euler.NewStream(
+					euler.NewCollection(
 						"Rot",
 						[]euler.Capture{
 							euler.NewEulerZXYCapture(1, 1, 2, 3),
@@ -383,8 +383,9 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 							euler.NewEulerZXYCapture(7, 10, 11, 12),
 						},
 					),
-					enum.NewStream(
+					enum.NewCollection(
 						"cmon",
+						enum.Raw32,
 						[]string{"A", "n"},
 						[]enum.Capture{
 							enum.NewCapture(1, 1),
@@ -402,7 +403,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 				"",
 				"Child 2 Recording",
 				[]format.CaptureCollection{
-					position.NewStream(
+					position.NewCollection(
 						"Child Position",
 						[]position.Capture{
 							position.NewCapture(1, 1, 2, 3),
@@ -411,7 +412,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 							position.NewCapture(7, 10, 11, 12),
 						},
 					),
-					position.NewStream(
+					position.NewCollection(
 						"Child Position2",
 						[]position.Capture{
 							position.NewCapture(1, 1, 2, 3),
@@ -420,7 +421,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 							position.NewCapture(7, 10, 11, 12),
 						},
 					),
-					euler.NewStream(
+					euler.NewCollection(
 						"Rot",
 						[]euler.Capture{
 							euler.NewEulerZXYCapture(1, 1, 2, 3),
@@ -464,7 +465,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(enumEncoding.Raw64),
+		enumEncoding.NewEncoder(),
 	}
 
 	w := io.NewWriter(encoders, fileData)
@@ -474,10 +475,10 @@ func Test_HandlesManyChildren(t *testing.T) {
 		"",
 		"Child Recording",
 		[]format.CaptureCollection{
-			event.NewStream("ahhh", []event.Capture{
+			event.NewCollection("ahhh", []event.Capture{
 				event.NewCapture(1, "att", map[string]string{"1": "2"}),
 			}),
-			position.NewStream(
+			position.NewCollection(
 				"Child Position",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -486,7 +487,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 					position.NewCapture(7, 10, 11, 12),
 				},
 			),
-			euler.NewStream(
+			euler.NewCollection(
 				"Rot",
 				[]euler.Capture{
 					euler.NewEulerZXYCapture(1, 1, 2, 3),
@@ -495,8 +496,9 @@ func Test_HandlesManyChildren(t *testing.T) {
 					euler.NewEulerZXYCapture(7, 10, 11, 12),
 				},
 			),
-			enum.NewStream(
+			enum.NewCollection(
 				"cmon",
+				enum.Raw32,
 				[]string{"A", "n"},
 				[]enum.Capture{
 					enum.NewCapture(1, 1),
@@ -521,7 +523,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 		"",
 		"Test Recording",
 		[]format.CaptureCollection{
-			position.NewStream(
+			position.NewCollection(
 				"Position",
 				[]position.Capture{
 					position.NewCapture(1, 1, 2, 3),
@@ -565,7 +567,7 @@ func Test_Uprade(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(enumEncoding.Raw64),
+		enumEncoding.NewEncoder(),
 	}
 	fileData := new(bytes.Buffer)
 

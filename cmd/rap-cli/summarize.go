@@ -31,18 +31,18 @@ func (s summary) Combine(other summary) summary {
 
 func summarize(recording format.Recording) summary {
 	curSummary := summary{}
-	for _, stream := range recording.CaptureCollections() {
-		switch v := stream.(type) {
-		case event.Stream:
+	for _, collection := range recording.CaptureCollections() {
+		switch v := collection.(type) {
+		case event.Collection:
 			curSummary.eventCaptureCount += len(v.Captures())
-		case position.Stream:
+		case position.Collection:
 			curSummary.positionCaptureCount += len(v.Captures())
-		case enum.Stream:
+		case enum.Collection:
 			curSummary.enumCaptureCount += len(v.Captures())
-		case euler.Stream:
+		case euler.Collection:
 			curSummary.eulerCaptureCount += len(v.Captures())
 		default:
-			curSummary.otherCaptureCount += len(stream.Captures())
+			curSummary.otherCaptureCount += len(collection.Captures())
 		}
 	}
 
