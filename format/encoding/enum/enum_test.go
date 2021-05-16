@@ -29,17 +29,17 @@ func Test_Singleenum(t *testing.T) {
 
 	storageTechniques := []struct {
 		displayName    string
-		technique      enumCollection.StorageTechnique
+		technique      enum.StorageTechnique
 		timeTollerance float64
 	}{
 		{
 			displayName:    "Raw64",
-			technique:      enumCollection.Raw64,
+			technique:      enum.Raw64,
 			timeTollerance: 0,
 		},
 		{
 			displayName:    "Raw32",
-			technique:      enumCollection.Raw32,
+			technique:      enum.Raw32,
 			timeTollerance: 0.0005,
 		},
 	}
@@ -47,9 +47,9 @@ func Test_Singleenum(t *testing.T) {
 	for name, tc := range tests {
 		for _, technique := range storageTechniques {
 			t.Run(fmt.Sprintf("%s/%s", name, technique.displayName), func(t *testing.T) {
-				collectionIn := enumCollection.NewCollection(tc.streamName, technique.technique, tc.enumMembers, tc.captures)
+				collectionIn := enumCollection.NewCollection(tc.streamName, tc.enumMembers, tc.captures)
 
-				encoder := enum.NewEncoder()
+				encoder := enum.NewEncoder(technique.technique)
 
 				// ACT ====================================================================
 				header, collectionData, encodeErr := encoder.Encode([]format.CaptureCollection{collectionIn})

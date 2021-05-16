@@ -99,7 +99,7 @@ func protobufToStd(inRec *Recording) (format.Recording, error) {
 
 		positionStream := position.NewCollection("Position", positionCaptures)
 		rotationStream := euler.NewCollection("Rotation", rotationCaptures)
-		lifeStream := enum.NewCollection("Life Cycle", enum.Raw32, []string{"START", "ENABLE", "DISABLE", "DESTROY"}, lifeCycleCaptures)
+		lifeStream := enum.NewCollection("Life Cycle", []string{"START", "ENABLE", "DISABLE", "DESTROY"}, lifeCycleCaptures)
 
 		subjectRecordings = append(subjectRecordings, &recordingV1{
 			id:   fmt.Sprint(rec.GetId()),

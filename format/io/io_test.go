@@ -262,7 +262,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(),
+		enumEncoding.NewEncoder(enumEncoding.Raw32),
 	}
 
 	w := io.NewWriter(encoders, fileData)
@@ -319,7 +319,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(),
+		enumEncoding.NewEncoder(enumEncoding.Raw32),
 	}
 
 	w := io.NewWriter(encoders, fileData)
@@ -385,7 +385,6 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 					),
 					enum.NewCollection(
 						"cmon",
-						enum.Raw32,
 						[]string{"A", "n"},
 						[]enum.Capture{
 							enum.NewCapture(1, 1),
@@ -465,7 +464,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(),
+		enumEncoding.NewEncoder(enumEncoding.Raw32),
 	}
 
 	w := io.NewWriter(encoders, fileData)
@@ -498,7 +497,6 @@ func Test_HandlesManyChildren(t *testing.T) {
 			),
 			enum.NewCollection(
 				"cmon",
-				enum.Raw32,
 				[]string{"A", "n"},
 				[]enum.Capture{
 					enum.NewCapture(1, 1),
@@ -567,7 +565,7 @@ func Test_Uprade(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(),
+		enumEncoding.NewEncoder(enumEncoding.Raw32),
 	}
 	fileData := new(bytes.Buffer)
 
