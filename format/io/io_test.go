@@ -49,12 +49,12 @@ func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording
 		return false
 	}
 
-	if assert.Equal(t, len(recExpected.Metadata()), len(recActual.Metadata())) == false {
+	if assert.Equal(t, len(recExpected.Metadata().Mapping()), len(recActual.Metadata().Mapping())) == false {
 		return false
 	}
 
-	for key, element := range recExpected.Metadata() {
-		assert.Equal(t, element, recActual.Metadata()[key])
+	for key, element := range recExpected.Metadata().Mapping() {
+		assert.Equal(t, element, recActual.Metadata().Mapping()[key])
 	}
 
 	if assert.Equal(t, len(recExpected.CaptureCollections()), len(recActual.CaptureCollections())) == false {
@@ -99,10 +99,12 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 			),
 		},
 		nil,
-		map[string]string{
-			"a":  "bee",
-			"ce": "dee",
-		},
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"a":  format.NewStringProperty("bee"),
+				"ce": format.NewStringProperty("dee"),
+			},
+		),
 		nil,
 	)
 
@@ -152,10 +154,12 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 			),
 		},
 		nil,
-		map[string]string{
-			"a":  "bee",
-			"ce": "dee",
-		},
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"a":  format.NewStringProperty("bee"),
+				"ce": format.NewStringProperty("dee"),
+			},
+		),
 		nil,
 	)
 
@@ -229,17 +233,21 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 					),
 				},
 				nil,
-				map[string]string{
-					"a":  "bee",
-					"ce": "dee",
-				},
+				format.NewMetadataBlock(
+					map[string]format.Property{
+						"a":  format.NewStringProperty("bee"),
+						"ce": format.NewStringProperty("dee"),
+					},
+				),
 				nil,
 			),
 		},
-		map[string]string{
-			"a":  "bee",
-			"ce": "dee",
-		},
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"a":  format.NewStringProperty("bee"),
+				"ce": format.NewStringProperty("dee"),
+			},
+		),
 		nil,
 	)
 
@@ -289,14 +297,16 @@ func Test_EncodersWithHeaders(t *testing.T) {
 					}),
 				},
 				nil,
-				nil,
+				format.EmptyMetadataBlock(),
 				nil,
 			),
 		},
-		map[string]string{
-			"a":  "bee",
-			"ce": "dee",
-		},
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"a":  format.NewStringProperty("bee"),
+				"ce": format.NewStringProperty("dee"),
+			},
+		),
 		nil,
 	)
 
@@ -392,10 +402,12 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 					),
 				},
 				nil,
-				map[string]string{
-					"a":  "bee",
-					"ce": "dee",
-				},
+				format.NewMetadataBlock(
+					map[string]format.Property{
+						"a":  format.NewStringProperty("bee"),
+						"ce": format.NewStringProperty("dee"),
+					},
+				),
 				nil,
 			),
 			format.NewRecording(
@@ -431,17 +443,21 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 					),
 				},
 				nil,
-				map[string]string{
-					"a":  "bee",
-					"ce": "dee",
-				},
+				format.NewMetadataBlock(
+					map[string]format.Property{
+						"a":  format.NewStringProperty("bee"),
+						"ce": format.NewStringProperty("dee"),
+					},
+				),
 				nil,
 			),
 		},
-		map[string]string{
-			"a":  "bee",
-			"ce": "dee",
-		},
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"a":  format.NewStringProperty("bee"),
+				"ce": format.NewStringProperty("dee"),
+			},
+		),
 		nil,
 	)
 
@@ -504,10 +520,12 @@ func Test_HandlesManyChildren(t *testing.T) {
 			),
 		},
 		nil,
-		map[string]string{
-			"a":  "bee",
-			"ce": "dee",
-		},
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"a":  format.NewStringProperty("bee"),
+				"ce": format.NewStringProperty("dee"),
+			},
+		),
 		nil,
 	)
 
@@ -532,10 +550,12 @@ func Test_HandlesManyChildren(t *testing.T) {
 			),
 		},
 		chilren,
-		map[string]string{
-			"a":  "bee",
-			"ce": "dee",
-		},
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"a":  format.NewStringProperty("bee"),
+				"ce": format.NewStringProperty("dee"),
+			},
+		),
 		nil,
 	)
 

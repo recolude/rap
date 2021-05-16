@@ -22,7 +22,7 @@ func ReadString(r io.Reader) (string, int, error) {
 	}
 
 	strBuffer := make([]byte, len)
-	moreBytes, err := r.Read(strBuffer)
+	moreBytes, err := io.ReadFull(r, strBuffer)
 	if err != nil {
 		return "", bytesRead + moreBytes, err
 	}

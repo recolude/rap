@@ -109,12 +109,12 @@ func RecordingFromCSV(in io.Reader) (format.Recording, error) {
 						position.NewCollection("Position", captures),
 					},
 					nil,
-					nil,
+					format.EmptyMetadataBlock(),
 					nil,
 				),
 			)
 		}
 	}
 
-	return format.NewRecording("", "", nil, allRecordings, nil, nil), nil
+	return format.NewRecording("", "", nil, allRecordings, format.EmptyMetadataBlock(), nil), nil
 }

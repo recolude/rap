@@ -13,7 +13,7 @@ type Binary interface {
 	Name() string
 	Data() io.Reader
 	Size() uint64
-	Metadata() map[string]string
+	Metadata() Metadata
 	Write(io.Writer) (int, error)
 }
 
@@ -21,7 +21,7 @@ type BinaryReference interface {
 	Name() string
 	URI() string
 	Size() uint64
-	Metadata() map[string]string
+	Metadata() Metadata
 }
 
 type CaptureCollection interface {
@@ -35,7 +35,7 @@ type Recording interface {
 	Name() string
 	CaptureCollections() []CaptureCollection
 	Recordings() []Recording
-	Metadata() map[string]string
+	Metadata() Metadata
 	Binaries() []Binary
 	BinaryReferences() []BinaryReference
 }
@@ -45,7 +45,7 @@ func NewRecording(
 	name string,
 	captureCollections []CaptureCollection,
 	recordings []Recording,
-	metadata map[string]string,
+	metadata Metadata,
 	binaries []Binary,
 ) recording {
 	return recording{
@@ -63,7 +63,7 @@ type recording struct {
 	name               string
 	captureCollections []CaptureCollection
 	recordings         []Recording
-	metadata           map[string]string
+	metadata           Metadata
 	binaries           []Binary
 }
 
@@ -83,7 +83,7 @@ func (r recording) Recordings() []Recording {
 	return r.recordings
 }
 
-func (r recording) Metadata() map[string]string {
+func (r recording) Metadata() Metadata {
 	return r.metadata
 }
 

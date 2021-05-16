@@ -7,7 +7,7 @@ type recordingV1 struct {
 	name           string
 	captureStreams []format.CaptureCollection
 	recordings     []format.Recording
-	metadata       map[string]string
+	metadata       format.Metadata
 }
 
 func (rec recordingV1) ID() string {
@@ -26,7 +26,7 @@ func (rec recordingV1) BinaryReferences() []format.BinaryReference {
 	return nil
 }
 
-func (rec recordingV1) Metadata() map[string]string {
+func (rec recordingV1) Metadata() format.Metadata {
 	return rec.metadata
 }
 

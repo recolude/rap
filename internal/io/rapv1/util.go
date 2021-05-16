@@ -56,6 +56,16 @@ func oldToNewEvents(oldEvents []*CustomEventCapture) event.Collection {
 	return event.NewCollection("Custom Event", customEventCaptures)
 }
 
+func convertMetadata(original map[string]string) format.Metadata {
+	out := make(map[string]format.Property)
+
+	for k, v := range original {
+		out[k] = format.NewStringProperty(v)
+	}
+
+	return format.NewMetadataBlock(out)
+}
+
 func protobufToStd(inRec *Recording) (format.Recording, error) {
 	subjectRecordings := make([]format.Recording, 0)
 	for _, rec := range inRec.GetSubjects() {
@@ -110,7 +120,7 @@ func protobufToStd(inRec *Recording) (format.Recording, error) {
 				oldToNewEvents(rec.GetCustomEvents()),
 				lifeStream,
 			},
-			metadata: rec.GetMetadata(),
+			metadata: convertMetadata(rec.GetMetadata()),
 		})
 	}
 
@@ -119,7 +129,7 @@ func protobufToStd(inRec *Recording) (format.Recording, error) {
 		name:           inRec.GetName(),
 		captureStreams: []format.CaptureCollection{oldToNewEvents(inRec.GetCustomEvents())},
 		recordings:     subjectRecordings,
-		metadata:       inRec.GetMetadata(),
+		metadata:       convertMetadata(inRec.GetMetadata()),
 	}, nil
 }
 

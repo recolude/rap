@@ -63,7 +63,7 @@ func calcNumStreams(recording format.Recording) int {
 func accumulateMetdataKeys(recording format.Recording, keyMappingToIndex map[string]int) {
 	keyCount := len(keyMappingToIndex)
 
-	for key, _ := range recording.Metadata() {
+	for key, _ := range recording.Metadata().Mapping() {
 		if _, ok := keyMappingToIndex[key]; !ok {
 			keyMappingToIndex[key] = keyCount
 			keyCount++
@@ -130,13 +130,17 @@ func (w Writer) evaluateCollections(recording format.Recording, offset int) ([]e
 	return mappings, curOffset, nil
 }
 
-func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, metadata map[string]string) (int, error) {
-	metadataIndices := make([]uint, len(metadata))
-	metadataValues := make([]string, len(metadata))
+func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, metadata format.Metadata) (int, error) {
+	metadataIndices := make([]uint, len(metadata.Mapping()))
+
+	metadataValuesBuffer := bytes.Buffer{}
+	// metadataValues := make([][]byte, len(metadata.Mapping()))
 	i := 0
-	for key, val := range metadata {
+	for key, val := range metadata.Mapping() {
 		metadataIndices[i] = uint(keyMappingToIndex[key])
-		metadataValues[i] = val
+		metadataValuesBuffer.WriteByte(val.Code())
+		metadataValuesBuffer.Write(val.Data())
+		// metadataValues[i] = append([]byte{val.Code()}, val.Data()...)
 		i++
 	}
 
@@ -148,7 +152,7 @@ func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, metadata map
 		return written, err
 	}
 
-	written, err = out.Write(rapbinary.StringArrayToBytes(metadataValues))
+	written, err = out.Write(rapbinary.BytesArrayToBytes(metadataValuesBuffer.Bytes()))
 	totalBytes += written
 
 	return totalBytes, err

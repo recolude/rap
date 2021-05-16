@@ -75,24 +75,43 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 	return encoders, encoderHeaders, totalBytesRead, nil
 }
 
-func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (map[string]string, error) {
-	metadata := make(map[string]string)
+func readProperty(b *bytes.Reader) (format.Property, error) {
+	propertyType, err := b.ReadByte()
+	if err != nil {
+		return nil, err
+	}
+
+	switch propertyType {
+	case 0:
+		str, _, err := binary.ReadString(b)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewStringProperty(str), nil
+	}
+
+	return nil, fmt.Errorf("unrecognized property type code %d", int(propertyType))
+}
+
+func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (format.Metadata, error) {
+	metadata := make(map[string]format.Property)
 
 	keyIndecies, _, err := binary.ReadUintArray(in)
 	if err != nil {
-		return nil, err
+		return format.Metadata{}, err
 	}
 
-	valuesBlock, _, err := binary.ReadStringArray(in)
+	valuesBlock, _, err := binary.ReadBytesArray(in)
 	if err != nil {
-		return nil, err
+		return format.Metadata{}, err
+	}
+	valuesBlockBuffer := bytes.NewReader(valuesBlock)
+
+	for _, key := range keyIndecies {
+		metadata[metadataKeys[key]], err = readProperty(valuesBlockBuffer)
 	}
 
-	for i, key := range keyIndecies {
-		metadata[metadataKeys[key]] = valuesBlock[i]
-	}
-
-	return metadata, nil
+	return format.NewMetadataBlock(metadata), nil
 }
 
 func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (format.Recording, error) {

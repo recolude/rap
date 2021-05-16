@@ -38,3 +38,36 @@ func ReadBytesArray(r io.Reader) ([]byte, int, error) {
 
 	return out, read + bytesRead, nil
 }
+
+// func ArrayOfByteArraysToBytes(b [][]byte) []byte {
+// 	// Array Count
+// 	varByte := make([]byte, 4)
+// 	read := binary.PutUvarint(varByte, uint64(len(b)))
+// 	buf := new(bytes.Buffer)
+// 	buf.Write(varByte[:read])
+
+// 	for _, a := range b {
+// 		buf.Write(BytesArrayToBytes(a))
+// 	}
+
+// 	return buf.Bytes()
+// }
+
+// func ReadArrayOfByteArrays(r io.Reader) ([][]byte, int, error) {
+// 	len, bytesRead, err := ReadUvarint(r)
+// 	if err != nil {
+// 		return nil, bytesRead, err
+// 	}
+
+// 	out := make([][]byte, len)
+// 	for i := range out {
+// 		str, read, err := ReadBytesArray(r)
+// 		bytesRead += read
+// 		if err != nil {
+// 			return nil, bytesRead, err
+// 		}
+// 		out[i] = str
+// 	}
+
+// 	return out, bytesRead, nil
+// }
