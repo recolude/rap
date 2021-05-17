@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	math "math"
+	"strconv"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/recolude/rap/format"
@@ -60,7 +61,12 @@ func convertMetadata(original map[string]string) format.Metadata {
 	out := make(map[string]format.Property)
 
 	for k, v := range original {
-		out[k] = format.NewStringProperty(v)
+		floatVal, err := strconv.ParseFloat(v, 32)
+		if err == nil {
+			out[k] = format.NewFloat32Property(float32(floatVal))
+		} else {
+			out[k] = format.NewStringProperty(v)
+		}
 	}
 
 	return format.NewMetadataBlock(out)

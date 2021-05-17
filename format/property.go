@@ -51,7 +51,7 @@ func NewIntProperty(i int32) Int32Property {
 }
 
 func (ip Int32Property) Code() byte {
-	return 2
+	return 1
 }
 
 func (ip Int32Property) String() string {
@@ -77,7 +77,7 @@ func NewFloat32Property(i float32) Float32Property {
 }
 
 func (fp Float32Property) Code() byte {
-	return 4
+	return 2
 }
 
 func (fp Float32Property) String() string {
@@ -88,4 +88,66 @@ func (fp Float32Property) Data() []byte {
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.LittleEndian, fp.i)
 	return buf.Bytes()
+}
+
+// BOOL =======================================================================
+
+type BoolProperty struct {
+	b bool
+}
+
+func NewBoolProperty(b bool) BoolProperty {
+	return BoolProperty{
+		b: b,
+	}
+}
+
+func (bp BoolProperty) Code() byte {
+	if bp.b {
+		return 3
+	}
+	return 4
+}
+
+func (bp BoolProperty) String() string {
+	if bp.b {
+		return "true"
+	}
+	return "false"
+}
+
+func (bp BoolProperty) Data() []byte {
+	return nil
+}
+
+func (bp BoolProperty) Value() bool {
+	return bp.b
+}
+
+// BYTE =======================================================================
+
+type ByteProperty struct {
+	b byte
+}
+
+func NewByteProperty(b byte) ByteProperty {
+	return ByteProperty{
+		b: b,
+	}
+}
+
+func (bp ByteProperty) Code() byte {
+	return 5
+}
+
+func (bp ByteProperty) String() string {
+	return fmt.Sprintf("%d", int(bp.b))
+}
+
+func (bp ByteProperty) Data() []byte {
+	return []byte{bp.b}
+}
+
+func (bp ByteProperty) Value() byte {
+	return bp.b
 }

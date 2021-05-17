@@ -603,3 +603,42 @@ func Test_Uprade(t *testing.T) {
 	assert.Equal(t, n, nOut)
 	assertRecordingsMatch(t, rec, recOut)
 }
+
+func Test_Metadata(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{}
+
+	w := io.NewWriter(encoders, fileData)
+	r := io.NewReader(encoders, fileData)
+
+	recIn := format.NewRecording(
+		"",
+		"Test MetadataRecording",
+		[]format.CaptureCollection{},
+		[]format.Recording{},
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"my int prop 77":   format.NewIntProperty(77),
+				"my int prop -100": format.NewIntProperty(100),
+				"my int prop -0":   format.NewIntProperty(0),
+				"my string prop":   format.NewStringProperty("dee"),
+				"my bool true":     format.NewBoolProperty(true),
+				"my bool false":    format.NewBoolProperty(false),
+				"my byte test":     format.NewByteProperty(22),
+			},
+		),
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assert.Equal(t, n, nOut)
+	assertRecordingsMatch(t, recIn, recOut)
+}

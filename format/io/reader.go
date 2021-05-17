@@ -3,6 +3,7 @@ package io
 import (
 	"bytes"
 	"compress/flate"
+	encbin "encoding/binary"
 	"fmt"
 	"io"
 
@@ -88,9 +89,36 @@ func readProperty(b *bytes.Reader) (format.Property, error) {
 			return nil, err
 		}
 		return format.NewStringProperty(str), nil
+
+	case 1:
+		var int32Val int32
+		err := encbin.Read(b, encbin.LittleEndian, &int32Val)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewIntProperty(int32Val), nil
+
+	case 2:
+		var float32Val float32
+		err := encbin.Read(b, encbin.LittleEndian, &float32Val)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewFloat32Property(float32Val), nil
+
+	case 3:
+		return format.NewBoolProperty(true), nil
+	case 4:
+		return format.NewBoolProperty(false), nil
+	case 5:
+		byteVal, err := b.ReadByte()
+		if err != nil {
+			return nil, err
+		}
+		return format.NewByteProperty(byteVal), nil
 	}
 
-	return nil, fmt.Errorf("unrecognized property type code %d", int(propertyType))
+	return nil, fmt.Errorf("unrecognized property type code: %d", int(propertyType))
 }
 
 func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (format.Metadata, error) {
@@ -109,6 +137,9 @@ func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (format
 
 	for _, key := range keyIndecies {
 		metadata[metadataKeys[key]], err = readProperty(valuesBlockBuffer)
+		if err != nil {
+			return format.EmptyMetadataBlock(), err
+		}
 	}
 
 	return format.NewMetadataBlock(metadata), nil
@@ -125,6 +156,9 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 
 	// Read Recording metadata
 	metadata, err := readRecordingMetadataBlock(in, metadataKeys)
+	if err != nil {
+		return nil, err
+	}
 
 	// read num streams
 	numStreams, _, err := binary.ReadUvarint(in)
