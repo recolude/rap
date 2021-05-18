@@ -89,6 +89,30 @@ func readFloat64s(r io.Reader, count int) ([]float64, error) {
 	return outValues, nil
 }
 
+func readNestedMetadatablock(b *bytes.Reader) (format.Metadata, error) {
+	metadataKeys, _, err := binary.ReadStringArray(b)
+	if err != nil {
+		return format.EmptyMetadataBlock(), err
+	}
+
+	metadata := make(map[string]format.Property)
+
+	// valuesBlock, _, err := binary.ReadBytesArray(in)
+	// if err != nil {
+	// 	return format.Metadata{}, err
+	// }
+	// valuesBlockBuffer := bytes.NewReader(valuesBlock)
+
+	for _, key := range metadataKeys {
+		metadata[key], err = readProperty(b)
+		if err != nil {
+			return format.EmptyMetadataBlock(), err
+		}
+	}
+
+	return format.NewMetadataBlock(metadata), nil
+}
+
 func readProperty(b *bytes.Reader) (format.Property, error) {
 	propertyType, err := b.ReadByte()
 	if err != nil {
@@ -163,6 +187,13 @@ func readProperty(b *bytes.Reader) (format.Property, error) {
 			return nil, err
 		}
 		return format.NewMatrix4x4Property(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8], vals[9], vals[10], vals[11], vals[12], vals[13], vals[14], vals[15]), nil
+	case 11:
+
+		metadataBlock, err := readNestedMetadatablock(b)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewMetadataProperty(metadataBlock), nil
 	}
 
 	return nil, fmt.Errorf("unrecognized property type code: %d", int(propertyType))

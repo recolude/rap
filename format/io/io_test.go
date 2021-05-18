@@ -632,6 +632,13 @@ func Test_Metadata(t *testing.T) {
 				"quaternion test": format.NewQuaternionProperty(1.2, 3.4, 5.6, 7.8),
 				"matrix3x3 test":  format.NewMatrix3x3Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18),
 				"matrix4x4 test":  format.NewMatrix4x4Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18, 19.20, 21.22, 23.24, 25.26, 27.28, 29.30, 31.32),
+				"matrix test": format.NewMetadataProperty(format.NewMetadataBlock(
+					map[string]format.Property{
+						"nested prop 1": format.NewStringProperty("God kill me"),
+						"nested prop 2": format.NewStringProperty("ahhhh"),
+						"nested prop 3": format.NewIntProperty(666),
+					},
+				)),
 			},
 		),
 		nil,

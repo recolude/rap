@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"strings"
 
 	rapbin "github.com/recolude/rap/internal/io/binary"
 )
@@ -377,5 +378,53 @@ func (m4p Matrix4x4Property) Data() []byte {
 	binary.Write(buf, binary.LittleEndian, m4p.r4f2)
 	binary.Write(buf, binary.LittleEndian, m4p.r4c3)
 	binary.Write(buf, binary.LittleEndian, m4p.r4c4)
+	return buf.Bytes()
+}
+
+// METADATA ===================================================================
+
+type MetadataProperty struct {
+	block Metadata
+}
+
+func NewMetadataProperty(block Metadata) MetadataProperty {
+	return MetadataProperty{block}
+}
+
+func (m4p MetadataProperty) Code() byte {
+	return 11
+}
+
+func (mp MetadataProperty) String() string {
+	out := strings.Builder{}
+	out.WriteString("{")
+	i := 0
+	for key, prop := range mp.block.Mapping() {
+		fmt.Fprintf(&out, " \"%s\": %s", key, prop.String())
+		if i < len(mp.block.Mapping())-1 {
+			out.WriteString(", ")
+		}
+	}
+	out.WriteString("}")
+	return out.String()
+}
+
+func (mp MetadataProperty) Data() []byte {
+	buf := new(bytes.Buffer)
+
+	i := 0
+	mappingWithIndex := make([]string, len(mp.block.Mapping()))
+	for key := range mp.block.Mapping() {
+		mappingWithIndex[i] = key
+		i++
+	}
+
+	buf.Write(rapbin.StringArrayToBytes(mappingWithIndex))
+
+	for _, key := range mappingWithIndex {
+		buf.WriteByte(mp.block.Mapping()[key].Code())
+		buf.Write(mp.block.Mapping()[key].Data())
+	}
+
 	return buf.Bytes()
 }
