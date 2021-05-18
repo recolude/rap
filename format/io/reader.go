@@ -76,6 +76,19 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 	return encoders, encoderHeaders, totalBytesRead, nil
 }
 
+func readFloat64s(r io.Reader, count int) ([]float64, error) {
+	outValues := make([]float64, count)
+	for i := 0; i < count; i++ {
+		var val float64
+		err := encbin.Read(r, encbin.LittleEndian, &val)
+		if err != nil {
+			return nil, err
+		}
+		outValues[i] = val
+	}
+	return outValues, nil
+}
+
 func readProperty(b *bytes.Reader) (format.Property, error) {
 	propertyType, err := b.ReadByte()
 	if err != nil {
@@ -116,6 +129,40 @@ func readProperty(b *bytes.Reader) (format.Property, error) {
 			return nil, err
 		}
 		return format.NewByteProperty(byteVal), nil
+
+	case 6:
+		vals, err := readFloat64s(b, 2)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewVector2Property(vals[0], vals[1]), nil
+
+	case 7:
+		vals, err := readFloat64s(b, 3)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewVector3Property(vals[0], vals[1], vals[2]), nil
+
+	case 8:
+		vals, err := readFloat64s(b, 4)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewQuaternionProperty(vals[0], vals[1], vals[2], vals[3]), nil
+
+	case 9:
+		vals, err := readFloat64s(b, 9)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewMatrix3x3Property(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8]), nil
+	case 10:
+		vals, err := readFloat64s(b, 16)
+		if err != nil {
+			return nil, err
+		}
+		return format.NewMatrix4x4Property(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8], vals[9], vals[10], vals[11], vals[12], vals[13], vals[14], vals[15]), nil
 	}
 
 	return nil, fmt.Errorf("unrecognized property type code: %d", int(propertyType))

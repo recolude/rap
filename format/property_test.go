@@ -104,7 +104,7 @@ func Test_ByteProperty(t *testing.T) {
 	}{
 		"0":  {value: 0, stringVal: "0"},
 		"1":  {value: 1, stringVal: "1"},
-		"12": {value: 44, stringVal: "44"},
+		"44": {value: 44, stringVal: "44"},
 	}
 
 	for name, tc := range tests {
