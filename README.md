@@ -12,7 +12,7 @@ cd rap
 go install ./cmd/rap-cli
 ```
 
-## Usage
+## CLI Usage
 
 ```
 NAME:
@@ -37,6 +37,54 @@ COMMANDS:
 GLOBAL OPTIONS:
    --help, -h     show help (default: false)
    --version, -v  print the version (default: false)
+```
+
+## Building Recordings Programmatically
+
+With this new library you can create your own recordings programmatically. The below example creates a recording of the sin wave and then writes it to disk.
+
+```golang
+package main
+
+import (
+	"math"
+	"os"
+	"time"
+
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/collection/position"
+	"github.com/recolude/rap/format/io"
+)
+
+func main() {
+	iterations := 1000
+	positions := make([]position.Capture, iterations)
+
+	start := time.Now()
+	for i := 0; i < iterations; i++ {
+		positions[i] = position.NewCapture(float64(i), 0, math.Sin(float64(i)), 0)
+	}
+	duration := time.Since(start)
+
+	rec := format.NewRecording(
+		"",
+		"Sin Wave Demo",
+		[]format.CaptureCollection{
+         position.NewCollection("Sin Wave", positions)
+      },
+		nil,
+		format.NewMetadataBlock(map[string]format.Property{
+			"iterations": format.NewIntProperty(int32(iterations)),
+			"benchmark":  format.NewStringProperty(duration.String()),
+		}),
+		nil,
+		nil,
+	)
+
+	f, _ := os.Create("sin demo.rap")
+	recordingWriter := io.NewRecoludeWriter(f)
+	recordingWriter.Write(rec)
+}
 ```
 
 ## Testing Locally

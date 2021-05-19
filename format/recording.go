@@ -2,7 +2,7 @@ package format
 
 import "io"
 
-//go:generate mockgen -destination=../internal/mocks/recording.go -package=mocks github.com/recolude/rap/format Recording,CaptureCollection
+//go:generate mockgen -destination=../internal/mocks/recording.go -package=mocks github.com/recolude/rap/format Recording,CaptureCollection,Binary,BinaryReference
 
 type Capture interface {
 	Time() float64
@@ -47,6 +47,7 @@ func NewRecording(
 	recordings []Recording,
 	metadata Metadata,
 	binaries []Binary,
+	binaryReferences []BinaryReference,
 ) recording {
 	return recording{
 		id:                 id,
@@ -55,6 +56,7 @@ func NewRecording(
 		captureCollections: captureCollections,
 		metadata:           metadata,
 		binaries:           binaries,
+		binaryReferences:   binaryReferences,
 	}
 }
 
@@ -65,6 +67,7 @@ type recording struct {
 	recordings         []Recording
 	metadata           Metadata
 	binaries           []Binary
+	binaryReferences   []BinaryReference
 }
 
 func (r recording) ID() string {
@@ -92,5 +95,5 @@ func (r recording) Binaries() []Binary {
 }
 
 func (r recording) BinaryReferences() []BinaryReference {
-	return nil
+	return r.binaryReferences
 }

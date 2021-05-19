@@ -70,6 +70,15 @@ func accumulateMetdataKeys(recording format.Recording, keyMappingToIndex map[str
 		}
 	}
 
+	for _, ref := range recording.BinaryReferences() {
+		for key, _ := range ref.Metadata().Mapping() {
+			if _, ok := keyMappingToIndex[key]; !ok {
+				keyMappingToIndex[key] = keyCount
+				keyCount++
+			}
+		}
+	}
+
 	for _, rec := range recording.Recordings() {
 		accumulateMetdataKeys(rec, keyMappingToIndex)
 	}
@@ -205,6 +214,24 @@ func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[s
 		// Write stream data
 		out.Write(rapbinary.BytesArrayToBytes(encodingBlocks[offset+streamIndex]))
 	}
+
+	// Write number of references
+	numReferences := make([]byte, 4)
+	read = binary.PutUvarint(numReferences, uint64(len(recording.BinaryReferences())))
+	out.Write(numReferences[:read])
+
+	// Write binary references
+	for _, ref := range recording.BinaryReferences() {
+		out.Write(rapbinary.StringToBytes(ref.Name()))
+		out.Write(rapbinary.StringToBytes(ref.URI()))
+
+		refSize := make([]byte, 4)
+		read = binary.PutUvarint(refSize, ref.Size())
+		out.Write(refSize[:read])
+
+		writeMetadata(&out, keyMappingToIndex, ref.Metadata())
+	}
+	// out.Write(rapbinary.StringArrayToBytes(binaryRefNames))
 
 	// Write number of recordings
 	numRecordings := make([]byte, 4)

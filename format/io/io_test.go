@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/enum"
 	"github.com/recolude/rap/format/collection/euler"
@@ -18,6 +19,7 @@ import (
 	eventEncoding "github.com/recolude/rap/format/encoding/event"
 	positionEncoding "github.com/recolude/rap/format/encoding/position"
 	"github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,6 +35,24 @@ func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording
 
 	if assert.Equal(t, len(recExpected.Binaries()), len(recActual.Binaries())) == false {
 		return false
+	}
+
+	if assert.Equal(t, len(recExpected.BinaryReferences()), len(recActual.BinaryReferences())) == false {
+		return false
+	}
+
+	for i, actual := range recActual.BinaryReferences() {
+		assert.Equal(t, recExpected.BinaryReferences()[i].Name(), actual.Name())
+		assert.Equal(t, recExpected.BinaryReferences()[i].URI(), actual.URI())
+		assert.Equal(t, recExpected.BinaryReferences()[i].Size(), actual.Size())
+
+		if assert.Equal(t, len(recExpected.BinaryReferences()[i].Metadata().Mapping()), len(actual.Metadata().Mapping()), "mismatch binary reference metadata lengths") == false {
+			return false
+		}
+
+		for key, element := range recExpected.BinaryReferences()[i].Metadata().Mapping() {
+			assert.Equal(t, element, recActual.BinaryReferences()[i].Metadata().Mapping()[key])
+		}
 	}
 
 	if assert.Equal(t, len(recExpected.Recordings()), len(recActual.Recordings()), "Mismatch child recordings") == false {
@@ -110,6 +130,54 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 			},
 		),
 		nil,
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assert.Equal(t, n, nOut)
+	assertRecordingsMatch(t, recIn, recOut)
+}
+
+func Test_HandlesBinaryReference(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	binaryRef := mocks.NewMockBinaryReference(ctrl)
+	binaryRef.EXPECT().Name().AnyTimes().Return("Test Bin Ref")
+	binaryRef.EXPECT().URI().AnyTimes().Return("recolude://orgid.projectid/binary-asset")
+	binaryRef.EXPECT().Size().AnyTimes().Return(uint64(1234))
+	binaryRef.EXPECT().Metadata().AnyTimes().Return(format.NewMetadataBlock(map[string]format.Property{
+		"a": format.NewStringProperty("b"),
+	}))
+
+	w := io.NewWriter(encoders, fileData)
+	r := io.NewReader(encoders, fileData)
+
+	recIn := format.NewRecording(
+		"44",
+		"Test Recording",
+		[]format.CaptureCollection{},
+		nil,
+		format.NewMetadataBlock(
+			map[string]format.Property{
+				"ce": format.NewStringProperty("dee"),
+			},
+		),
+		nil,
+		[]format.BinaryReference{binaryRef},
 	)
 
 	// ACT ====================================================================
@@ -164,6 +232,7 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 				"ce": format.NewStringProperty("dee"),
 			},
 		),
+		nil,
 		nil,
 	)
 
@@ -244,6 +313,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 					},
 				),
 				nil,
+				nil,
 			),
 		},
 		format.NewMetadataBlock(
@@ -252,6 +322,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 				"ce": format.NewStringProperty("dee"),
 			},
 		),
+		nil,
 		nil,
 	)
 
@@ -308,6 +379,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 				nil,
 				format.EmptyMetadataBlock(),
 				nil,
+				nil,
 			),
 		},
 		format.NewMetadataBlock(
@@ -316,6 +388,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 				"ce": format.NewStringProperty("dee"),
 			},
 		),
+		nil,
 		nil,
 	)
 
@@ -420,6 +493,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 					},
 				),
 				nil,
+				nil,
 			),
 			format.NewRecording(
 				"",
@@ -461,6 +535,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 					},
 				),
 				nil,
+				nil,
 			),
 		},
 		format.NewMetadataBlock(
@@ -469,6 +544,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 				"ce": format.NewStringProperty("dee"),
 			},
 		),
+		nil,
 		nil,
 	)
 
@@ -540,6 +616,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 			},
 		),
 		nil,
+		nil,
 	)
 
 	numChildren := 1600
@@ -569,6 +646,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 				"ce": format.NewStringProperty("dee"),
 			},
 		),
+		nil,
 		nil,
 	)
 
@@ -654,6 +732,7 @@ func Test_Metadata(t *testing.T) {
 				)),
 			},
 		),
+		nil,
 		nil,
 	)
 
