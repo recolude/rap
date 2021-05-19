@@ -2,15 +2,17 @@ package event
 
 import (
 	"fmt"
+
+	"github.com/recolude/rap/format"
 )
 
 type Capture struct {
 	time     float64
 	name     string
-	metadata map[string]string
+	metadata format.Metadata
 }
 
-func NewCapture(time float64, name string, metadata map[string]string) Capture {
+func NewCapture(time float64, name string, metadata format.Metadata) Capture {
 	return Capture{
 		time:     time,
 		name:     name,
@@ -22,7 +24,7 @@ func (c Capture) Name() string {
 	return c.name
 }
 
-func (c Capture) Metadata() map[string]string {
+func (c Capture) Metadata() format.Metadata {
 	return c.metadata
 }
 

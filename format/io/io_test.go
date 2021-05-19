@@ -293,7 +293,12 @@ func Test_EncodersWithHeaders(t *testing.T) {
 				"Child",
 				[]format.CaptureCollection{
 					event.NewCollection("ahhh", []event.Capture{
-						event.NewCapture(1, "att", map[string]string{"1": "2"}),
+						event.NewCapture(
+							1,
+							"att",
+							format.NewMetadataBlock(map[string]format.Property{
+								"1": format.NewStringProperty("2"),
+							})),
 					}),
 				},
 				nil,
@@ -364,7 +369,9 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 				"Child Recording",
 				[]format.CaptureCollection{
 					event.NewCollection("ahhh", []event.Capture{
-						event.NewCapture(1, "att", map[string]string{"1": "2"}),
+						event.NewCapture(1, "att", format.NewMetadataBlock(map[string]format.Property{
+							"1": format.NewStringProperty("2"),
+						})),
 					}),
 					position.NewCollection(
 						"Child Position",
@@ -491,7 +498,9 @@ func Test_HandlesManyChildren(t *testing.T) {
 		"Child Recording",
 		[]format.CaptureCollection{
 			event.NewCollection("ahhh", []event.Capture{
-				event.NewCapture(1, "att", map[string]string{"1": "2"}),
+				event.NewCapture(1, "att", format.NewMetadataBlock(map[string]format.Property{
+					"1": format.NewStringProperty("2"),
+				})),
 			}),
 			position.NewCollection(
 				"Child Position",

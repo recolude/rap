@@ -3,7 +3,6 @@ package io
 import (
 	"bytes"
 	"compress/flate"
-	encbin "encoding/binary"
 	"fmt"
 	"io"
 
@@ -76,129 +75,6 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 	return encoders, encoderHeaders, totalBytesRead, nil
 }
 
-func readFloat64s(r io.Reader, count int) ([]float64, error) {
-	outValues := make([]float64, count)
-	for i := 0; i < count; i++ {
-		var val float64
-		err := encbin.Read(r, encbin.LittleEndian, &val)
-		if err != nil {
-			return nil, err
-		}
-		outValues[i] = val
-	}
-	return outValues, nil
-}
-
-func readNestedMetadatablock(b *bytes.Reader) (format.Metadata, error) {
-	metadataKeys, _, err := binary.ReadStringArray(b)
-	if err != nil {
-		return format.EmptyMetadataBlock(), err
-	}
-
-	metadata := make(map[string]format.Property)
-
-	// valuesBlock, _, err := binary.ReadBytesArray(in)
-	// if err != nil {
-	// 	return format.Metadata{}, err
-	// }
-	// valuesBlockBuffer := bytes.NewReader(valuesBlock)
-
-	for _, key := range metadataKeys {
-		metadata[key], err = readProperty(b)
-		if err != nil {
-			return format.EmptyMetadataBlock(), err
-		}
-	}
-
-	return format.NewMetadataBlock(metadata), nil
-}
-
-func readProperty(b *bytes.Reader) (format.Property, error) {
-	propertyType, err := b.ReadByte()
-	if err != nil {
-		return nil, err
-	}
-
-	switch propertyType {
-	case 0:
-		str, _, err := binary.ReadString(b)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewStringProperty(str), nil
-
-	case 1:
-		var int32Val int32
-		err := encbin.Read(b, encbin.LittleEndian, &int32Val)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewIntProperty(int32Val), nil
-
-	case 2:
-		var float32Val float32
-		err := encbin.Read(b, encbin.LittleEndian, &float32Val)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewFloat32Property(float32Val), nil
-
-	case 3:
-		return format.NewBoolProperty(true), nil
-	case 4:
-		return format.NewBoolProperty(false), nil
-	case 5:
-		byteVal, err := b.ReadByte()
-		if err != nil {
-			return nil, err
-		}
-		return format.NewByteProperty(byteVal), nil
-
-	case 6:
-		vals, err := readFloat64s(b, 2)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewVector2Property(vals[0], vals[1]), nil
-
-	case 7:
-		vals, err := readFloat64s(b, 3)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewVector3Property(vals[0], vals[1], vals[2]), nil
-
-	case 8:
-		vals, err := readFloat64s(b, 4)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewQuaternionProperty(vals[0], vals[1], vals[2], vals[3]), nil
-
-	case 9:
-		vals, err := readFloat64s(b, 9)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewMatrix3x3Property(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8]), nil
-	case 10:
-		vals, err := readFloat64s(b, 16)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewMatrix4x4Property(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8], vals[9], vals[10], vals[11], vals[12], vals[13], vals[14], vals[15]), nil
-	case 11:
-
-		metadataBlock, err := readNestedMetadatablock(b)
-		if err != nil {
-			return nil, err
-		}
-		return format.NewMetadataProperty(metadataBlock), nil
-	}
-
-	return nil, fmt.Errorf("unrecognized property type code: %d", int(propertyType))
-}
-
 func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (format.Metadata, error) {
 	metadata := make(map[string]format.Property)
 
@@ -214,7 +90,7 @@ func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (format
 	valuesBlockBuffer := bytes.NewReader(valuesBlock)
 
 	for _, key := range keyIndecies {
-		metadata[metadataKeys[key]], err = readProperty(valuesBlockBuffer)
+		metadata[metadataKeys[key]], err = format.ReadProperty(valuesBlockBuffer)
 		if err != nil {
 			return format.EmptyMetadataBlock(), err
 		}

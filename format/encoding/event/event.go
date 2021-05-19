@@ -79,20 +79,21 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 			read := binary.PutUvarint(nameIndex, uint64(eventNamesSet[eventCapture.Name()]))
 			streamDataBuffers[bufferIndex].Write(nameIndex[:read])
 
-			allKeyIndxes := make([]uint, len(eventCapture.Metadata()))
-			allValueStrings := make([]string, len(eventCapture.Metadata()))
+			allKeyIndxes := make([]uint, len(eventCapture.Metadata().Mapping()))
+			allValueDataBuffer := bytes.Buffer{}
 			keyCount := 0
-			for key, val := range eventCapture.Metadata() {
+			for key, val := range eventCapture.Metadata().Mapping() {
 				if _, ok := eventKeysSet[key]; !ok {
 					eventKeysSet[key] = len(eventKeysSet)
 				}
 				allKeyIndxes[keyCount] = uint(eventKeysSet[key])
-				allValueStrings[keyCount] = val
+				allValueDataBuffer.WriteByte(val.Code())
+				allValueDataBuffer.Write(val.Data())
 				keyCount++
 			}
 
 			streamDataBuffers[bufferIndex].Write(rapbinary.UintArrayToBytes(allKeyIndxes))
-			streamDataBuffers[bufferIndex].Write(rapbinary.StringArrayToBytes(allValueStrings))
+			streamDataBuffers[bufferIndex].Write(allValueDataBuffer.Bytes())
 		}
 	}
 
@@ -126,7 +127,7 @@ func readHeader(header []byte) (names []string, metadataKeys []string, err error
 }
 
 func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollection, error) {
-	buf := bytes.NewBuffer(streamData)
+	buf := bytes.NewReader(streamData)
 
 	eventNames, metadataKeys, err := readHeader(header)
 	if err != nil {
@@ -176,16 +177,20 @@ func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollect
 			return nil, err
 		}
 
-		metadataValues, _, err := rapbinary.ReadStringArray(buf)
-		if err != nil {
-			return nil, err
-		}
+		// metadataValues, _, err := rapbinary.ReadStringArray(buf)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-		metadata := make(map[string]string)
+		metadata := make(map[string]format.Property)
 		for metadataIndex := 0; metadataIndex < len(metadataIndeces); metadataIndex++ {
-			metadata[metadataKeys[metadataIndeces[metadataIndex]]] = metadataValues[metadataIndex]
+			prop, err := format.ReadProperty(buf)
+			if err != nil {
+				return nil, err
+			}
+			metadata[metadataKeys[metadataIndeces[metadataIndex]]] = prop
 		}
-		captures[i] = event.NewCapture(time, eventNames[int(eventNameIndex)], metadata)
+		captures[i] = event.NewCapture(time, eventNames[int(eventNameIndex)], format.NewMetadataBlock(metadata))
 	}
 
 	return event.NewCollection(streamName, captures), nil

@@ -20,23 +20,35 @@ func Test_SingleEvent(t *testing.T) {
 		"1-events": {
 			streamName: "ahhhh",
 			captures: []eventStream.Capture{
-				eventStream.NewCapture(1.2, "Damage", map[string]string{
-					"dealer": "watcher",
-					"damage": "7",
-				}),
+				eventStream.NewCapture(
+					1.2,
+					"Damage",
+					format.NewMetadataBlock(map[string]format.Property{
+						"dealer": format.NewStringProperty("player"),
+						"damage": format.NewIntProperty(7),
+					}),
+				),
 			},
 		},
 		"2-events": {
 			streamName: "ahhhh",
 			captures: []eventStream.Capture{
-				eventStream.NewCapture(1.2, "", map[string]string{
-					"dealer": "watcher",
-					"damage": "7",
-				}),
-				eventStream.NewCapture(1.6, "ttt", map[string]string{
-					"dealer": "persib",
-					"damage": "9",
-				}),
+				eventStream.NewCapture(
+					1.2,
+					"",
+					format.NewMetadataBlock(map[string]format.Property{
+						"dealer": format.NewStringProperty("arer"),
+						"damage": format.NewIntProperty(7),
+					}),
+				),
+				eventStream.NewCapture(
+					1.6,
+					"ttt",
+					format.NewMetadataBlock(map[string]format.Property{
+						"dealer": format.NewStringProperty("watcher"),
+						"damage": format.NewIntProperty(40),
+					}),
+				),
 			},
 		},
 	}
@@ -87,9 +99,9 @@ func Test_SingleEvent(t *testing.T) {
 							assert.InDelta(t, tc.captures[i].Time(), eventCapture.Time(), technique.timeTollerance, "times are not equal: %.2f != %.2f", tc.captures[i].Time(), eventCapture.Time())
 							assert.Equal(t, tc.captures[i].Name(), eventCapture.Name())
 
-							assert.Len(t, eventCapture.Metadata(), len(tc.captures[i].Metadata()))
-							for key, val := range tc.captures[i].Metadata() {
-								assert.Equal(t, val, eventCapture.Metadata()[key])
+							assert.Len(t, eventCapture.Metadata().Mapping(), len(tc.captures[i].Metadata().Mapping()))
+							for key, val := range tc.captures[i].Metadata().Mapping() {
+								assert.Equal(t, val, eventCapture.Metadata().Mapping()[key])
 							}
 
 						}

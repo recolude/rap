@@ -36,21 +36,29 @@ func getNumberOfRecordings(file io.Reader) (int, int, error) {
 func oldToNewEvents(oldEvents []*CustomEventCapture) event.Collection {
 	customEventCaptures := make([]event.Capture, 0)
 	for _, customEvent := range oldEvents {
-		dictToUse := customEvent.GetData()
-
+		eventDict := customEvent.GetData()
+		dictToUse := make(map[string]format.Property)
 		// Older files did not have dictionaries associated with their
 		// custom events
-		if dictToUse == nil || len(dictToUse) == 0 {
-			dictToUse = map[string]string{
-				"value": customEvent.GetContents(),
+		if eventDict == nil || len(eventDict) == 0 {
+			dictToUse["value"] = format.NewStringProperty(customEvent.GetContents())
+		} else {
+			for key, val := range eventDict {
+				floatVal, err := strconv.ParseFloat(val, 32)
+				if err == nil {
+					dictToUse[key] = format.NewFloat32Property(float32(floatVal))
+				} else {
+					dictToUse[key] = format.NewStringProperty(val)
+				}
 			}
 		}
+
 		customEventCaptures = append(
 			customEventCaptures,
 			event.NewCapture(
 				float64(customEvent.Time),
 				customEvent.GetName(),
-				dictToUse,
+				format.NewMetadataBlock(dictToUse),
 			),
 		)
 	}
