@@ -102,6 +102,12 @@ func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (format
 func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (format.Recording, error) {
 	in := bytes.NewReader(recordingData)
 
+	// Read Recording id
+	recordingID, _, err := binary.ReadString(in)
+	if err != nil {
+		return nil, err
+	}
+
 	// Read Recording name
 	recordingName, _, err := binary.ReadString(in)
 	if err != nil {
@@ -161,7 +167,7 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 		allChildRecordings[i] = childRec
 	}
 
-	return format.NewRecording("", recordingName, allStreams, allChildRecordings, metadata, nil), nil
+	return format.NewRecording(recordingID, recordingName, allStreams, allChildRecordings, metadata, nil), nil
 }
 
 func (r Reader) Read() (format.Recording, int, error) {

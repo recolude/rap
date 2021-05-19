@@ -181,6 +181,9 @@ func writeEncoders(out io.Writer, encoders []encoderCollectionMapping) (int, err
 func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[string]int, encodingBlocks [][]byte, streamIndexToEncoderUsedIndex []int, offset int) (int, []byte) {
 	out := bytes.Buffer{}
 
+	// Write id
+	out.Write(rapbinary.StringToBytes(recording.ID()))
+
 	// Write name
 	out.Write(rapbinary.StringToBytes(recording.Name()))
 

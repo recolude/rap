@@ -27,6 +27,10 @@ func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording
 		return false
 	}
 
+	if assert.Equal(t, len(recExpected.ID()), len(recActual.ID())) == false {
+		return false
+	}
+
 	if assert.Equal(t, len(recExpected.Binaries()), len(recActual.Binaries())) == false {
 		return false
 	}
@@ -85,7 +89,7 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
-		"",
+		"44",
 		"Test Recording",
 		[]format.CaptureCollection{
 			position.NewCollection(
