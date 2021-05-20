@@ -8,6 +8,7 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/encoding"
+	"github.com/recolude/rap/format/metadata"
 	"github.com/recolude/rap/internal/io/binary"
 	"github.com/recolude/rap/internal/io/rapv1"
 )
@@ -75,28 +76,28 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 	return encoders, encoderHeaders, totalBytesRead, nil
 }
 
-func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (format.Metadata, error) {
-	metadata := make(map[string]format.Property)
+func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (metadata.Block, error) {
+	propMapping := make(map[string]metadata.Property)
 
 	keyIndecies, _, err := binary.ReadUintArray(in)
 	if err != nil {
-		return format.Metadata{}, err
+		return metadata.EmptyBlock(), err
 	}
 
 	valuesBlock, _, err := binary.ReadBytesArray(in)
 	if err != nil {
-		return format.Metadata{}, err
+		return metadata.EmptyBlock(), err
 	}
 	valuesBlockBuffer := bytes.NewReader(valuesBlock)
 
 	for _, key := range keyIndecies {
-		metadata[metadataKeys[key]], err = format.ReadProperty(valuesBlockBuffer)
+		propMapping[metadataKeys[key]], err = metadata.ReadProperty(valuesBlockBuffer)
 		if err != nil {
-			return format.EmptyMetadataBlock(), err
+			return metadata.EmptyBlock(), err
 		}
 	}
 
-	return format.NewMetadataBlock(metadata), nil
+	return metadata.NewBlock(propMapping), nil
 }
 
 func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (format.Recording, error) {

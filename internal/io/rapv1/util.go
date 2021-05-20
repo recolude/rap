@@ -16,6 +16,7 @@ import (
 	"github.com/recolude/rap/format/collection/euler"
 	"github.com/recolude/rap/format/collection/event"
 	"github.com/recolude/rap/format/collection/position"
+	"github.com/recolude/rap/format/metadata"
 )
 
 func getNumberOfRecordings(file io.Reader) (int, int, error) {
@@ -37,18 +38,18 @@ func oldToNewEvents(oldEvents []*CustomEventCapture) event.Collection {
 	customEventCaptures := make([]event.Capture, 0)
 	for _, customEvent := range oldEvents {
 		eventDict := customEvent.GetData()
-		dictToUse := make(map[string]format.Property)
+		dictToUse := make(map[string]metadata.Property)
 		// Older files did not have dictionaries associated with their
 		// custom events
 		if eventDict == nil || len(eventDict) == 0 {
-			dictToUse["value"] = format.NewStringProperty(customEvent.GetContents())
+			dictToUse["value"] = metadata.NewStringProperty(customEvent.GetContents())
 		} else {
 			for key, val := range eventDict {
 				floatVal, err := strconv.ParseFloat(val, 32)
 				if err == nil {
-					dictToUse[key] = format.NewFloat32Property(float32(floatVal))
+					dictToUse[key] = metadata.NewFloat32Property(float32(floatVal))
 				} else {
-					dictToUse[key] = format.NewStringProperty(val)
+					dictToUse[key] = metadata.NewStringProperty(val)
 				}
 			}
 		}
@@ -58,26 +59,26 @@ func oldToNewEvents(oldEvents []*CustomEventCapture) event.Collection {
 			event.NewCapture(
 				float64(customEvent.Time),
 				customEvent.GetName(),
-				format.NewMetadataBlock(dictToUse),
+				metadata.NewBlock(dictToUse),
 			),
 		)
 	}
 	return event.NewCollection("Custom Event", customEventCaptures)
 }
 
-func convertMetadata(original map[string]string) format.Metadata {
-	out := make(map[string]format.Property)
+func convertMetadata(original map[string]string) metadata.Block {
+	out := make(map[string]metadata.Property)
 
 	for k, v := range original {
 		floatVal, err := strconv.ParseFloat(v, 32)
 		if err == nil {
-			out[k] = format.NewFloat32Property(float32(floatVal))
+			out[k] = metadata.NewFloat32Property(float32(floatVal))
 		} else {
-			out[k] = format.NewStringProperty(v)
+			out[k] = metadata.NewStringProperty(v)
 		}
 	}
 
-	return format.NewMetadataBlock(out)
+	return metadata.NewBlock(out)
 }
 
 func protobufToStd(inRec *Recording) (format.Recording, error) {

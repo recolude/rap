@@ -7,6 +7,7 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/event"
+	"github.com/recolude/rap/format/metadata"
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
@@ -182,15 +183,15 @@ func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollect
 		// 	return nil, err
 		// }
 
-		metadata := make(map[string]format.Property)
+		block := make(map[string]metadata.Property)
 		for metadataIndex := 0; metadataIndex < len(metadataIndeces); metadataIndex++ {
-			prop, err := format.ReadProperty(buf)
+			prop, err := metadata.ReadProperty(buf)
 			if err != nil {
 				return nil, err
 			}
-			metadata[metadataKeys[metadataIndeces[metadataIndex]]] = prop
+			block[metadataKeys[metadataIndeces[metadataIndex]]] = prop
 		}
-		captures[i] = event.NewCapture(time, eventNames[int(eventNameIndex)], format.NewMetadataBlock(metadata))
+		captures[i] = event.NewCapture(time, eventNames[int(eventNameIndex)], metadata.NewBlock(block))
 	}
 
 	return event.NewCollection(streamName, captures), nil

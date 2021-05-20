@@ -1,20 +1,22 @@
 package io
 
-import "github.com/recolude/rap/format"
+import (
+	"github.com/recolude/rap/format/metadata"
+)
 
 type BinaryReference struct {
-	name     string
-	uri      string
-	size     uint64
-	metadata format.Metadata
+	name  string
+	uri   string
+	size  uint64
+	block metadata.Block
 }
 
-func NewBinaryReference(name string, uri string, size uint64, metadata format.Metadata) BinaryReference {
+func NewBinaryReference(name string, uri string, size uint64, block metadata.Block) BinaryReference {
 	return BinaryReference{
-		name:     name,
-		uri:      uri,
-		size:     size,
-		metadata: metadata,
+		name:  name,
+		uri:   uri,
+		size:  size,
+		block: block,
 	}
 }
 
@@ -30,6 +32,6 @@ func (br BinaryReference) Size() uint64 {
 	return br.size
 }
 
-func (br BinaryReference) Metadata() format.Metadata {
-	return br.metadata
+func (br BinaryReference) Metadata() metadata.Block {
+	return br.block
 }

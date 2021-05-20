@@ -1,4 +1,4 @@
-package format
+package metadata
 
 import (
 	"bytes"
@@ -385,10 +385,10 @@ func (m4p Matrix4x4Property) Data() []byte {
 // METADATA ===================================================================
 
 type MetadataProperty struct {
-	block Metadata
+	block Block
 }
 
-func NewMetadataProperty(block Metadata) MetadataProperty {
+func NewMetadataProperty(block Block) MetadataProperty {
 	return MetadataProperty{block}
 }
 
@@ -443,10 +443,10 @@ func readFloat64s(r io.Reader, count int) ([]float64, error) {
 	return outValues, nil
 }
 
-func readNestedMetadatablock(b *bytes.Reader) (Metadata, error) {
+func readNestedMetadatablock(b *bytes.Reader) (Block, error) {
 	metadataKeys, _, err := rapbin.ReadStringArray(b)
 	if err != nil {
-		return EmptyMetadataBlock(), err
+		return EmptyBlock(), err
 	}
 
 	metadata := make(map[string]Property)
@@ -454,11 +454,11 @@ func readNestedMetadatablock(b *bytes.Reader) (Metadata, error) {
 	for _, key := range metadataKeys {
 		metadata[key], err = ReadProperty(b)
 		if err != nil {
-			return EmptyMetadataBlock(), err
+			return EmptyBlock(), err
 		}
 	}
 
-	return NewMetadataBlock(metadata), nil
+	return NewBlock(metadata), nil
 }
 
 func ReadProperty(b *bytes.Reader) (Property, error) {

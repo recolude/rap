@@ -9,6 +9,7 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/position"
+	"github.com/recolude/rap/format/metadata"
 )
 
 func RecordingFromCSV(in io.Reader) (format.Recording, error) {
@@ -109,7 +110,7 @@ func RecordingFromCSV(in io.Reader) (format.Recording, error) {
 						position.NewCollection("Position", captures),
 					},
 					nil,
-					format.EmptyMetadataBlock(),
+					metadata.EmptyBlock(),
 					nil,
 					nil,
 				),
@@ -117,5 +118,5 @@ func RecordingFromCSV(in io.Reader) (format.Recording, error) {
 		}
 	}
 
-	return format.NewRecording("", "", nil, allRecordings, format.EmptyMetadataBlock(), nil, nil), nil
+	return format.NewRecording("", "", nil, allRecordings, metadata.EmptyBlock(), nil, nil), nil
 }

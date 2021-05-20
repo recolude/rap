@@ -7,6 +7,7 @@ import (
 	"github.com/recolude/rap/format"
 	eventStream "github.com/recolude/rap/format/collection/event"
 	"github.com/recolude/rap/format/encoding/event"
+	"github.com/recolude/rap/format/metadata"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,9 +24,9 @@ func Test_SingleEvent(t *testing.T) {
 				eventStream.NewCapture(
 					1.2,
 					"Damage",
-					format.NewMetadataBlock(map[string]format.Property{
-						"dealer": format.NewStringProperty("player"),
-						"damage": format.NewIntProperty(7),
+					metadata.NewBlock(map[string]metadata.Property{
+						"dealer": metadata.NewStringProperty("player"),
+						"damage": metadata.NewIntProperty(7),
 					}),
 				),
 			},
@@ -36,17 +37,17 @@ func Test_SingleEvent(t *testing.T) {
 				eventStream.NewCapture(
 					1.2,
 					"",
-					format.NewMetadataBlock(map[string]format.Property{
-						"dealer": format.NewStringProperty("arer"),
-						"damage": format.NewIntProperty(7),
+					metadata.NewBlock(map[string]metadata.Property{
+						"dealer": metadata.NewStringProperty("arer"),
+						"damage": metadata.NewIntProperty(7),
 					}),
 				),
 				eventStream.NewCapture(
 					1.6,
 					"ttt",
-					format.NewMetadataBlock(map[string]format.Property{
-						"dealer": format.NewStringProperty("watcher"),
-						"damage": format.NewIntProperty(40),
+					metadata.NewBlock(map[string]metadata.Property{
+						"dealer": metadata.NewStringProperty("watcher"),
+						"damage": metadata.NewIntProperty(40),
 					}),
 				),
 			},

@@ -19,6 +19,7 @@ import (
 	eventEncoding "github.com/recolude/rap/format/encoding/event"
 	positionEncoding "github.com/recolude/rap/format/encoding/position"
 	"github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/format/metadata"
 	"github.com/recolude/rap/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -123,10 +124,10 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 			),
 		},
 		nil,
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"a":  format.NewStringProperty("bee"),
-				"ce": format.NewStringProperty("dee"),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
 			},
 		),
 		nil,
@@ -159,8 +160,8 @@ func Test_HandlesBinaryReference(t *testing.T) {
 	binaryRef.EXPECT().Name().AnyTimes().Return("Test Bin Ref")
 	binaryRef.EXPECT().URI().AnyTimes().Return("recolude://orgid.projectid/binary-asset")
 	binaryRef.EXPECT().Size().AnyTimes().Return(uint64(1234))
-	binaryRef.EXPECT().Metadata().AnyTimes().Return(format.NewMetadataBlock(map[string]format.Property{
-		"a": format.NewStringProperty("b"),
+	binaryRef.EXPECT().Metadata().AnyTimes().Return(metadata.NewBlock(map[string]metadata.Property{
+		"a": metadata.NewStringProperty("b"),
 	}))
 
 	w := io.NewWriter(encoders, fileData)
@@ -171,9 +172,9 @@ func Test_HandlesBinaryReference(t *testing.T) {
 		"Test Recording",
 		[]format.CaptureCollection{},
 		nil,
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"ce": format.NewStringProperty("dee"),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"ce": metadata.NewStringProperty("dee"),
 			},
 		),
 		nil,
@@ -226,10 +227,10 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 			),
 		},
 		nil,
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"a":  format.NewStringProperty("bee"),
-				"ce": format.NewStringProperty("dee"),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
 			},
 		),
 		nil,
@@ -306,20 +307,20 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 					),
 				},
 				nil,
-				format.NewMetadataBlock(
-					map[string]format.Property{
-						"a":  format.NewStringProperty("bee"),
-						"ce": format.NewStringProperty("dee"),
+				metadata.NewBlock(
+					map[string]metadata.Property{
+						"a":  metadata.NewStringProperty("bee"),
+						"ce": metadata.NewStringProperty("dee"),
 					},
 				),
 				nil,
 				nil,
 			),
 		},
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"a":  format.NewStringProperty("bee"),
-				"ce": format.NewStringProperty("dee"),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
 			},
 		),
 		nil,
@@ -371,21 +372,21 @@ func Test_EncodersWithHeaders(t *testing.T) {
 						event.NewCapture(
 							1,
 							"att",
-							format.NewMetadataBlock(map[string]format.Property{
-								"1": format.NewStringProperty("2"),
+							metadata.NewBlock(map[string]metadata.Property{
+								"1": metadata.NewStringProperty("2"),
 							})),
 					}),
 				},
 				nil,
-				format.EmptyMetadataBlock(),
+				metadata.EmptyBlock(),
 				nil,
 				nil,
 			),
 		},
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"a":  format.NewStringProperty("bee"),
-				"ce": format.NewStringProperty("dee"),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
 			},
 		),
 		nil,
@@ -446,8 +447,8 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 				"Child Recording",
 				[]format.CaptureCollection{
 					event.NewCollection("ahhh", []event.Capture{
-						event.NewCapture(1, "att", format.NewMetadataBlock(map[string]format.Property{
-							"1": format.NewStringProperty("2"),
+						event.NewCapture(1, "att", metadata.NewBlock(map[string]metadata.Property{
+							"1": metadata.NewStringProperty("2"),
 						})),
 					}),
 					position.NewCollection(
@@ -486,10 +487,10 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 					),
 				},
 				nil,
-				format.NewMetadataBlock(
-					map[string]format.Property{
-						"a":  format.NewStringProperty("bee"),
-						"ce": format.NewStringProperty("dee"),
+				metadata.NewBlock(
+					map[string]metadata.Property{
+						"a":  metadata.NewStringProperty("bee"),
+						"ce": metadata.NewStringProperty("dee"),
 					},
 				),
 				nil,
@@ -528,20 +529,20 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 					),
 				},
 				nil,
-				format.NewMetadataBlock(
-					map[string]format.Property{
-						"a":  format.NewStringProperty("bee"),
-						"ce": format.NewStringProperty("dee"),
+				metadata.NewBlock(
+					map[string]metadata.Property{
+						"a":  metadata.NewStringProperty("bee"),
+						"ce": metadata.NewStringProperty("dee"),
 					},
 				),
 				nil,
 				nil,
 			),
 		},
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"a":  format.NewStringProperty("bee"),
-				"ce": format.NewStringProperty("dee"),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
 			},
 		),
 		nil,
@@ -578,8 +579,8 @@ func Test_HandlesManyChildren(t *testing.T) {
 		"Child Recording",
 		[]format.CaptureCollection{
 			event.NewCollection("ahhh", []event.Capture{
-				event.NewCapture(1, "att", format.NewMetadataBlock(map[string]format.Property{
-					"1": format.NewStringProperty("2"),
+				event.NewCapture(1, "att", metadata.NewBlock(map[string]metadata.Property{
+					"1": metadata.NewStringProperty("2"),
 				})),
 			}),
 			position.NewCollection(
@@ -609,10 +610,10 @@ func Test_HandlesManyChildren(t *testing.T) {
 			),
 		},
 		nil,
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"a":  format.NewStringProperty("bee"),
-				"ce": format.NewStringProperty("dee"),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
 			},
 		),
 		nil,
@@ -640,10 +641,10 @@ func Test_HandlesManyChildren(t *testing.T) {
 			),
 		},
 		chilren,
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"a":  format.NewStringProperty("bee"),
-				"ce": format.NewStringProperty("dee"),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
 			},
 		),
 		nil,
@@ -709,25 +710,25 @@ func Test_Metadata(t *testing.T) {
 		"Test MetadataRecording",
 		[]format.CaptureCollection{},
 		[]format.Recording{},
-		format.NewMetadataBlock(
-			map[string]format.Property{
-				"int prop 77":     format.NewIntProperty(77),
-				"int prop -100":   format.NewIntProperty(100),
-				"int prop -0":     format.NewIntProperty(0),
-				"string prop":     format.NewStringProperty("dee"),
-				"bool true":       format.NewBoolProperty(true),
-				"bool false":      format.NewBoolProperty(false),
-				"byte test":       format.NewByteProperty(22),
-				"vec2 test":       format.NewVector2Property(1.2, 3.4),
-				"vec3 test":       format.NewVector3Property(1.2, 3.4, 5.6),
-				"quaternion test": format.NewQuaternionProperty(1.2, 3.4, 5.6, 7.8),
-				"matrix3x3 test":  format.NewMatrix3x3Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18),
-				"matrix4x4 test":  format.NewMatrix4x4Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18, 19.20, 21.22, 23.24, 25.26, 27.28, 29.30, 31.32),
-				"matrix test": format.NewMetadataProperty(format.NewMetadataBlock(
-					map[string]format.Property{
-						"nested prop 1": format.NewStringProperty("God kill me"),
-						"nested prop 2": format.NewStringProperty("ahhhh"),
-						"nested prop 3": format.NewIntProperty(666),
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"int prop 77":     metadata.NewIntProperty(77),
+				"int prop -100":   metadata.NewIntProperty(100),
+				"int prop -0":     metadata.NewIntProperty(0),
+				"string prop":     metadata.NewStringProperty("dee"),
+				"bool true":       metadata.NewBoolProperty(true),
+				"bool false":      metadata.NewBoolProperty(false),
+				"byte test":       metadata.NewByteProperty(22),
+				"vec2 test":       metadata.NewVector2Property(1.2, 3.4),
+				"vec3 test":       metadata.NewVector3Property(1.2, 3.4, 5.6),
+				"quaternion test": metadata.NewQuaternionProperty(1.2, 3.4, 5.6, 7.8),
+				"matrix3x3 test":  metadata.NewMatrix3x3Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18),
+				"matrix4x4 test":  metadata.NewMatrix4x4Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18, 19.20, 21.22, 23.24, 25.26, 27.28, 29.30, 31.32),
+				"matrix test": metadata.NewMetadataProperty(metadata.NewBlock(
+					map[string]metadata.Property{
+						"nested prop 1": metadata.NewStringProperty("God kill me"),
+						"nested prop 2": metadata.NewStringProperty("ahhhh"),
+						"nested prop 3": metadata.NewIntProperty(666),
 					},
 				)),
 			},

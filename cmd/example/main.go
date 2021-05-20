@@ -8,6 +8,7 @@ import (
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/position"
 	rapio "github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/format/metadata"
 )
 
 func main() {
@@ -16,20 +17,21 @@ func main() {
 
 	start := time.Now()
 	for i := 0; i < iterations; i++ {
-		positions[i] = position.NewCapture(float64(i), 0, math.Sin(float64(i)), 0)
+		currentTime := float64(i)
+		positions[i] = position.NewCapture(currentTime, 0, math.Sin(currentTime), 0)
 	}
 	duration := time.Since(start)
-
-	sinWavePositions := position.NewCollection("Sin Wave", positions)
 
 	rec := format.NewRecording(
 		"",
 		"Sin Wave Demo",
-		[]format.CaptureCollection{sinWavePositions},
+		[]format.CaptureCollection{
+			position.NewCollection("Sin Wave", positions),
+		},
 		nil,
-		format.NewMetadataBlock(map[string]format.Property{
-			"iterations": format.NewIntProperty(int32(iterations)),
-			"benchmark":  format.NewStringProperty(duration.String()),
+		metadata.NewBlock(map[string]metadata.Property{
+			"iterations": metadata.NewIntProperty(int32(iterations)),
+			"benchmark":  metadata.NewStringProperty(duration.String()),
 		}),
 		nil,
 		nil,

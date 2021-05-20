@@ -47,43 +47,45 @@ With this new library you can create your own recordings programmatically. The b
 package main
 
 import (
-   "math"
-   "os"
-   "time"
+	"math"
+	"os"
+	"time"
 
-   "github.com/recolude/rap/format"
-   "github.com/recolude/rap/format/collection/position"
-   "github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/collection/position"
+	rapio "github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/format/metadata"
 )
 
 func main() {
-   iterations := 1000
-   positions := make([]position.Capture, iterations)
+	iterations := 1000
+	positions := make([]position.Capture, iterations)
 
-   start := time.Now()
-   for i := 0; i < iterations; i++ {
-      positions[i] = position.NewCapture(float64(i), 0, math.Sin(float64(i)), 0)
-   }
-   duration := time.Since(start)
+	start := time.Now()
+	for i := 0; i < iterations; i++ {
+		currentTime := float64(i)
+		positions[i] = position.NewCapture(currentTime, 0, math.Sin(currentTime), 0)
+	}
+	duration := time.Since(start)
 
-   rec := format.NewRecording(
-      "",
-      "Sin Wave Demo",
-      []format.CaptureCollection{
-         position.NewCollection("Sin Wave", positions)
-      },
-      nil,
-      format.NewMetadataBlock(map[string]format.Property{
-         "iterations": format.NewIntProperty(int32(iterations)),
-         "benchmark":  format.NewStringProperty(duration.String()),
-      }),
-      nil,
-      nil,
-   )
+	rec := format.NewRecording(
+		"",
+		"Sin Wave Demo",
+		[]format.CaptureCollection{
+			position.NewCollection("Sin Wave", positions),
+		},
+		nil,
+		metadata.NewBlock(map[string]metadata.Property{
+			"iterations": metadata.NewIntProperty(int32(iterations)),
+			"benchmark":  metadata.NewStringProperty(duration.String()),
+		}),
+		nil,
+		nil,
+	)
 
-   f, _ := os.Create("sin demo.rap")
-   recordingWriter := io.NewRecoludeWriter(f)
-   recordingWriter.Write(rec)
+	f, _ := os.Create("sin demo.rap")
+	recordingWriter := rapio.NewRecoludeWriter(f)
+	recordingWriter.Write(rec)
 }
 ```
 

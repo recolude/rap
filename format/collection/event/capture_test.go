@@ -3,16 +3,16 @@ package event_test
 import (
 	"testing"
 
-	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/event"
+	"github.com/recolude/rap/format/metadata"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_CreateCapture(t *testing.T) {
 	time := 123.0
-	metadata := format.NewMetadataBlock(map[string]format.Property{
-		"a": format.NewStringProperty("b"),
-		"c": format.NewStringProperty("d"),
+	metadata := metadata.NewBlock(map[string]metadata.Property{
+		"a": metadata.NewStringProperty("b"),
+		"c": metadata.NewStringProperty("d"),
 	})
 	capture := event.NewCapture(time, "My Name", metadata)
 

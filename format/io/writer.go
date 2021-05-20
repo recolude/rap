@@ -14,6 +14,7 @@ import (
 	"github.com/recolude/rap/format/encoding/euler"
 	"github.com/recolude/rap/format/encoding/event"
 	"github.com/recolude/rap/format/encoding/position"
+	"github.com/recolude/rap/format/metadata"
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
@@ -139,13 +140,13 @@ func (w Writer) evaluateCollections(recording format.Recording, offset int) ([]e
 	return mappings, curOffset, nil
 }
 
-func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, metadata format.Metadata) (int, error) {
-	metadataIndices := make([]uint, len(metadata.Mapping()))
+func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, block metadata.Block) (int, error) {
+	metadataIndices := make([]uint, len(block.Mapping()))
 
 	metadataValuesBuffer := bytes.Buffer{}
 	// metadataValues := make([][]byte, len(metadata.Mapping()))
 	i := 0
-	for key, val := range metadata.Mapping() {
+	for key, val := range block.Mapping() {
 		metadataIndices[i] = uint(keyMappingToIndex[key])
 		metadataValuesBuffer.WriteByte(val.Code())
 		metadataValuesBuffer.Write(val.Data())

@@ -1,11 +1,11 @@
-package format_test
+package metadata_test
 
 import (
 	"bytes"
 	"encoding/binary"
 	"testing"
 
-	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/metadata"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +21,7 @@ func Test_StringProperty(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			prop := format.NewStringProperty(tc.value)
+			prop := metadata.NewStringProperty(tc.value)
 			assert.Equal(t, byte(0), prop.Code())
 			assert.Equal(t, tc.value, prop.String())
 			assert.Equal(t, tc.data, prop.Data())
@@ -41,7 +41,7 @@ func Test_IntProperty(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			prop := format.NewIntProperty(tc.value)
+			prop := metadata.NewIntProperty(tc.value)
 			assert.Equal(t, byte(1), prop.Code())
 			assert.Equal(t, tc.stringVal, prop.String())
 
@@ -64,7 +64,7 @@ func Test_Float32Property(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			prop := format.NewFloat32Property(tc.value)
+			prop := metadata.NewFloat32Property(tc.value)
 			assert.Equal(t, byte(2), prop.Code())
 			assert.Equal(t, tc.stringVal, prop.String())
 
@@ -87,7 +87,7 @@ func Test_BoolProperty(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			prop := format.NewBoolProperty(tc.value)
+			prop := metadata.NewBoolProperty(tc.value)
 
 			assert.Equal(t, byte(tc.byteVal), prop.Code())
 			assert.Equal(t, tc.stringVal, prop.String())
@@ -109,7 +109,7 @@ func Test_ByteProperty(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			prop := format.NewByteProperty(tc.value)
+			prop := metadata.NewByteProperty(tc.value)
 
 			assert.Equal(t, byte(5), prop.Code())
 			assert.Equal(t, tc.stringVal, prop.String())

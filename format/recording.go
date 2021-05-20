@@ -1,6 +1,10 @@
 package format
 
-import "io"
+import (
+	"io"
+
+	"github.com/recolude/rap/format/metadata"
+)
 
 //go:generate mockgen -destination=../internal/mocks/recording.go -package=mocks github.com/recolude/rap/format Recording,CaptureCollection,Binary,BinaryReference
 
@@ -13,7 +17,7 @@ type Binary interface {
 	Name() string
 	Data() io.Reader
 	Size() uint64
-	Metadata() Metadata
+	Metadata() metadata.Block
 	Write(io.Writer) (int, error)
 }
 
@@ -21,7 +25,7 @@ type BinaryReference interface {
 	Name() string
 	URI() string
 	Size() uint64
-	Metadata() Metadata
+	Metadata() metadata.Block
 }
 
 type CaptureCollection interface {
@@ -35,7 +39,7 @@ type Recording interface {
 	Name() string
 	CaptureCollections() []CaptureCollection
 	Recordings() []Recording
-	Metadata() Metadata
+	Metadata() metadata.Block
 	Binaries() []Binary
 	BinaryReferences() []BinaryReference
 }
@@ -45,7 +49,7 @@ func NewRecording(
 	name string,
 	captureCollections []CaptureCollection,
 	recordings []Recording,
-	metadata Metadata,
+	metadata metadata.Block,
 	binaries []Binary,
 	binaryReferences []BinaryReference,
 ) recording {
@@ -65,7 +69,7 @@ type recording struct {
 	name               string
 	captureCollections []CaptureCollection
 	recordings         []Recording
-	metadata           Metadata
+	metadata           metadata.Block
 	binaries           []Binary
 	binaryReferences   []BinaryReference
 }
@@ -86,7 +90,7 @@ func (r recording) Recordings() []Recording {
 	return r.recordings
 }
 
-func (r recording) Metadata() Metadata {
+func (r recording) Metadata() metadata.Block {
 	return r.metadata
 }
 

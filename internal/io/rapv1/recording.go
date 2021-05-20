@@ -1,13 +1,16 @@
 package rapv1
 
-import "github.com/recolude/rap/format"
+import (
+	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/metadata"
+)
 
 type recordingV1 struct {
 	id             string
 	name           string
 	captureStreams []format.CaptureCollection
 	recordings     []format.Recording
-	metadata       format.Metadata
+	metadata       metadata.Block
 }
 
 func (rec recordingV1) ID() string {
@@ -26,7 +29,7 @@ func (rec recordingV1) BinaryReferences() []format.BinaryReference {
 	return nil
 }
 
-func (rec recordingV1) Metadata() format.Metadata {
+func (rec recordingV1) Metadata() metadata.Block {
 	return rec.metadata
 }
 
