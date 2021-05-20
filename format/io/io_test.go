@@ -808,6 +808,8 @@ func Test_Metadata(t *testing.T) {
 						"nested prop time": metadata.NewTimeProperty(time.Now()),
 					},
 				)),
+				"String Array": metadata.NewStringArrayProperty([]string{"x", "y", "z"}),
+				"Int Array":    metadata.NewIntArrayProperty([]int{1, 2, 3, 4}),
 			},
 		),
 		nil,

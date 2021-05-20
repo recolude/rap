@@ -31,7 +31,7 @@ func Test_StringProperty(t *testing.T) {
 
 func Test_IntProperty(t *testing.T) {
 	tests := map[string]struct {
-		value     int32
+		value     int
 		stringVal string
 	}{
 		"0":    {value: 0, stringVal: "0"},
@@ -47,7 +47,7 @@ func Test_IntProperty(t *testing.T) {
 
 			var out int32
 			binary.Read(bytes.NewBuffer(prop.Data()), binary.LittleEndian, &out)
-			assert.Equal(t, tc.value, out)
+			assert.Equal(t, int32(tc.value), out)
 		})
 	}
 }

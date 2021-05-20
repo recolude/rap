@@ -30,7 +30,7 @@ func main() {
 		},
 		nil,
 		metadata.NewBlock(map[string]metadata.Property{
-			"iterations": metadata.NewIntProperty(int32(iterations)),
+			"iterations": metadata.NewIntProperty(iterations),
 			"benchmark":  metadata.NewStringProperty(duration.String()),
 		}),
 		nil,

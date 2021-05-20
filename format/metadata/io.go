@@ -41,12 +41,7 @@ func readNestedMetadatablock(b *bytes.Reader) (Block, error) {
 	return NewBlock(metadata), nil
 }
 
-func ReadProperty(b *bytes.Reader) (Property, error) {
-	propertyType, err := b.ReadByte()
-	if err != nil {
-		return nil, err
-	}
-
+func readPropData(b *bytes.Reader, propertyType byte) (Property, error) {
 	switch propertyType {
 	case 0:
 		str, _, err := rapbin.ReadString(b)
@@ -61,7 +56,7 @@ func ReadProperty(b *bytes.Reader) (Property, error) {
 		if err != nil {
 			return nil, err
 		}
-		return NewIntProperty(int32Val), nil
+		return NewIntProperty(int(int32Val)), nil
 
 	case 2:
 		var float32Val float32
@@ -129,7 +124,31 @@ func ReadProperty(b *bytes.Reader) (Property, error) {
 			return nil, err
 		}
 		return NewTimeProperty(time.Unix(0, unixTime)), nil
-	}
 
+	case 13:
+		fallthrough
+	case 14:
+		len, _, err := rapbin.ReadUvarint(b)
+		if err != nil {
+			return nil, err
+		}
+		adjustedType := propertyType - 13
+		props := make([]Property, len)
+		for i := 0; i < int(len); i++ {
+			props[i], err = readPropData(b, adjustedType)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return newArrayProperty(adjustedType, props), nil
+	}
 	return nil, fmt.Errorf("unrecognized property type code: %d", int(propertyType))
+}
+
+func ReadProperty(b *bytes.Reader) (Property, error) {
+	propertyType, err := b.ReadByte()
+	if err != nil {
+		return nil, err
+	}
+	return readPropData(b, propertyType)
 }

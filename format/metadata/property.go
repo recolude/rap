@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/EliCDavis/vector"
 	rapbin "github.com/recolude/rap/internal/io/binary"
 )
 
@@ -46,9 +47,9 @@ type Int32Property struct {
 	i int32
 }
 
-func NewIntProperty(i int32) Int32Property {
+func NewIntProperty(i int) Int32Property {
 	return Int32Property{
-		i: i,
+		i: int32(i),
 	}
 }
 
@@ -454,4 +455,111 @@ func (tp TimeProperty) Data() []byte {
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.LittleEndian, tp.nanoseconds)
 	return buf.Bytes()
+}
+
+// ARRAY =====================================================================
+
+type ArrayProperty struct {
+	originalBaseCode byte
+	props            []Property
+}
+
+func newArrayProperty(originalBaseCode byte, props []Property) ArrayProperty {
+	return ArrayProperty{
+		originalBaseCode: originalBaseCode,
+		props:            props,
+	}
+}
+
+func (sp ArrayProperty) Code() byte {
+	return 13 + sp.originalBaseCode
+}
+
+func (sp ArrayProperty) String() string {
+	return fmt.Sprintf("Type %d Array of %d elements", sp.originalBaseCode, len(sp.props))
+}
+
+func (sp ArrayProperty) Data() []byte {
+	buf := bytes.Buffer{}
+
+	numBinaries := make([]byte, 4)
+	read := binary.PutUvarint(numBinaries, uint64(len(sp.props)))
+	buf.Write(numBinaries[:read])
+
+	for _, prop := range sp.props {
+		buf.Write(prop.Data())
+	}
+	return buf.Bytes()
+}
+
+func NewStringArrayProperty(strs []string) ArrayProperty {
+	strProps := make([]Property, len(strs))
+	for i, str := range strs {
+		strProps[i] = NewStringProperty(str)
+	}
+	return newArrayProperty(0, strProps)
+}
+
+func NewIntArrayProperty(strs []int) ArrayProperty {
+	strProps := make([]Property, len(strs))
+	for i, str := range strs {
+		strProps[i] = NewIntProperty(str)
+	}
+	return newArrayProperty(1, strProps)
+}
+
+func NewFloat32ArrayProperty(entries []float32) ArrayProperty {
+	strProps := make([]Property, len(entries))
+	for i, entry := range entries {
+		strProps[i] = NewFloat32Property(entry)
+	}
+	return newArrayProperty(2, strProps)
+}
+
+func NewBoolArrayProperty(entries []bool) ArrayProperty {
+	strProps := make([]Property, len(entries))
+	for i, str := range entries {
+		strProps[i] = NewBoolProperty(str)
+	}
+	return newArrayProperty(3, strProps)
+}
+
+func NewByteArrayProperty(entries []byte) ArrayProperty {
+	strProps := make([]Property, len(entries))
+	for i, entry := range entries {
+		strProps[i] = NewByteProperty(entry)
+	}
+	return newArrayProperty(5, strProps)
+}
+
+func NewVector2ArrayProperty(entries []vector.Vector2) ArrayProperty {
+	strProps := make([]Property, len(entries))
+	for i, entry := range entries {
+		strProps[i] = NewVector2Property(entry.X(), entry.Y())
+	}
+	return newArrayProperty(6, strProps)
+}
+
+func NewVector3ArrayProperty(entries []vector.Vector3) ArrayProperty {
+	strProps := make([]Property, len(entries))
+	for i, entry := range entries {
+		strProps[i] = NewVector3Property(entry.X(), entry.Y(), entry.Z())
+	}
+	return newArrayProperty(6, strProps)
+}
+
+func NewMetadataArrayProperty(entries []Block) ArrayProperty {
+	strProps := make([]Property, len(entries))
+	for i, entry := range entries {
+		strProps[i] = NewMetadataProperty(entry)
+	}
+	return newArrayProperty(11, strProps)
+}
+
+func NewTimestampArrayProperty(entries []time.Time) ArrayProperty {
+	props := make([]Property, len(entries))
+	for i, entry := range entries {
+		props[i] = NewTimeProperty(entry)
+	}
+	return newArrayProperty(12, props)
 }
