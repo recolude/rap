@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/recolude/rap/format"
@@ -799,11 +800,12 @@ func Test_Metadata(t *testing.T) {
 				"quaternion test": metadata.NewQuaternionProperty(1.2, 3.4, 5.6, 7.8),
 				"matrix3x3 test":  metadata.NewMatrix3x3Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18),
 				"matrix4x4 test":  metadata.NewMatrix4x4Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18, 19.20, 21.22, 23.24, 25.26, 27.28, 29.30, 31.32),
-				"matrix test": metadata.NewMetadataProperty(metadata.NewBlock(
+				"block test": metadata.NewMetadataProperty(metadata.NewBlock(
 					map[string]metadata.Property{
-						"nested prop 1": metadata.NewStringProperty("God kill me"),
-						"nested prop 2": metadata.NewStringProperty("ahhhh"),
-						"nested prop 3": metadata.NewIntProperty(666),
+						"nested prop 1":    metadata.NewStringProperty("God kill me"),
+						"nested prop 2":    metadata.NewStringProperty("ahhhh"),
+						"nested prop 3":    metadata.NewIntProperty(666),
+						"nested prop time": metadata.NewTimeProperty(time.Now()),
 					},
 				)),
 			},
