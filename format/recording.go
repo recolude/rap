@@ -18,7 +18,6 @@ type Binary interface {
 	Data() io.Reader
 	Size() uint64
 	Metadata() metadata.Block
-	Write(io.Writer) (int, error)
 }
 
 type BinaryReference interface {

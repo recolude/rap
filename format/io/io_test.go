@@ -38,6 +38,30 @@ func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording
 		return false
 	}
 
+	for i, actual := range recActual.Binaries() {
+		assert.Equal(t, recExpected.Binaries()[i].Name(), actual.Name())
+		assert.Equal(t, recExpected.Binaries()[i].Size(), actual.Size())
+
+		if assert.Equal(t, len(recExpected.Binaries()[i].Metadata().Mapping()), len(actual.Metadata().Mapping()), "mismatch binary reference metadata lengths") == false {
+			return false
+		}
+
+		for key, element := range recExpected.Binaries()[i].Metadata().Mapping() {
+			assert.Equal(t, element, recActual.Binaries()[i].Metadata().Mapping()[key])
+		}
+
+		if assert.NotNil(t, actual.Data(), "Binary data is nil") == false {
+			return false
+		}
+		readbackBytes, err := ioutil.ReadAll(actual.Data())
+		assert.NoError(t, err)
+
+		exectedBytes, _ := ioutil.ReadAll(recExpected.Binaries()[i].Data())
+
+		assert.Equal(t, exectedBytes, readbackBytes)
+
+	}
+
 	if assert.Equal(t, len(recExpected.BinaryReferences()), len(recActual.BinaryReferences())) == false {
 		return false
 	}
@@ -179,6 +203,57 @@ func Test_HandlesBinaryReference(t *testing.T) {
 		),
 		nil,
 		[]format.BinaryReference{binaryRef},
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assert.Equal(t, n, nOut)
+	assertRecordingsMatch(t, recIn, recOut)
+}
+
+func Test_HandlesBinaryData(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+	}
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	binaryFile := mocks.NewMockBinary(ctrl)
+	binaryFile.EXPECT().Name().AnyTimes().Return("Test Bin Ref")
+	binaryFile.EXPECT().Size().AnyTimes().Return(uint64(10))
+	binaryFile.EXPECT().Metadata().AnyTimes().Return(metadata.NewBlock(map[string]metadata.Property{
+		"a": metadata.NewStringProperty("b"),
+	}))
+
+	// Have to do it twice, once for the first buffer to get read and  written. Next to be pulled in during our
+	// assertion statements
+	binaryFile.EXPECT().Data().Return(bytes.NewBufferString("My Data!!!"))
+	binaryFile.EXPECT().Data().Return(bytes.NewBufferString("My Data!!!"))
+
+	w := io.NewWriter(encoders, fileData)
+	r := io.NewReader(encoders, fileData)
+
+	recIn := format.NewRecording(
+		"44",
+		"Test Recording",
+		[]format.CaptureCollection{},
+		nil,
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"ce": metadata.NewStringProperty("dee"),
+			},
+		),
+		[]format.Binary{binaryFile},
+		nil,
 	)
 
 	// ACT ====================================================================

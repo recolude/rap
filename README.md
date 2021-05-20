@@ -53,7 +53,7 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/position"
-	rapio "github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/format/io"
 	"github.com/recolude/rap/format/metadata"
 )
 
@@ -84,7 +84,7 @@ func main() {
 	)
 
 	f, _ := os.Create("sin demo.rap")
-	recordingWriter := rapio.NewRecoludeWriter(f)
+	recordingWriter := io.NewRecoludeWriter(f)
 	recordingWriter.Write(rec)
 }
 ```

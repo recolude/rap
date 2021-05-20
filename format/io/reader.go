@@ -116,7 +116,7 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 	}
 
 	// Read Recording metadata
-	metadata, err := readRecordingMetadataBlock(in, metadataKeys)
+	recordingMetadataBlock, err := readRecordingMetadataBlock(in, metadataKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -174,12 +174,43 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 		}
 
 		// Read Recording metadata
-		metadata, err := readRecordingMetadataBlock(in, metadataKeys)
+		block, err := readRecordingMetadataBlock(in, metadataKeys)
 		if err != nil {
 			return nil, err
 		}
 
-		binReferences[i] = NewBinaryReference(name, uri, refSize, metadata)
+		binReferences[i] = NewBinaryReference(name, uri, refSize, block)
+	}
+
+	// read binaries
+	numBinaries, _, err := binary.ReadUvarint(in)
+	if err != nil {
+		return nil, err
+	}
+
+	binaries := make([]format.Binary, numBinaries)
+
+	for i := 0; i < int(numBinaries); i++ {
+		name, _, err := binary.ReadString(in)
+		if err != nil {
+			return nil, err
+		}
+
+		refSize, _, err := binary.ReadUvarint(in)
+		if err != nil {
+			return nil, err
+		}
+
+		// Read Recording metadata
+		block, err := readRecordingMetadataBlock(in, metadataKeys)
+		if err != nil {
+			return nil, err
+		}
+
+		allData := make([]byte, refSize)
+		io.ReadFull(in, allData)
+
+		binaries[i] = NewBinary(name, allData, block)
 	}
 
 	// read num recordings
@@ -201,7 +232,7 @@ func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encode
 		allChildRecordings[i] = childRec
 	}
 
-	return format.NewRecording(recordingID, recordingName, allStreams, allChildRecordings, metadata, nil, binReferences), nil
+	return format.NewRecording(recordingID, recordingName, allStreams, allChildRecordings, recordingMetadataBlock, binaries, binReferences), nil
 }
 
 func (r Reader) Read() (format.Recording, int, error) {

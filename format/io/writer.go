@@ -72,7 +72,16 @@ func accumulateMetdataKeys(recording format.Recording, keyMappingToIndex map[str
 	}
 
 	for _, ref := range recording.BinaryReferences() {
-		for key, _ := range ref.Metadata().Mapping() {
+		for key := range ref.Metadata().Mapping() {
+			if _, ok := keyMappingToIndex[key]; !ok {
+				keyMappingToIndex[key] = keyCount
+				keyCount++
+			}
+		}
+	}
+
+	for _, bin := range recording.Binaries() {
+		for key := range bin.Metadata().Mapping() {
 			if _, ok := keyMappingToIndex[key]; !ok {
 				keyMappingToIndex[key] = keyCount
 				keyCount++
@@ -232,7 +241,27 @@ func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[s
 
 		writeMetadata(&out, keyMappingToIndex, ref.Metadata())
 	}
-	// out.Write(rapbinary.StringArrayToBytes(binaryRefNames))
+
+	// Write number of binaries
+	numBinaries := make([]byte, 4)
+	read = binary.PutUvarint(numBinaries, uint64(len(recording.Binaries())))
+	out.Write(numBinaries[:read])
+
+	// Write binaries
+	for _, bin := range recording.Binaries() {
+		out.Write(rapbinary.StringToBytes(bin.Name()))
+
+		refSize := make([]byte, 4)
+		read = binary.PutUvarint(refSize, bin.Size())
+		out.Write(refSize[:read])
+
+		writeMetadata(&out, keyMappingToIndex, bin.Metadata())
+
+		actualbinaryWritten, _ := io.Copy(&out, bin.Data())
+		if actualbinaryWritten != int64(bin.Size()) {
+			panic("Binary data written was larger than size in signature")
+		}
+	}
 
 	// Write number of recordings
 	numRecordings := make([]byte, 4)
