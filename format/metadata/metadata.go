@@ -9,7 +9,7 @@ func NewBlock(mapping map[string]Property) Block {
 }
 
 func EmptyBlock() Block {
-	return Block{}
+	return NewBlock(make(map[string]Property))
 }
 
 func (m Block) Mapping() map[string]Property {

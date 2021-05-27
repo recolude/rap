@@ -157,8 +157,10 @@ func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, block metada
 	i := 0
 	for key, val := range block.Mapping() {
 		metadataIndices[i] = uint(keyMappingToIndex[key])
-		metadataValuesBuffer.WriteByte(val.Code())
-		metadataValuesBuffer.Write(val.Data())
+
+		metadata.WriteProprty(&metadataValuesBuffer, val)
+		// metadataValuesBuffer.WriteByte(val.Code())
+		// metadataValuesBuffer.Write(val.Data())
 		// metadataValues[i] = append([]byte{val.Code()}, val.Data()...)
 		i++
 	}

@@ -216,173 +216,6 @@ func (v3p Vector3Property) Data() []byte {
 	return buf.Bytes()
 }
 
-// QUATERNION =================================================================
-
-type QuaternionProperty struct {
-	x float64
-	y float64
-	z float64
-	w float64
-}
-
-func NewQuaternionProperty(x, y, z, w float64) QuaternionProperty {
-	return QuaternionProperty{
-		x: x,
-		y: y,
-		z: z,
-		w: w,
-	}
-}
-
-func (qp QuaternionProperty) Code() byte {
-	return 8
-}
-
-func (qp QuaternionProperty) String() string {
-	return fmt.Sprintf("%f, %f, %f, %f", qp.x, qp.y, qp.z, qp.w)
-}
-
-func (qp QuaternionProperty) Data() []byte {
-	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, qp.x)
-	binary.Write(buf, binary.LittleEndian, qp.y)
-	binary.Write(buf, binary.LittleEndian, qp.z)
-	binary.Write(buf, binary.LittleEndian, qp.w)
-	return buf.Bytes()
-}
-
-// MATRIX3x3 ==================================================================
-
-type Matrix3x3Property struct {
-	r1c1, r1f2, r1c3 float64
-	r2c1, r2f2, r2c3 float64
-	r3c1, r3f2, r3c3 float64
-}
-
-func NewMatrix3x3Property(r1c1, r1f2, r1c3, r2c1, r2f2, r2c3, r3c1, r3f2, r3c3 float64) Matrix3x3Property {
-	return Matrix3x3Property{
-		r1c1: r1c1,
-		r1f2: r1f2,
-		r1c3: r1c3,
-		r2c1: r2c1,
-		r2f2: r2f2,
-		r2c3: r2c3,
-		r3c1: r3c1,
-		r3f2: r3f2,
-		r3c3: r3c3,
-	}
-}
-
-func (m3p Matrix3x3Property) Code() byte {
-	return 9
-}
-
-func (m3p Matrix3x3Property) String() string {
-	return fmt.Sprintf(
-		"[[%f, %f, %f], [%f, %f, %f], [%f, %f, %f]]",
-		m3p.r1c1,
-		m3p.r1f2,
-		m3p.r1c3,
-		m3p.r2c1,
-		m3p.r2f2,
-		m3p.r2c3,
-		m3p.r3c1,
-		m3p.r3f2,
-		m3p.r3c3,
-	)
-}
-
-func (m3p Matrix3x3Property) Data() []byte {
-	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, m3p.r1c1)
-	binary.Write(buf, binary.LittleEndian, m3p.r1f2)
-	binary.Write(buf, binary.LittleEndian, m3p.r1c3)
-	binary.Write(buf, binary.LittleEndian, m3p.r2c1)
-	binary.Write(buf, binary.LittleEndian, m3p.r2f2)
-	binary.Write(buf, binary.LittleEndian, m3p.r2c3)
-	binary.Write(buf, binary.LittleEndian, m3p.r3c1)
-	binary.Write(buf, binary.LittleEndian, m3p.r3f2)
-	binary.Write(buf, binary.LittleEndian, m3p.r3c3)
-	return buf.Bytes()
-}
-
-// MATRIX4x4 ==================================================================
-
-type Matrix4x4Property struct {
-	r1c1, r1f2, r1c3, r1c4 float64
-	r2c1, r2f2, r2c3, r2c4 float64
-	r3c1, r3f2, r3c3, r3c4 float64
-	r4c1, r4f2, r4c3, r4c4 float64
-}
-
-func NewMatrix4x4Property(r1c1, r1f2, r1c3, r1c4, r2c1, r2f2, r2c3, r2c4, r3c1, r3f2, r3c3, r3c4, r4c1, r4f2, r4c3, r4c4 float64) Matrix4x4Property {
-	return Matrix4x4Property{
-		r1c1: r1c1,
-		r1f2: r1f2,
-		r1c3: r1c3,
-		r1c4: r1c4,
-		r2c1: r2c1,
-		r2f2: r2f2,
-		r2c3: r2c3,
-		r2c4: r2c4,
-		r3c1: r3c1,
-		r3f2: r3f2,
-		r3c3: r3c3,
-		r3c4: r3c4,
-		r4c1: r4c1,
-		r4f2: r4f2,
-		r4c3: r4c3,
-		r4c4: r4c4,
-	}
-}
-
-func (m4p Matrix4x4Property) Code() byte {
-	return 10
-}
-
-func (m4p Matrix4x4Property) String() string {
-	return fmt.Sprintf(
-		"[[%f, %f, %f, %f], [%f, %f, %f, %f], [%f, %f, %f, %f], [%f, %f, %f, %f]]",
-		m4p.r1c1,
-		m4p.r1f2,
-		m4p.r1c3,
-		m4p.r1c4,
-		m4p.r2c1,
-		m4p.r2f2,
-		m4p.r2c3,
-		m4p.r2c4,
-		m4p.r3c1,
-		m4p.r3f2,
-		m4p.r3c3,
-		m4p.r3c4,
-		m4p.r4c1,
-		m4p.r4f2,
-		m4p.r4c3,
-		m4p.r4c4,
-	)
-}
-
-func (m4p Matrix4x4Property) Data() []byte {
-	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, m4p.r1c1)
-	binary.Write(buf, binary.LittleEndian, m4p.r1f2)
-	binary.Write(buf, binary.LittleEndian, m4p.r1c3)
-	binary.Write(buf, binary.LittleEndian, m4p.r1c4)
-	binary.Write(buf, binary.LittleEndian, m4p.r2c1)
-	binary.Write(buf, binary.LittleEndian, m4p.r2f2)
-	binary.Write(buf, binary.LittleEndian, m4p.r2c3)
-	binary.Write(buf, binary.LittleEndian, m4p.r2c4)
-	binary.Write(buf, binary.LittleEndian, m4p.r3c1)
-	binary.Write(buf, binary.LittleEndian, m4p.r3f2)
-	binary.Write(buf, binary.LittleEndian, m4p.r3c3)
-	binary.Write(buf, binary.LittleEndian, m4p.r3c4)
-	binary.Write(buf, binary.LittleEndian, m4p.r4c1)
-	binary.Write(buf, binary.LittleEndian, m4p.r4f2)
-	binary.Write(buf, binary.LittleEndian, m4p.r4c3)
-	binary.Write(buf, binary.LittleEndian, m4p.r4c4)
-	return buf.Bytes()
-}
-
 // METADATA ===================================================================
 
 type MetadataProperty struct {
@@ -516,22 +349,6 @@ func NewFloat32ArrayProperty(entries []float32) ArrayProperty {
 	return newArrayProperty(2, strProps)
 }
 
-func NewBoolArrayProperty(entries []bool) ArrayProperty {
-	strProps := make([]Property, len(entries))
-	for i, str := range entries {
-		strProps[i] = NewBoolProperty(str)
-	}
-	return newArrayProperty(3, strProps)
-}
-
-func NewByteArrayProperty(entries []byte) ArrayProperty {
-	strProps := make([]Property, len(entries))
-	for i, entry := range entries {
-		strProps[i] = NewByteProperty(entry)
-	}
-	return newArrayProperty(5, strProps)
-}
-
 func NewVector2ArrayProperty(entries []vector.Vector2) ArrayProperty {
 	strProps := make([]Property, len(entries))
 	for i, entry := range entries {
@@ -545,7 +362,7 @@ func NewVector3ArrayProperty(entries []vector.Vector3) ArrayProperty {
 	for i, entry := range entries {
 		strProps[i] = NewVector3Property(entry.X(), entry.Y(), entry.Z())
 	}
-	return newArrayProperty(6, strProps)
+	return newArrayProperty(7, strProps)
 }
 
 func NewMetadataArrayProperty(entries []Block) ArrayProperty {
@@ -562,4 +379,49 @@ func NewTimestampArrayProperty(entries []time.Time) ArrayProperty {
 		props[i] = NewTimeProperty(entry)
 	}
 	return newArrayProperty(12, props)
+}
+
+// BINARY ARRAY ===============================================================
+
+type ArrayPropertyRaw struct {
+	originalBaseCode byte
+	data             []byte
+	divison          int
+}
+
+func (sp ArrayPropertyRaw) Code() byte {
+	return 13 + sp.originalBaseCode
+}
+
+func (sp ArrayPropertyRaw) String() string {
+	return fmt.Sprintf("Type %d Array of %d elements", sp.originalBaseCode, len(sp.data)/sp.divison)
+}
+
+func (sp ArrayPropertyRaw) Data() []byte {
+	return sp.data
+}
+
+func NewBinaryArrayProperty(binarr []byte) ArrayPropertyRaw {
+	return ArrayPropertyRaw{
+		data:             rapbin.BytesArrayToBytes(binarr),
+		originalBaseCode: 5,
+		divison:          1,
+	}
+}
+
+func NewBoolArrayProperty(boolArr []bool) ArrayPropertyRaw {
+	data := make([]byte, len(boolArr))
+	for i, b := range boolArr {
+		if b {
+			data[i] = 1
+		} else {
+			data[i] = 0
+		}
+	}
+
+	return ArrayPropertyRaw{
+		data:             rapbin.BytesArrayToBytes(data),
+		originalBaseCode: 3,
+		divison:          1,
+	}
 }

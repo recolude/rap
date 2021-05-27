@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/EliCDavis/vector"
 	"github.com/golang/mock/gomock"
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/enum"
@@ -788,18 +789,15 @@ func Test_Metadata(t *testing.T) {
 		[]format.Recording{},
 		metadata.NewBlock(
 			map[string]metadata.Property{
-				"int prop 77":     metadata.NewIntProperty(77),
-				"int prop -100":   metadata.NewIntProperty(100),
-				"int prop -0":     metadata.NewIntProperty(0),
-				"string prop":     metadata.NewStringProperty("dee"),
-				"bool true":       metadata.NewBoolProperty(true),
-				"bool false":      metadata.NewBoolProperty(false),
-				"byte test":       metadata.NewByteProperty(22),
-				"vec2 test":       metadata.NewVector2Property(1.2, 3.4),
-				"vec3 test":       metadata.NewVector3Property(1.2, 3.4, 5.6),
-				"quaternion test": metadata.NewQuaternionProperty(1.2, 3.4, 5.6, 7.8),
-				"matrix3x3 test":  metadata.NewMatrix3x3Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18),
-				"matrix4x4 test":  metadata.NewMatrix4x4Property(1.2, 3.4, 5.6, 7.8, 9.10, 11.12, 13.14, 15.16, 17.18, 19.20, 21.22, 23.24, 25.26, 27.28, 29.30, 31.32),
+				"int prop 77":   metadata.NewIntProperty(77),
+				"int prop -100": metadata.NewIntProperty(100),
+				"int prop -0":   metadata.NewIntProperty(0),
+				"string prop":   metadata.NewStringProperty("dee"),
+				"bool true":     metadata.NewBoolProperty(true),
+				"bool false":    metadata.NewBoolProperty(false),
+				"byte test":     metadata.NewByteProperty(22),
+				"vec2 test":     metadata.NewVector2Property(1.2, 3.4),
+				"vec3 test":     metadata.NewVector3Property(1.2, 3.4, 5.6),
 				"block test": metadata.NewMetadataProperty(metadata.NewBlock(
 					map[string]metadata.Property{
 						"nested prop 1":    metadata.NewStringProperty("God kill me"),
@@ -810,6 +808,18 @@ func Test_Metadata(t *testing.T) {
 				)),
 				"String Array": metadata.NewStringArrayProperty([]string{"x", "y", "z"}),
 				"Int Array":    metadata.NewIntArrayProperty([]int{1, 2, 3, 4}),
+				"time array":   metadata.NewTimestampArrayProperty([]time.Time{time.Now(), time.Now().Add(1)}),
+				"float array":  metadata.NewFloat32ArrayProperty([]float32{1.2, 3.4}),
+				"vec2 array":   metadata.NewVector2ArrayProperty([]vector.Vector2{vector.NewVector2(1, 2), vector.NewVector2(3, 4)}),
+				"vec3 array":   metadata.NewVector3ArrayProperty([]vector.Vector3{vector.NewVector3(1, 2, 3), vector.NewVector3(4, 5, 6)}),
+				"metadata array": metadata.NewMetadataArrayProperty([]metadata.Block{
+					metadata.EmptyBlock(),
+					metadata.NewBlock(map[string]metadata.Property{
+						"ahh": metadata.NewBoolProperty(true),
+					}),
+					metadata.EmptyBlock(),
+				}),
+				"byte array": metadata.NewBinaryArrayProperty([]byte{1, 2, 3, 4}),
 			},
 		),
 		nil,

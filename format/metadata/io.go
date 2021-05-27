@@ -10,6 +10,15 @@ import (
 	rapbin "github.com/recolude/rap/internal/io/binary"
 )
 
+func WriteProprty(writer io.Writer, property Property) (int, error) {
+	count, err := writer.Write([]byte{property.Code()})
+	if err != nil {
+		return count, err
+	}
+	other, err := writer.Write(property.Data())
+	return count + other, err
+}
+
 func readFloat64s(r io.Reader, count int) ([]float64, error) {
 	outValues := make([]float64, count)
 	for i := 0; i < count; i++ {
@@ -90,26 +99,6 @@ func readPropData(b *bytes.Reader, propertyType byte) (Property, error) {
 			return nil, err
 		}
 		return NewVector3Property(vals[0], vals[1], vals[2]), nil
-
-	case 8:
-		vals, err := readFloat64s(b, 4)
-		if err != nil {
-			return nil, err
-		}
-		return NewQuaternionProperty(vals[0], vals[1], vals[2], vals[3]), nil
-
-	case 9:
-		vals, err := readFloat64s(b, 9)
-		if err != nil {
-			return nil, err
-		}
-		return NewMatrix3x3Property(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8]), nil
-	case 10:
-		vals, err := readFloat64s(b, 16)
-		if err != nil {
-			return nil, err
-		}
-		return NewMatrix4x4Property(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8], vals[9], vals[10], vals[11], vals[12], vals[13], vals[14], vals[15]), nil
 	case 11:
 		metadataBlock, err := readNestedMetadatablock(b)
 		if err != nil {
@@ -125,7 +114,35 @@ func readPropData(b *bytes.Reader, propertyType byte) (Property, error) {
 		}
 		return NewTimeProperty(time.Unix(0, unixTime)), nil
 
+	case 16:
+		allbytes, _, err := rapbin.ReadBytesArray(b)
+		if err != nil {
+			return nil, err
+		}
+		return ArrayPropertyRaw{
+			data:             rapbin.BytesArrayToBytes(allbytes),
+			originalBaseCode: 3,
+			divison:          1,
+		}, err
+
+	case 18:
+		allbytes, _, err := rapbin.ReadBytesArray(b)
+		if err != nil {
+			return nil, err
+		}
+		return NewBinaryArrayProperty(allbytes), nil
+
 	case 13:
+		fallthrough
+	case 15:
+		fallthrough
+	case 19:
+		fallthrough
+	case 20:
+		fallthrough
+	case 24:
+		fallthrough
+	case 25:
 		fallthrough
 	case 14:
 		len, _, err := rapbin.ReadUvarint(b)

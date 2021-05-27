@@ -1,6 +1,6 @@
 # RAP
 
-**RAP is in alpha, and APIs will be changing each update**
+**RAP is in Beta**
 
 Recolude's official recording file format.
 
