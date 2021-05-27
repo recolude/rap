@@ -18,6 +18,28 @@ import (
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
+// https://dave.cheney.net/2019/01/27/eliminate-error-handling-by-eliminating-errors
+type errWriter struct {
+	io.Writer
+	err error
+	n   int
+}
+
+func (e *errWriter) Write(buf []byte) (int, error) {
+	if e.err != nil {
+		return 0, e.err
+	}
+
+	var n int
+	n, e.err = e.Writer.Write(buf)
+	e.n += n
+	return n, e.err
+}
+
+func (e *errWriter) TotalWritten() int {
+	return e.n
+}
+
 type encoderCollectionMapping struct {
 	encoder         encoding.Encoder
 	collections     []format.CaptureCollection
@@ -153,15 +175,11 @@ func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, block metada
 	metadataIndices := make([]uint, len(block.Mapping()))
 
 	metadataValuesBuffer := bytes.Buffer{}
-	// metadataValues := make([][]byte, len(metadata.Mapping()))
 	i := 0
 	for key, val := range block.Mapping() {
 		metadataIndices[i] = uint(keyMappingToIndex[key])
 
 		metadata.WriteProprty(&metadataValuesBuffer, val)
-		// metadataValuesBuffer.WriteByte(val.Code())
-		// metadataValuesBuffer.Write(val.Data())
-		// metadataValues[i] = append([]byte{val.Code()}, val.Data()...)
 		i++
 	}
 
@@ -199,67 +217,67 @@ func writeEncoders(out io.Writer, encoders []encoderCollectionMapping) (int, err
 	return writtenVersions + written, err
 }
 
-func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[string]int, encodingBlocks [][]byte, streamIndexToEncoderUsedIndex []int, offset int) (int, []byte) {
-	out := bytes.Buffer{}
+func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappingToIndex map[string]int, encodingBlocks [][]byte, streamIndexToEncoderUsedIndex []int, offset int) (int, int, error) {
+	ew := &errWriter{Writer: out}
 
 	// Write id
-	out.Write(rapbinary.StringToBytes(recording.ID()))
+	ew.Write(rapbinary.StringToBytes(recording.ID()))
 
 	// Write name
-	out.Write(rapbinary.StringToBytes(recording.Name()))
+	ew.Write(rapbinary.StringToBytes(recording.Name()))
 
 	// Write metadata
-	writeMetadata(&out, keyMappingToIndex, recording.Metadata())
+	writeMetadata(ew, keyMappingToIndex, recording.Metadata())
 
 	// Write number of streams
 	numStreams := make([]byte, 4)
 	read := binary.PutUvarint(numStreams, uint64(len(recording.CaptureCollections())))
-	out.Write(numStreams[:read])
+	ew.Write(numStreams[:read])
 
 	// Write all streams
 	for streamIndex := range recording.CaptureCollections() {
 		// Write index of the encoder used to encode stream
 		numStreams := make([]byte, 4)
 		read := binary.PutUvarint(numStreams, uint64(streamIndexToEncoderUsedIndex[offset+streamIndex]))
-		out.Write(numStreams[:read])
+		ew.Write(numStreams[:read])
 
 		// Write stream data
-		out.Write(rapbinary.BytesArrayToBytes(encodingBlocks[offset+streamIndex]))
+		ew.Write(rapbinary.BytesArrayToBytes(encodingBlocks[offset+streamIndex]))
 	}
 
 	// Write number of references
 	numReferences := make([]byte, 4)
 	read = binary.PutUvarint(numReferences, uint64(len(recording.BinaryReferences())))
-	out.Write(numReferences[:read])
+	ew.Write(numReferences[:read])
 
 	// Write binary references
 	for _, ref := range recording.BinaryReferences() {
-		out.Write(rapbinary.StringToBytes(ref.Name()))
-		out.Write(rapbinary.StringToBytes(ref.URI()))
+		ew.Write(rapbinary.StringToBytes(ref.Name()))
+		ew.Write(rapbinary.StringToBytes(ref.URI()))
 
 		refSize := make([]byte, 4)
 		read = binary.PutUvarint(refSize, ref.Size())
-		out.Write(refSize[:read])
+		ew.Write(refSize[:read])
 
-		writeMetadata(&out, keyMappingToIndex, ref.Metadata())
+		writeMetadata(ew, keyMappingToIndex, ref.Metadata())
 	}
 
 	// Write number of binaries
 	numBinaries := make([]byte, 4)
 	read = binary.PutUvarint(numBinaries, uint64(len(recording.Binaries())))
-	out.Write(numBinaries[:read])
+	ew.Write(numBinaries[:read])
 
 	// Write binaries
 	for _, bin := range recording.Binaries() {
-		out.Write(rapbinary.StringToBytes(bin.Name()))
+		ew.Write(rapbinary.StringToBytes(bin.Name()))
 
 		refSize := make([]byte, 4)
 		read = binary.PutUvarint(refSize, bin.Size())
-		out.Write(refSize[:read])
+		ew.Write(refSize[:read])
 
-		writeMetadata(&out, keyMappingToIndex, bin.Metadata())
+		writeMetadata(ew, keyMappingToIndex, bin.Metadata())
 
-		actualbinaryWritten, _ := io.Copy(&out, bin.Data())
+		actualbinaryWritten, _ := io.Copy(ew, bin.Data())
 		if actualbinaryWritten != int64(bin.Size()) {
 			panic("Binary data written was larger than size in signature")
 		}
@@ -268,17 +286,19 @@ func recurseRecordingToBytes(recording format.Recording, keyMappingToIndex map[s
 	// Write number of recordings
 	numRecordings := make([]byte, 4)
 	read = binary.PutUvarint(numRecordings, uint64(len(recording.Recordings())))
-	out.Write(numRecordings[:read])
+	ew.Write(numRecordings[:read])
 
 	// Write all child recordings
 	newOffset := offset + len(recording.CaptureCollections())
 	for _, rec := range recording.Recordings() {
-		updatedOffset, recordingData := recurseRecordingToBytes(rec, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, newOffset)
+		_, updatedOffset, err := recurseRecordingToBytes(ew, rec, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, newOffset)
+		if err != nil {
+			return ew.TotalWritten(), -1, err
+		}
 		newOffset = updatedOffset
-		out.Write(rapbinary.BytesArrayToBytes(recordingData))
 	}
 
-	return newOffset, out.Bytes()
+	return ew.TotalWritten(), newOffset, ew.err
 }
 
 // Write will take the recording provided and write it to the underlying stream
@@ -332,8 +352,7 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 		}
 	}
 
-	// Build compression buffer
-	// compressBuffer := bytes.Buffer{}
+	// Build compression writer
 	compressWriter, err := flate.NewWriter(w.out, 9 /*Best Compression*/)
 	if err != nil {
 		return totalBytesWritten, err
@@ -353,8 +372,7 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 	}
 
 	// Write out all recordings
-	_, allRecData := recurseRecordingToBytes(recording, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, 0)
-	written, err = compressWriter.Write(rapbinary.BytesArrayToBytes(allRecData))
+	written, _, err = recurseRecordingToBytes(compressWriter, recording, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, 0)
 	totalBytesWritten += written
 	if err != nil {
 		return totalBytesWritten, err

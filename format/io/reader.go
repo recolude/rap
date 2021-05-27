@@ -13,6 +13,27 @@ import (
 	"github.com/recolude/rap/internal/io/rapv1"
 )
 
+// https://dave.cheney.net/2019/01/27/eliminate-error-handling-by-eliminating-errors
+type errReader struct {
+	io.Reader
+	err error
+	n   int
+}
+
+func (e *errReader) Read(p []byte) (n int, err error) {
+	if e.err != nil {
+		return 0, e.err
+	}
+
+	n, e.err = io.ReadFull(e.Reader, p)
+	e.n += n
+	return n, e.err
+}
+
+func (e *errReader) TotalRead() int {
+	return e.n
+}
+
 type Reader struct {
 	encoders []encoding.Encoder
 	in       io.Reader
@@ -76,7 +97,7 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 	return encoders, encoderHeaders, totalBytesRead, nil
 }
 
-func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (metadata.Block, error) {
+func readRecordingMetadataBlock(in io.Reader, metadataKeys []string) (metadata.Block, error) {
 	propMapping := make(map[string]metadata.Property)
 
 	keyIndecies, _, err := binary.ReadUintArray(in)
@@ -100,139 +121,79 @@ func readRecordingMetadataBlock(in *bytes.Reader, metadataKeys []string) (metada
 	return metadata.NewBlock(propMapping), nil
 }
 
-func recursiveBuidRecordings(recordingData []byte, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (format.Recording, error) {
-	in := bytes.NewReader(recordingData)
+func recursiveBuidRecordings(inStream io.Reader, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (format.Recording, int, error) {
+	// in := bytes.NewReader(recordingData)
+	er := &errReader{Reader: inStream}
 
 	// Read Recording id
-	recordingID, _, err := binary.ReadString(in)
-	if err != nil {
-		return nil, err
-	}
+	recordingID, _, err := binary.ReadString(er)
 
 	// Read Recording name
-	recordingName, _, err := binary.ReadString(in)
-	if err != nil {
-		return nil, err
-	}
+	recordingName, _, err := binary.ReadString(er)
 
 	// Read Recording metadata
-	recordingMetadataBlock, err := readRecordingMetadataBlock(in, metadataKeys)
+	recordingMetadataBlock, err := readRecordingMetadataBlock(er, metadataKeys)
 	if err != nil {
-		return nil, err
+		return nil, er.TotalRead(), err
 	}
 
 	// read num streams
-	numStreams, _, err := binary.ReadUvarint(in)
-	if err != nil {
-		return nil, err
-	}
+	numStreams, _, err := binary.ReadUvarint(er)
 
 	// read streams
 	allStreams := make([]format.CaptureCollection, numStreams)
 	for i := 0; i < int(numStreams); i++ {
-
-		encoderIndex, _, err := binary.ReadUvarint(in)
-		if err != nil {
-			return nil, err
-		}
-
-		captureBody, _, err := binary.ReadBytesArray(in)
-		if err != nil {
-			return nil, err
-		}
-
-		stream, err := encoders[encoderIndex].Decode(headers[encoderIndex], captureBody)
-		if err != nil {
-			return nil, err
-		}
+		encoderIndex, _, _ := binary.ReadUvarint(er)
+		captureBody, _, _ := binary.ReadBytesArray(er)
+		stream, _ := encoders[encoderIndex].Decode(headers[encoderIndex], captureBody)
 
 		allStreams[i] = stream
 	}
 
 	// read binary references
-	numBinaryReferences, _, err := binary.ReadUvarint(in)
-	if err != nil {
-		return nil, err
-	}
-
+	numBinaryReferences, _, err := binary.ReadUvarint(er)
 	binReferences := make([]format.BinaryReference, numBinaryReferences)
 
 	for i := 0; i < int(numBinaryReferences); i++ {
-		name, _, err := binary.ReadString(in)
-		if err != nil {
-			return nil, err
-		}
-
-		uri, _, err := binary.ReadString(in)
-		if err != nil {
-			return nil, err
-		}
-
-		refSize, _, err := binary.ReadUvarint(in)
-		if err != nil {
-			return nil, err
-		}
-
+		name, _, _ := binary.ReadString(er)
+		uri, _, _ := binary.ReadString(er)
+		refSize, _, _ := binary.ReadUvarint(er)
 		// Read Recording metadata
-		block, err := readRecordingMetadataBlock(in, metadataKeys)
-		if err != nil {
-			return nil, err
-		}
+		block, _ := readRecordingMetadataBlock(er, metadataKeys)
 
 		binReferences[i] = NewBinaryReference(name, uri, refSize, block)
 	}
 
 	// read binaries
-	numBinaries, _, err := binary.ReadUvarint(in)
-	if err != nil {
-		return nil, err
-	}
-
+	numBinaries, _, err := binary.ReadUvarint(er)
 	binaries := make([]format.Binary, numBinaries)
 
 	for i := 0; i < int(numBinaries); i++ {
-		name, _, err := binary.ReadString(in)
-		if err != nil {
-			return nil, err
-		}
-
-		refSize, _, err := binary.ReadUvarint(in)
-		if err != nil {
-			return nil, err
-		}
+		name, _, _ := binary.ReadString(er)
+		refSize, _, _ := binary.ReadUvarint(er)
 
 		// Read Recording metadata
-		block, err := readRecordingMetadataBlock(in, metadataKeys)
-		if err != nil {
-			return nil, err
-		}
+		block, _ := readRecordingMetadataBlock(er, metadataKeys)
 
 		allData := make([]byte, refSize)
-		io.ReadFull(in, allData)
+		io.ReadFull(er, allData)
 
 		binaries[i] = NewBinary(name, allData, block)
 	}
 
 	// read num recordings
-	numRecordings, _, err := binary.ReadUvarint(in)
-	if err != nil {
-		return nil, err
-	}
+	numRecordings, _, err := binary.ReadUvarint(er)
 
 	allChildRecordings := make([]format.Recording, numRecordings)
 	for i := 0; i < int(numRecordings); i++ {
-		childRecData, _, err := binary.ReadBytesArray(in)
+		childRec, _, err := recursiveBuidRecordings(er, metadataKeys, encoders, headers)
 		if err != nil {
-			return nil, err
-		}
-		childRec, err := recursiveBuidRecordings(childRecData, metadataKeys, encoders, headers)
-		if err != nil {
-			return nil, err
+			return nil, er.TotalRead(), err
 		}
 		allChildRecordings[i] = childRec
 	}
 
-	return format.NewRecording(recordingID, recordingName, allStreams, allChildRecordings, recordingMetadataBlock, binaries, binReferences), nil
+	return format.NewRecording(recordingID, recordingName, allStreams, allChildRecordings, recordingMetadataBlock, binaries, binReferences), er.TotalRead(), er.err
 }
 
 func (r Reader) Read() (format.Recording, int, error) {
@@ -275,13 +236,11 @@ func (r Reader) Read() (format.Recording, int, error) {
 	}
 
 	// Read off recordings
-	uncompresseRecordingData, bytesRead, err := binary.ReadBytesArray(deflateReader)
+	rec, bytesRead, err := recursiveBuidRecordings(deflateReader, metdataKeys, encodersToUse, encoderHeaders)
 	totalBytesRead += bytesRead
 	if err != nil {
 		return nil, totalBytesRead, err
 	}
-
-	rec, err := recursiveBuidRecordings(uncompresseRecordingData, metdataKeys, encodersToUse, encoderHeaders)
 
 	return rec, totalBytesRead, err
 }
