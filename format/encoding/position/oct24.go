@@ -15,29 +15,43 @@ func octCellsToBytes24(cells []OctCell, buffer []byte) {
 	buffer[1] = 0
 	buffer[2] = 0
 
-	buffer[0] = byte(cells[0])
-	buffer[0] |= byte(cells[1]) << 3
-	buffer[0] |= byte(cells[2]) << 6
+	// This method is better for compression
+	for i := 0; i < 8; i++ {
+		buffer[0] |= (byte(cells[i]) & 0b1) << i
+		buffer[1] |= ((byte(cells[i]) & 0b10) >> 1) << i
+		buffer[2] |= ((byte(cells[i]) & 0b100) >> 2) << i
+	}
 
-	buffer[1] = byte(cells[2]) >> 2
-	buffer[1] |= byte(cells[3]) << 1
-	buffer[1] |= byte(cells[4]) << 4
-	buffer[1] |= byte(cells[5]) << 7
+	// Old method, keeping around for sake of reference
+	// buffer[0] = byte(cells[0])
+	// buffer[0] |= byte(cells[1]) << 3
+	// buffer[0] |= byte(cells[2]) << 6
 
-	buffer[2] = byte(cells[5]) >> 1
-	buffer[2] |= byte(cells[6]) << 2
-	buffer[2] |= byte(cells[7]) << 5
+	// buffer[1] = byte(cells[2]) >> 2
+	// buffer[1] |= byte(cells[3]) << 1
+	// buffer[1] |= byte(cells[4]) << 4
+	// buffer[1] |= byte(cells[5]) << 7
+
+	// buffer[2] = byte(cells[5]) >> 1
+	// buffer[2] |= byte(cells[6]) << 2
+	// buffer[2] |= byte(cells[7]) << 5
 }
 
 func bytesToOctCells24(cells []OctCell, buffer []byte) {
-	cells[0] = OctCell(buffer[0] & 0b111)
-	cells[1] = OctCell((buffer[0] & 0b111000) >> 3)
-	cells[2] = OctCell((buffer[0] >> 6) | ((buffer[1] & 0b1) << 2))
-	cells[3] = OctCell((buffer[1] & 0b1110) >> 1)
-	cells[4] = OctCell((buffer[1] & 0b1110000) >> 4)
-	cells[5] = OctCell((buffer[1] >> 7) | ((buffer[2] & 0b11) << 1))
-	cells[6] = OctCell((buffer[2] & 0b11100) >> 2)
-	cells[7] = OctCell((buffer[2] & 0b11100000) >> 5)
+	// This method is better for compression
+	for i := 0; i < 8; i++ {
+		cells[i] = OctCell(((byte(buffer[0]) >> i) & 0b1) | (((byte(buffer[1]) >> i) & 0b1) << 1) | ((byte(buffer[2])>>i)&0b1)<<2)
+	}
+
+	// Old method, keeping around for sake of reference
+	// cells[0] = OctCell(buffer[0] & 0b111)
+	// cells[1] = OctCell((buffer[0] & 0b111000) >> 3)
+	// cells[2] = OctCell((buffer[0] >> 6) | ((buffer[1] & 0b1) << 2))
+	// cells[3] = OctCell((buffer[1] & 0b1110) >> 1)
+	// cells[4] = OctCell((buffer[1] & 0b1110000) >> 4)
+	// cells[5] = OctCell((buffer[1] >> 7) | ((buffer[2] & 0b11) << 1))
+	// cells[6] = OctCell((buffer[2] & 0b11100) >> 2)
+	// cells[7] = OctCell((buffer[2] & 0b11100000) >> 5)
 }
 
 func encodeOct24(captures []position.Capture) ([]byte, error) {
