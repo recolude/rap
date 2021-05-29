@@ -148,7 +148,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 						enum.NewEncoder(enum.Raw32),
 					}
 
-					recordingWriter := rapio.NewWriter(encoders, c.App.Writer)
+					recordingWriter := rapio.NewWriter(encoders, true, c.App.Writer)
 					_, err = recordingWriter.Write(recording)
 					return err
 				},
@@ -180,7 +180,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 						position.NewEncoder(position.Raw64),
 					}
 
-					recordingWriter := rapio.NewWriter(encoders, c.App.Writer)
+					recordingWriter := rapio.NewWriter(encoders, true, c.App.Writer)
 					_, err = recordingWriter.Write(recording)
 					return err
 				},

@@ -21,7 +21,7 @@ func Test_ErrorsWithNoValidEncoders(t *testing.T) {
 	rec := mocks.NewMockRecording(ctrl)
 	rec.EXPECT().CaptureCollections().AnyTimes().Return([]format.CaptureCollection{stream})
 
-	w := io.NewWriter(nil, nil)
+	w := io.NewWriter(nil, false, nil)
 
 	// ACT ====================================================================
 	_, err := w.Write(rec)
@@ -32,7 +32,7 @@ func Test_ErrorsWithNoValidEncoders(t *testing.T) {
 
 func Test_PanicsWithNilRecording(t *testing.T) {
 	// ARRANGE ================================================================
-	w := io.NewWriter(nil, nil)
+	w := io.NewWriter(nil, false, nil)
 
 	// ACT/ASSERT =============================================================
 	assert.PanicsWithError(t, "can not write nil recording", func() { w.Write(nil) })

@@ -20,11 +20,12 @@ type errReader struct {
 	n   int
 }
 
-func (e *errReader) Read(p []byte) (n int, err error) {
+func (e *errReader) Read(p []byte) (int, error) {
 	if e.err != nil {
 		return 0, e.err
 	}
 
+	var n int
 	n, e.err = io.ReadFull(e.Reader, p)
 	e.n += n
 	return n, e.err
@@ -226,17 +227,27 @@ func (r Reader) Read() (format.Recording, int, error) {
 		return nil, totalBytesRead, err
 	}
 
-	deflateReader := flate.NewReader(r.in)
+	compressedFlag := []byte{0}
+	bytesRead, err = r.in.Read(compressedFlag)
+	totalBytesRead += bytesRead
+	if err != nil {
+		return nil, totalBytesRead, err
+	}
+
+	var readcloser io.Reader = r.in
+	if compressedFlag[0] == 1 {
+		readcloser = flate.NewReader(r.in)
+	}
 
 	// Read off metadata keys
-	metdataKeys, bytesRead, err := binary.ReadStringArray(deflateReader)
+	metdataKeys, bytesRead, err := binary.ReadStringArray(readcloser)
 	totalBytesRead += bytesRead
 	if err != nil {
 		return nil, totalBytesRead, err
 	}
 
 	// Read off recordings
-	rec, bytesRead, err := recursiveBuidRecordings(deflateReader, metdataKeys, encodersToUse, encoderHeaders)
+	rec, bytesRead, err := recursiveBuidRecordings(readcloser, metdataKeys, encodersToUse, encoderHeaders)
 	totalBytesRead += bytesRead
 	if err != nil {
 		return nil, totalBytesRead, err

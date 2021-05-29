@@ -70,7 +70,7 @@ func main() {
 					}
 
 					recBuf := bytes.Buffer{}
-					recordingWriter := rapio.NewWriter(encoders, &recBuf)
+					recordingWriter := rapio.NewWriter(encoders, true, &recBuf)
 					recordingReader := rapio.NewReader(encoders, &recBuf)
 
 					_, err = recordingWriter.Write(recording)

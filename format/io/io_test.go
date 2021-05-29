@@ -132,7 +132,7 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 	}
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -190,7 +190,7 @@ func Test_HandlesBinaryReference(t *testing.T) {
 		"a": metadata.NewStringProperty("b"),
 	}))
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -241,7 +241,7 @@ func Test_HandlesBinaryData(t *testing.T) {
 	binaryFile.EXPECT().Data().Return(bytes.NewBufferString("My Data!!!"))
 	binaryFile.EXPECT().Data().Return(bytes.NewBufferString("My Data!!!"))
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -277,7 +277,7 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 	}
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -333,7 +333,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 	}
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -426,7 +426,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 		enumEncoding.NewEncoder(enumEncoding.Raw32),
 	}
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -492,7 +492,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 		enumEncoding.NewEncoder(enumEncoding.Raw32),
 	}
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -648,7 +648,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 		enumEncoding.NewEncoder(enumEncoding.Raw32),
 	}
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	childRec := format.NewRecording(
@@ -758,7 +758,7 @@ func Test_Uprade(t *testing.T) {
 	}
 	fileData := new(bytes.Buffer)
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	// ACT ====================================================================
@@ -779,7 +779,7 @@ func Test_Metadata(t *testing.T) {
 
 	encoders := []encoding.Encoder{}
 
-	w := io.NewWriter(encoders, fileData)
+	w := io.NewWriter(encoders, true, fileData)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -835,4 +835,104 @@ func Test_Metadata(t *testing.T) {
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
 	assertRecordingsMatch(t, recIn, recOut)
+}
+
+func Test_OptionallyCompressesRecording(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+	fileData2 := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+	}
+
+	wCompress := io.NewWriter(encoders, true, fileData)
+	wNonComress := io.NewWriter(encoders, false, fileData2)
+	r := io.NewReader(encoders, fileData)
+	r2 := io.NewReader(encoders, fileData2)
+
+	recIn := format.NewRecording(
+		"",
+		"Test Recording",
+		[]format.CaptureCollection{
+			position.NewCollection(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+			position.NewCollection(
+				"Position2",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+		},
+		[]format.Recording{
+			format.NewRecording(
+				"",
+				"Child Recording",
+				[]format.CaptureCollection{
+					position.NewCollection(
+						"Child Position",
+						[]position.Capture{
+							position.NewCapture(1, 1, 2, 3),
+							position.NewCapture(2, 4, 5, 6),
+							position.NewCapture(4, 7, 8, 9),
+							position.NewCapture(7, 10, 11, 12),
+						},
+					),
+					position.NewCollection(
+						"Child Position2",
+						[]position.Capture{
+							position.NewCapture(1, 1, 2, 3),
+							position.NewCapture(2, 4, 5, 6),
+							position.NewCapture(4, 7, 8, 9),
+							position.NewCapture(7, 10, 11, 12),
+						},
+					),
+				},
+				nil,
+				metadata.NewBlock(
+					map[string]metadata.Property{
+						"a":  metadata.NewStringProperty("bee"),
+						"ce": metadata.NewStringProperty("dee"),
+					},
+				),
+				nil,
+				nil,
+			),
+		},
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
+			},
+		),
+		nil,
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := wCompress.Write(recIn)
+	n2, errNonCompressWrite := wNonComress.Write(recIn)
+	assert.Less(t, len(fileData.Bytes()), len(fileData2.Bytes()))
+	recOut, nOut, errRead := r.Read()
+	recOut2, nOut2, errRead2 := r2.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errNonCompressWrite)
+	assert.NoError(t, errRead)
+	assert.NoError(t, errRead2)
+	assert.Equal(t, n, nOut)
+	assert.Equal(t, n2, nOut2)
+	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut2)
 }

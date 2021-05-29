@@ -40,6 +40,10 @@ func (e *errWriter) TotalWritten() int {
 	return e.n
 }
 
+func (e *errWriter) Close() error {
+	return e.err
+}
+
 type encoderCollectionMapping struct {
 	encoder         encoding.Encoder
 	collections     []format.CaptureCollection
@@ -48,6 +52,7 @@ type encoderCollectionMapping struct {
 
 type Writer struct {
 	encoders []encoding.Encoder
+	compress bool
 	out      io.Writer
 }
 
@@ -61,15 +66,17 @@ func NewRecoludeWriter(out io.Writer) Writer {
 			euler.NewEncoder(euler.Raw32),
 			enum.NewEncoder(enum.Raw32),
 		},
-		out: out,
+		compress: true,
+		out:      out,
 	}
 }
 
 // NewWriter builds a new writer using the encoders provided.
-func NewWriter(encoders []encoding.Encoder, out io.Writer) Writer {
+func NewWriter(encoders []encoding.Encoder, compress bool, out io.Writer) Writer {
 	return Writer{
 		encoders: encoders,
 		out:      out,
+		compress: compress,
 	}
 }
 
@@ -352,11 +359,32 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 		}
 	}
 
-	// Build compression writer
-	compressWriter, err := flate.NewWriter(w.out, 9 /*Best Compression*/)
-	if err != nil {
-		return totalBytesWritten, err
+	var compressWriter io.WriteCloser
+
+	if w.compress {
+		written, err = w.out.Write([]byte{1})
+		totalBytesWritten += written
+		if err != nil {
+			return totalBytesWritten, err
+		}
+		compressWriter, err = flate.NewWriter(w.out, 9 /*Best Compression*/)
+		if err != nil {
+			return totalBytesWritten, err
+		}
+	} else {
+		written, err = w.out.Write([]byte{0})
+		totalBytesWritten += written
+		if err != nil {
+			return totalBytesWritten, err
+		}
+		compressWriter = &errWriter{Writer: w.out}
 	}
+
+	// Build compression writer
+	// compressWriter, err := flate.NewWriter(w.out, 9 /*Best Compression*/)
+	// if err != nil {
+	// 	return totalBytesWritten, err
+	// }
 
 	// Write metadata keys
 	keyMappingToIndex := make(map[string]int)
