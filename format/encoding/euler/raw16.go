@@ -9,6 +9,11 @@ import (
 	binaryutil "github.com/recolude/rap/internal/io/binary"
 )
 
+func wrapEulerAngle(angle float64) float64 {
+	timesWrap := math.Floor(angle / 360)
+	return angle - (360 * timesWrap)
+}
+
 func encodeRaw16(captures []euler.Capture) []byte {
 	streamData := new(bytes.Buffer)
 
@@ -45,9 +50,9 @@ func encodeRaw16(captures []euler.Capture) []byte {
 	binary.Write(streamData, binary.LittleEndian, float32(startingTime))
 
 	if len(captures) == 1 {
-		binary.Write(streamData, binary.LittleEndian, float32(captures[0].EulerZXY().X()))
-		binary.Write(streamData, binary.LittleEndian, float32(captures[0].EulerZXY().Y()))
-		binary.Write(streamData, binary.LittleEndian, float32(captures[0].EulerZXY().Z()))
+		binary.Write(streamData, binary.LittleEndian, float32(wrapEulerAngle(captures[0].EulerZXY().X())))
+		binary.Write(streamData, binary.LittleEndian, float32(wrapEulerAngle(captures[0].EulerZXY().Y())))
+		binary.Write(streamData, binary.LittleEndian, float32(wrapEulerAngle(captures[0].EulerZXY().Z())))
 		return streamData.Bytes()
 	}
 
@@ -64,13 +69,13 @@ func encodeRaw16(captures []euler.Capture) []byte {
 		// Read back quantized time to fix drifting
 		totalledQuantizedDuration += binaryutil.BytesToUnisngedFloatBST(0, maxTimeDifference, buffer2Byes)
 
-		binaryutil.UnsignedFloatBSTToBytes(capture.EulerZXY().X(), 0, 360, buffer2Byes)
+		binaryutil.UnsignedFloatBSTToBytes(wrapEulerAngle(capture.EulerZXY().X()), 0, 360, buffer2Byes)
 		streamData.Write(buffer2Byes)
 
-		binaryutil.UnsignedFloatBSTToBytes(capture.EulerZXY().Y(), 0, 360, buffer2Byes)
+		binaryutil.UnsignedFloatBSTToBytes(wrapEulerAngle(capture.EulerZXY().Y()), 0, 360, buffer2Byes)
 		streamData.Write(buffer2Byes)
 
-		binaryutil.UnsignedFloatBSTToBytes(capture.EulerZXY().Z(), 0, 360, buffer2Byes)
+		binaryutil.UnsignedFloatBSTToBytes(wrapEulerAngle(capture.EulerZXY().Z()), 0, 360, buffer2Byes)
 		streamData.Write(buffer2Byes)
 	}
 	return streamData.Bytes()

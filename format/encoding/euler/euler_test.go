@@ -17,9 +17,9 @@ func Test_Euler(t *testing.T) {
 	for i := 0; i < len(continuousCaptures); i++ {
 		continuousCaptures[i] = eulerCollection.NewEulerZXYCapture(
 			curTime,
-			(-rand.Float64()*360)+360,
-			(-rand.Float64()*360)+360,
-			(-rand.Float64()*360)+360,
+			(rand.Float64() * 360),
+			(rand.Float64() * 360),
+			(rand.Float64() * 360),
 		)
 		curTime += rand.Float64() * 10.0
 	}
@@ -124,6 +124,97 @@ func Test_Euler(t *testing.T) {
 					}
 				}
 			})
+		}
+	}
+}
+
+func Test_EulerRaw16Wrapping(t *testing.T) {
+	// ARRANGE ================================================================
+	testCaptures := []struct {
+		in  eulerCollection.Capture
+		out eulerCollection.Capture
+	}{
+		{
+			in:  eulerCollection.NewEulerZXYCapture(0, 10+360, 20, 30),
+			out: eulerCollection.NewEulerZXYCapture(0, 10, 20, 30),
+		},
+		{
+			in:  eulerCollection.NewEulerZXYCapture(1, 10, 20, 30+360),
+			out: eulerCollection.NewEulerZXYCapture(1, 10, 20, 30),
+		},
+		{
+			in:  eulerCollection.NewEulerZXYCapture(2, 10, 20+360, 30),
+			out: eulerCollection.NewEulerZXYCapture(2, 10, 20, 30),
+		},
+		{
+			in:  eulerCollection.NewEulerZXYCapture(3, 10+360, 20+720, 30+1080),
+			out: eulerCollection.NewEulerZXYCapture(3, 10, 20, 30),
+		},
+		{
+			in:  eulerCollection.NewEulerZXYCapture(4, -10, -20, -30),
+			out: eulerCollection.NewEulerZXYCapture(4, 350, 340, 330),
+		},
+		{
+			in:  eulerCollection.NewEulerZXYCapture(5, -10-360, -720, 360),
+			out: eulerCollection.NewEulerZXYCapture(5, 350, 0, 0),
+		},
+	}
+
+	capturesIn := make([]eulerCollection.Capture, len(testCaptures))
+	correctAnswers := make([]eulerCollection.Capture, len(testCaptures))
+	for i, capture := range testCaptures {
+		capturesIn[i] = capture.in
+		correctAnswers[i] = capture.out
+	}
+
+	streamIn := eulerCollection.NewCollection("Rot", capturesIn)
+	encoder := euler.NewEncoder(euler.Raw16)
+
+	// ACT ====================================================================
+	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
+	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
+
+	// ASSERT =================================================================
+	assert.NoError(t, encodeErr)
+	assert.NoError(t, decodeErr)
+	assert.Len(t, header, 0)
+	assert.Len(t, streamsData, 1)
+	assert.Len(t, streamOut.Captures(), len(streamIn.Captures()))
+
+	for i, attempt := range streamOut.Captures() {
+
+		rotationCapture, ok := attempt.(eulerCollection.Capture)
+		if assert.True(t, ok) == false {
+			break
+		}
+
+		assert.InDelta(t, correctAnswers[i].Time(), rotationCapture.Time(), 0.001, "times are not equal: %.2f != %.2f", correctAnswers[i].Time(), rotationCapture.Time())
+		if assert.InDelta(
+			t,
+			correctAnswers[i].EulerZXY().X(),
+			rotationCapture.EulerZXY().X(),
+			0.005,
+			"[%d] X components not equal: %.2f != %.2f", i, correctAnswers[i].EulerZXY().X(), rotationCapture.EulerZXY().X(),
+		) == false {
+			break
+		}
+		if assert.InDelta(
+			t,
+			correctAnswers[i].EulerZXY().Y(),
+			rotationCapture.EulerZXY().Y(),
+			0.005,
+			"Y components not equal: %.2f != %.2f", correctAnswers[i].EulerZXY().Y(), rotationCapture.EulerZXY().Y(),
+		) == false {
+			break
+		}
+		if assert.InDelta(
+			t,
+			correctAnswers[i].EulerZXY().Z(),
+			rotationCapture.EulerZXY().Z(),
+			0.005,
+			"Z components not equal: %.2f != %.2f", correctAnswers[i].EulerZXY().Z(), rotationCapture.EulerZXY().Z(),
+		) == false {
+			break
 		}
 	}
 }
