@@ -126,7 +126,10 @@ func accumulateMetdataKeys(recording format.Recording, keyMappingToIndex map[str
 func (w Writer) evaluateCollections(recording format.Recording, offset int) ([]encoderCollectionMapping, int, error) {
 	mappings := make([]encoderCollectionMapping, 0)
 	streamsSatisfied := make([]bool, len(recording.CaptureCollections()))
-	for i := range recording.CaptureCollections() {
+	for i, collection := range recording.CaptureCollections() {
+		if collection == nil {
+			return nil, 0, errors.New("can not serialize recording with nil capture collections")
+		}
 		streamsSatisfied[i] = false
 	}
 
@@ -308,11 +311,43 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 	return ew.TotalWritten(), newOffset, ew.err
 }
 
+func checkForNilInterfaces(recording format.Recording) error {
+	if recording == nil {
+		return errors.New("can not serialize recording with nil sub-recordings")
+	}
+
+	for _, bin := range recording.BinaryReferences() {
+		if bin == nil {
+			return errors.New("can not serialize recording with nil binary references")
+		}
+	}
+
+	for _, bin := range recording.Binaries() {
+		if bin == nil {
+			return errors.New("can not serialize recording with nil binaries")
+		}
+	}
+
+	for _, rec := range recording.Recordings() {
+		err := checkForNilInterfaces(rec)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Write will take the recording provided and write it to the underlying stream
 // the writer was built with.
 func (w Writer) Write(recording format.Recording) (int, error) {
 	if recording == nil {
 		panic(errors.New("can not write nil recording"))
+	}
+
+	err := checkForNilInterfaces(recording)
+	if err != nil {
+		return 0, err
 	}
 
 	encoderMappings, _, err := w.evaluateCollections(recording, 0)
@@ -359,8 +394,8 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 		}
 	}
 
+	// Build compression writer
 	var compressWriter io.WriteCloser
-
 	if w.compress {
 		written, err = w.out.Write([]byte{1})
 		totalBytesWritten += written
@@ -379,12 +414,6 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 		}
 		compressWriter = &errWriter{Writer: w.out}
 	}
-
-	// Build compression writer
-	// compressWriter, err := flate.NewWriter(w.out, 9 /*Best Compression*/)
-	// if err != nil {
-	// 	return totalBytesWritten, err
-	// }
 
 	// Write metadata keys
 	keyMappingToIndex := make(map[string]int)

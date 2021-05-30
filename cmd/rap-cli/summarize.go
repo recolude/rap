@@ -59,8 +59,8 @@ func printSummary(out io.Writer, recording format.Recording) {
 		displayName = "[No Name]"
 	}
 
-	fmt.Fprintf(out, "Name: %s\n", displayName)
-	fmt.Fprintf(out, "Sub Recordings: %d\n", len(recording.Recordings()))
+	fmt.Fprintf(out, "Name:                    %s\n", displayName)
+	fmt.Fprintf(out, "Sub Recordings:          %d\n", len(recording.Recordings()))
 
 	recSummary := summarize(recording)
 	fmt.Fprintf(out, "Total Position Captures: %d\n", recSummary.positionCaptureCount)

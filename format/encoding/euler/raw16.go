@@ -10,8 +10,7 @@ import (
 )
 
 func wrapEulerAngle(angle float64) float64 {
-	timesWrap := math.Floor(angle / 360)
-	return angle - (360 * timesWrap)
+	return angle - (360 * math.Floor(angle/360))
 }
 
 func encodeRaw16(captures []euler.Capture) []byte {

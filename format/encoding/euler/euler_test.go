@@ -155,7 +155,7 @@ func Test_EulerRaw16Wrapping(t *testing.T) {
 			out: eulerCollection.NewEulerZXYCapture(4, 350, 340, 330),
 		},
 		{
-			in:  eulerCollection.NewEulerZXYCapture(5, -10-360, -720, 360),
+			in:  eulerCollection.NewEulerZXYCapture(5, -10-360, -720, -360),
 			out: eulerCollection.NewEulerZXYCapture(5, 350, 0, 0),
 		},
 	}
