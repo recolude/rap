@@ -217,14 +217,22 @@ func writeEncoders(out io.Writer, encoders []encoderCollectionMapping) (int, err
 		i++
 	}
 
-	written, err := out.Write(rapbinary.StringArrayToBytes(encoderSignatures))
+	totalWritten, err := out.Write(rapbinary.StringArrayToBytes(encoderSignatures))
 	if err != nil {
-		return written, err
+		return totalWritten, err
 	}
 
-	writtenVersions, err := out.Write(rapbinary.UintArrayToBytes(encoderVersions))
+	varByte := make([]byte, 4)
+	for _, version := range encoderVersions {
+		read := binary.PutUvarint(varByte, uint64(version))
+		written, err := out.Write(varByte[:read])
+		totalWritten += written
+		if err != nil {
+			return totalWritten, err
+		}
+	}
 
-	return writtenVersions + written, err
+	return totalWritten, err
 }
 
 func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappingToIndex map[string]int, encodingBlocks [][]byte, streamIndexToEncoderUsedIndex []int, offset int) (int, int, error) {

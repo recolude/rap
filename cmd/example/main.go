@@ -7,6 +7,8 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/position"
+	"github.com/recolude/rap/format/encoding"
+	positionEncoder "github.com/recolude/rap/format/encoding/position"
 	"github.com/recolude/rap/format/io"
 	"github.com/recolude/rap/format/metadata"
 )
@@ -38,6 +40,14 @@ func main() {
 	)
 
 	f, _ := os.Create("sin demo.rap")
-	recordingWriter := io.NewRecoludeWriter(f)
+	recordingWriter := io.NewWriter(
+		[]encoding.Encoder{
+			positionEncoder.NewEncoder(positionEncoder.Oct24),
+		},
+		true,
+		f,
+	)
+
+	// Writes a recording in 1,258 bytes
 	recordingWriter.Write(rec)
 }

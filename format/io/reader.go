@@ -56,10 +56,14 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 		return nil, nil, totalBytesRead, err
 	}
 
-	encoderVersions, read, err := binary.ReadUintArray(r.in)
-	totalBytesRead += read
-	if err != nil {
-		return nil, nil, totalBytesRead, err
+	encoderVersions := make([]uint64, len(encoderSignatures))
+	for i := range encoderSignatures {
+		val, read, err := binary.ReadUvarint(r.in)
+		if err != nil {
+			return nil, nil, totalBytesRead, err
+		}
+		totalBytesRead += read
+		encoderVersions[i] = val
 	}
 
 	encoders := make([]encoding.Encoder, len(encoderSignatures))
@@ -67,7 +71,7 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 		found := false
 		for _, registeredEncoder := range r.encoders {
 			if registeredEncoder.Signature() == desiredEncoderSignature {
-				if registeredEncoder.Version() >= encoderVersions[i] {
+				if registeredEncoder.Version() >= uint(encoderVersions[i]) {
 					encoders[i] = registeredEncoder
 					found = true
 				} else {
