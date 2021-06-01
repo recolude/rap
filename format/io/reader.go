@@ -47,20 +47,20 @@ func NewReader(encoders []encoding.Encoder, r io.Reader) Reader {
 	}
 }
 
-func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
+func (r Reader) readEncoders() ([]encoding.Encoder, int, error) {
 	totalBytesRead := 0
 
 	encoderSignatures, read, err := binary.ReadStringArray(r.in)
 	totalBytesRead += read
 	if err != nil {
-		return nil, nil, totalBytesRead, err
+		return nil, totalBytesRead, err
 	}
 
 	encoderVersions := make([]uint64, len(encoderSignatures))
 	for i := range encoderSignatures {
 		val, read, err := binary.ReadUvarint(r.in)
 		if err != nil {
-			return nil, nil, totalBytesRead, err
+			return nil, totalBytesRead, err
 		}
 		totalBytesRead += read
 		encoderVersions[i] = val
@@ -75,7 +75,7 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 					encoders[i] = registeredEncoder
 					found = true
 				} else {
-					return nil, nil, totalBytesRead, fmt.Errorf(
+					return nil, totalBytesRead, fmt.Errorf(
 						"registered encoder (%s) version is behind what is found in recording: %d < %d",
 						desiredEncoderSignature,
 						registeredEncoder.Version(),
@@ -85,21 +85,11 @@ func (r Reader) readEncoders() ([]encoding.Encoder, [][]byte, int, error) {
 			}
 		}
 		if found == false {
-			return nil, nil, totalBytesRead, fmt.Errorf("no registered encoder has signature %s", desiredEncoderSignature)
+			return nil, totalBytesRead, fmt.Errorf("no registered encoder has signature %s", desiredEncoderSignature)
 		}
 	}
 
-	encoderHeaders := make([][]byte, len(encoders))
-	for i := range encoderHeaders {
-		header, read, err := binary.ReadBytesArray(r.in)
-		totalBytesRead += read
-		if err != nil {
-			return nil, nil, totalBytesRead, err
-		}
-		encoderHeaders[i] = header
-	}
-
-	return encoders, encoderHeaders, totalBytesRead, nil
+	return encoders, totalBytesRead, nil
 }
 
 func readRecordingMetadataBlock(in io.Reader, metadataKeys []string) (metadata.Block, error) {
@@ -225,7 +215,7 @@ func (r Reader) Read() (format.Recording, int, error) {
 	}
 
 	// Read encoders
-	encodersToUse, encoderHeaders, bytesRead, err := r.readEncoders()
+	encodersToUse, bytesRead, err := r.readEncoders()
 	totalBytesRead += bytesRead
 	if err != nil {
 		return nil, totalBytesRead, err
@@ -241,6 +231,16 @@ func (r Reader) Read() (format.Recording, int, error) {
 	var readcloser io.Reader = r.in
 	if compressedFlag[0] == 1 {
 		readcloser = flate.NewReader(r.in)
+	}
+
+	encoderHeaders := make([][]byte, len(encodersToUse))
+	for i := range encoderHeaders {
+		header, read, err := binary.ReadBytesArray(readcloser)
+		totalBytesRead += read
+		if err != nil {
+			return nil, totalBytesRead, err
+		}
+		encoderHeaders[i] = header
 	}
 
 	// Read off metadata keys

@@ -379,29 +379,6 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 		return totalBytesWritten, err
 	}
 
-	numStreams := calcNumStreams(recording)
-	encodingBlocks := make([][]byte, numStreams)
-	streamIndexToEncoderUsedIndex := make([]int, numStreams)
-
-	for encoderIndex, val := range encoderMappings {
-		header, streamsEncoded, err := val.encoder.Encode(val.collections)
-		if err != nil {
-			return totalBytesWritten, err
-		}
-
-		for i, order := range val.collectionOrder {
-			encodingBlocks[order] = streamsEncoded[i]
-			streamIndexToEncoderUsedIndex[order] = encoderIndex
-		}
-
-		// Write header
-		written, err = w.out.Write(rapbinary.BytesArrayToBytes(header))
-		totalBytesWritten += written
-		if err != nil {
-			return totalBytesWritten, err
-		}
-	}
-
 	// Build compression writer
 	var compressWriter io.WriteCloser
 	if w.compress {
@@ -421,6 +398,29 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 			return totalBytesWritten, err
 		}
 		compressWriter = &errWriter{Writer: w.out}
+	}
+
+	numStreams := calcNumStreams(recording)
+	encodingBlocks := make([][]byte, numStreams)
+	streamIndexToEncoderUsedIndex := make([]int, numStreams)
+
+	for encoderIndex, val := range encoderMappings {
+		header, streamsEncoded, err := val.encoder.Encode(val.collections)
+		if err != nil {
+			return totalBytesWritten, err
+		}
+
+		for i, order := range val.collectionOrder {
+			encodingBlocks[order] = streamsEncoded[i]
+			streamIndexToEncoderUsedIndex[order] = encoderIndex
+		}
+
+		// Write header
+		written, err = compressWriter.Write(rapbinary.BytesArrayToBytes(header))
+		totalBytesWritten += written
+		if err != nil {
+			return totalBytesWritten, err
+		}
 	}
 
 	// Write metadata keys
