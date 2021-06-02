@@ -1,7 +1,6 @@
 package io
 
 import (
-	"bytes"
 	"compress/flate"
 	"fmt"
 	"io"
@@ -95,19 +94,13 @@ func (r Reader) readEncoders() ([]encoding.Encoder, int, error) {
 func readRecordingMetadataBlock(in io.Reader, metadataKeys []string) (metadata.Block, error) {
 	propMapping := make(map[string]metadata.Property)
 
-	keyIndecies, _, err := binary.ReadUintArray(in)
+	keyIndecies, _, err := binary.ReadUvarIntArray(in)
 	if err != nil {
 		return metadata.EmptyBlock(), err
 	}
-
-	valuesBlock, _, err := binary.ReadBytesArray(in)
-	if err != nil {
-		return metadata.EmptyBlock(), err
-	}
-	valuesBlockBuffer := bytes.NewReader(valuesBlock)
 
 	for _, key := range keyIndecies {
-		propMapping[metadataKeys[key]], err = metadata.ReadProperty(valuesBlockBuffer)
+		propMapping[metadataKeys[key]], err = metadata.ReadProperty(in)
 		if err != nil {
 			return metadata.EmptyBlock(), err
 		}

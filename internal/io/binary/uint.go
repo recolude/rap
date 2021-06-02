@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func UintArrayToBytes(strs []uint) []byte {
+func UvarintArrayToBytes(strs []uint) []byte {
 	buf := new(bytes.Buffer)
 
 	varByte := make([]byte, 4)
@@ -20,7 +20,7 @@ func UintArrayToBytes(strs []uint) []byte {
 	return buf.Bytes()
 }
 
-func ReadUintArray(r io.Reader) ([]uint, int, error) {
+func ReadUvarIntArray(r io.Reader) ([]uint, int, error) {
 	len, bytesRead, err := ReadUvarint(r)
 	if err != nil {
 		return nil, bytesRead, err

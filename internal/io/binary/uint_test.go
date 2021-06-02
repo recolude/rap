@@ -20,8 +20,8 @@ func Test_UintArrayToBytes(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := binary.UintArrayToBytes(tc.input)
-			back, _, err := binary.ReadUintArray(bytes.NewBuffer(got))
+			got := binary.UvarintArrayToBytes(tc.input)
+			back, _, err := binary.ReadUvarIntArray(bytes.NewBuffer(got))
 			if assert.NoError(t, err) && assert.Equal(t, len(tc.input), len(back)) {
 				for i, correct := range tc.input {
 					assert.Equal(t, correct, back[i])

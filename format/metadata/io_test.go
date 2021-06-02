@@ -1,6 +1,7 @@
 package metadata_test
 
 import (
+	"bufio"
 	"bytes"
 	"testing"
 	"time"
@@ -54,7 +55,7 @@ func Test_BasicIO(t *testing.T) {
 
 			_, err := metadata.WriteProprty(&bufferData, tc)
 			assert.NoError(t, err)
-			propBack, err := metadata.ReadProperty(bytes.NewReader(bufferData.Bytes()))
+			propBack, err := metadata.ReadProperty(bufio.NewReader(bytes.NewReader(bufferData.Bytes())))
 			assert.NoError(t, err)
 
 			assert.Equal(t, tc, propBack)

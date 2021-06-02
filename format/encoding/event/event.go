@@ -1,6 +1,7 @@
 package event
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"errors"
@@ -93,7 +94,7 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 				keyCount++
 			}
 
-			streamDataBuffers[bufferIndex].Write(rapbinary.UintArrayToBytes(allKeyIndxes))
+			streamDataBuffers[bufferIndex].Write(rapbinary.UvarintArrayToBytes(allKeyIndxes))
 			streamDataBuffers[bufferIndex].Write(allValueDataBuffer.Bytes())
 		}
 	}
@@ -128,7 +129,7 @@ func readHeader(header []byte) (names []string, metadataKeys []string, err error
 }
 
 func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollection, error) {
-	buf := bytes.NewReader(streamData)
+	buf := bufio.NewReader(bytes.NewReader(streamData))
 
 	eventNames, metadataKeys, err := readHeader(header)
 	if err != nil {
@@ -173,7 +174,7 @@ func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollect
 			return nil, err
 		}
 
-		metadataIndeces, _, err := rapbinary.ReadUintArray(buf)
+		metadataIndeces, _, err := rapbinary.ReadUvarIntArray(buf)
 		if err != nil {
 			return nil, err
 		}

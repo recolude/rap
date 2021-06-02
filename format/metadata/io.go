@@ -1,7 +1,6 @@
 package metadata
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -32,7 +31,7 @@ func readFloat64s(r io.Reader, count int) ([]float64, error) {
 	return outValues, nil
 }
 
-func readNestedMetadatablock(b *bytes.Reader) (Block, error) {
+func readNestedMetadatablock(b io.Reader) (Block, error) {
 	metadataKeys, _, err := rapbin.ReadStringArray(b)
 	if err != nil {
 		return EmptyBlock(), err
@@ -50,7 +49,7 @@ func readNestedMetadatablock(b *bytes.Reader) (Block, error) {
 	return NewBlock(metadata), nil
 }
 
-func readPropData(b *bytes.Reader, propertyType byte) (Property, error) {
+func readPropData(b io.Reader, propertyType byte) (Property, error) {
 	switch propertyType {
 	case 0:
 		str, _, err := rapbin.ReadString(b)
@@ -80,11 +79,12 @@ func readPropData(b *bytes.Reader, propertyType byte) (Property, error) {
 	case 4:
 		return NewBoolProperty(false), nil
 	case 5:
-		byteVal, err := b.ReadByte()
+		byteVal := make([]byte, 1)
+		_, err := b.Read(byteVal)
 		if err != nil {
 			return nil, err
 		}
-		return NewByteProperty(byteVal), nil
+		return NewByteProperty(byteVal[0]), nil
 
 	case 6:
 		vals, err := readFloat64s(b, 2)
@@ -162,10 +162,11 @@ func readPropData(b *bytes.Reader, propertyType byte) (Property, error) {
 	return nil, fmt.Errorf("unrecognized property type code: %d", int(propertyType))
 }
 
-func ReadProperty(b *bytes.Reader) (Property, error) {
-	propertyType, err := b.ReadByte()
+func ReadProperty(b io.Reader) (Property, error) {
+	propByte := make([]byte, 1)
+	_, err := b.Read(propByte)
 	if err != nil {
 		return nil, err
 	}
-	return readPropData(b, propertyType)
+	return readPropData(b, propByte[0])
 }

@@ -195,14 +195,17 @@ func writeMetadata(out io.Writer, keyMappingToIndex map[string]int, block metada
 
 	totalBytes := 0
 
-	written, err := out.Write(rapbinary.UintArrayToBytes(metadataIndices))
+	written, err := out.Write(rapbinary.UvarintArrayToBytes(metadataIndices))
 	totalBytes += written
 	if err != nil {
-		return written, err
+		return totalBytes, err
 	}
 
-	written, err = out.Write(rapbinary.BytesArrayToBytes(metadataValuesBuffer.Bytes()))
+	written, err = out.Write(metadataValuesBuffer.Bytes())
 	totalBytes += written
+	if err != nil {
+		return totalBytes, err
+	}
 
 	return totalBytes, err
 }
