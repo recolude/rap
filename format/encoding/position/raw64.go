@@ -11,7 +11,7 @@ import (
 func encodeRaw64(captures []position.Capture) []byte {
 	streamData := new(bytes.Buffer)
 
-	buf := make([]byte, 8)
+	buf := make([]byte, binary.MaxVarintLen64)
 	size := binary.PutUvarint(buf, uint64(len(captures)))
 	streamData.Write(buf[:size])
 
@@ -37,7 +37,7 @@ func decodeRaw64(streamData *bytes.Reader) ([]position.Capture, error) {
 	}
 
 	captures := make([]position.Capture, numCaptures)
-	buf := make([]byte, 8)
+	buf := make([]byte, binary.MaxVarintLen64)
 	for i := 0; i < int(numCaptures); i++ {
 		_, err = streamData.Read(buf)
 		if err != nil {

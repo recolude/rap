@@ -10,7 +10,7 @@ import (
 func encodeRaw32(captures []euler.Capture) []byte {
 	streamData := new(bytes.Buffer)
 
-	buf := make([]byte, 8)
+	buf := make([]byte, binary.MaxVarintLen64)
 	size := binary.PutUvarint(buf, uint64(len(captures)))
 	streamData.Write(buf[:size])
 

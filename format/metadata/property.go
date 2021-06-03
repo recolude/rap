@@ -315,7 +315,7 @@ func (sp ArrayProperty) String() string {
 func (sp ArrayProperty) Data() []byte {
 	buf := bytes.Buffer{}
 
-	numBinaries := make([]byte, 4)
+	numBinaries := make([]byte, binary.MaxVarintLen64)
 	read := binary.PutUvarint(numBinaries, uint64(len(sp.props)))
 	buf.Write(numBinaries[:read])
 

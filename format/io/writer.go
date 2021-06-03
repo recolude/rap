@@ -225,7 +225,7 @@ func writeEncoders(out io.Writer, encoders []encoderCollectionMapping) (int, err
 		return totalWritten, err
 	}
 
-	varByte := make([]byte, 4)
+	varByte := make([]byte, binary.MaxVarintLen64)
 	for _, version := range encoderVersions {
 		read := binary.PutUvarint(varByte, uint64(version))
 		written, err := out.Write(varByte[:read])
@@ -251,14 +251,14 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 	writeMetadata(ew, keyMappingToIndex, recording.Metadata())
 
 	// Write number of streams
-	numStreams := make([]byte, 4)
+	numStreams := make([]byte, binary.MaxVarintLen64)
 	read := binary.PutUvarint(numStreams, uint64(len(recording.CaptureCollections())))
 	ew.Write(numStreams[:read])
 
 	// Write all streams
 	for streamIndex := range recording.CaptureCollections() {
 		// Write index of the encoder used to encode stream
-		numStreams := make([]byte, 4)
+		numStreams := make([]byte, binary.MaxVarintLen64)
 		read := binary.PutUvarint(numStreams, uint64(streamIndexToEncoderUsedIndex[offset+streamIndex]))
 		ew.Write(numStreams[:read])
 
@@ -267,7 +267,7 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 	}
 
 	// Write number of references
-	numReferences := make([]byte, 4)
+	numReferences := make([]byte, binary.MaxVarintLen64)
 	read = binary.PutUvarint(numReferences, uint64(len(recording.BinaryReferences())))
 	ew.Write(numReferences[:read])
 
@@ -276,7 +276,7 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 		ew.Write(rapbinary.StringToBytes(ref.Name()))
 		ew.Write(rapbinary.StringToBytes(ref.URI()))
 
-		refSize := make([]byte, 4)
+		refSize := make([]byte, binary.MaxVarintLen64)
 		read = binary.PutUvarint(refSize, ref.Size())
 		ew.Write(refSize[:read])
 
@@ -284,7 +284,7 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 	}
 
 	// Write number of binaries
-	numBinaries := make([]byte, 4)
+	numBinaries := make([]byte, binary.MaxVarintLen64)
 	read = binary.PutUvarint(numBinaries, uint64(len(recording.Binaries())))
 	ew.Write(numBinaries[:read])
 
@@ -292,7 +292,7 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 	for _, bin := range recording.Binaries() {
 		ew.Write(rapbinary.StringToBytes(bin.Name()))
 
-		refSize := make([]byte, 4)
+		refSize := make([]byte, binary.MaxVarintLen64)
 		read = binary.PutUvarint(refSize, bin.Size())
 		ew.Write(refSize[:read])
 
@@ -305,7 +305,7 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 	}
 
 	// Write number of recordings
-	numRecordings := make([]byte, 4)
+	numRecordings := make([]byte, binary.MaxVarintLen64)
 	read = binary.PutUvarint(numRecordings, uint64(len(recording.Recordings())))
 	ew.Write(numRecordings[:read])
 

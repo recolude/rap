@@ -9,7 +9,7 @@ import (
 func StringToBytes(str string) []byte {
 	strBytes := []byte(str)
 
-	varByte := make([]byte, 4)
+	varByte := make([]byte, binary.MaxVarintLen64)
 	read := binary.PutUvarint(varByte, uint64(len(strBytes)))
 
 	return append(varByte[:read], strBytes...)
@@ -31,7 +31,7 @@ func ReadString(r io.Reader) (string, int, error) {
 }
 
 func StringArrayToBytes(strs []string) []byte {
-	varByte := make([]byte, 4)
+	varByte := make([]byte, binary.MaxVarintLen64)
 	read := binary.PutUvarint(varByte, uint64(len(strs)))
 
 	buf := new(bytes.Buffer)

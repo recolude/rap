@@ -56,7 +56,7 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 		streamDataBuffers[bufferIndex].WriteByte(byte(p.technique))
 
 		// Write Num Captures
-		numCaptures := make([]byte, 4)
+		numCaptures := make([]byte, binary.MaxVarintLen64)
 		read := binary.PutUvarint(numCaptures, uint64(len(stream.Captures())))
 		streamDataBuffers[bufferIndex].Write(numCaptures[:read])
 
@@ -77,7 +77,7 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 				eventNamesSet[eventCapture.Name()] = len(eventNamesSet)
 			}
 
-			nameIndex := make([]byte, 4)
+			nameIndex := make([]byte, binary.MaxVarintLen64)
 			read := binary.PutUvarint(nameIndex, uint64(eventNamesSet[eventCapture.Name()]))
 			streamDataBuffers[bufferIndex].Write(nameIndex[:read])
 

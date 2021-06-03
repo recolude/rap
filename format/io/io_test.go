@@ -118,7 +118,6 @@ func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording
 		for i, correctCapture := range recExpected.CaptureCollections()[streamIndex].Captures() {
 			assert.Equal(t, correctCapture.Time(), recActual.CaptureCollections()[streamIndex].Captures()[i].Time())
 		}
-
 	}
 
 	return true

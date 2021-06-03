@@ -10,7 +10,7 @@ import (
 func BytesArrayToBytes(b []byte) []byte {
 	buf := new(bytes.Buffer)
 
-	varByte := make([]byte, 4)
+	varByte := make([]byte, binary.MaxVarintLen64)
 	read := binary.PutUvarint(varByte, uint64(len(b)))
 	buf.Write(varByte[:read])
 
@@ -41,7 +41,7 @@ func ReadBytesArray(r io.Reader) ([]byte, int, error) {
 
 // func ArrayOfByteArraysToBytes(b [][]byte) []byte {
 // 	// Array Count
-// 	varByte := make([]byte, 4)
+// 	varByte := make([]byte, binary.MaxVarintLen64)
 // 	read := binary.PutUvarint(varByte, uint64(len(b)))
 // 	buf := new(bytes.Buffer)
 // 	buf.Write(varByte[:read])

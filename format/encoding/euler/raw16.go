@@ -38,7 +38,7 @@ func encodeRaw16(captures []euler.Capture) []byte {
 	}
 
 	// Num captures
-	buf := make([]byte, 8)
+	buf := make([]byte, binary.MaxVarintLen64)
 	size := binary.PutUvarint(buf, uint64(len(captures)))
 	streamData.Write(buf[:size])
 

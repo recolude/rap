@@ -9,7 +9,7 @@ import (
 func UvarintArrayToBytes(strs []uint) []byte {
 	buf := new(bytes.Buffer)
 
-	varByte := make([]byte, 4)
+	varByte := make([]byte, binary.MaxVarintLen64)
 	read := binary.PutUvarint(varByte, uint64(len(strs)))
 	buf.Write(varByte[:read])
 

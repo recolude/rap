@@ -89,7 +89,7 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 	collectionData := new(bytes.Buffer)
 
 	// Write number of captures
-	buf := make([]byte, 8)
+	buf := make([]byte, binary.MaxVarintLen64)
 	size := binary.PutUvarint(buf, uint64(len(captures)))
 	collectionData.Write(buf[:size])
 
