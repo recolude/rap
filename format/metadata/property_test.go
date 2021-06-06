@@ -3,6 +3,7 @@ package metadata_test
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"testing"
 
 	"github.com/recolude/rap/format/metadata"
@@ -25,6 +26,13 @@ func Test_StringProperty(t *testing.T) {
 			assert.Equal(t, byte(0), prop.Code())
 			assert.Equal(t, tc.value, prop.String())
 			assert.Equal(t, tc.data, prop.Data())
+
+			b, err := json.Marshal(prop)
+			assert.Nil(t, err)
+
+			var sp metadata.StringProperty
+			assert.Nil(t, json.Unmarshal(b, &sp))
+			assert.Equal(t, prop, sp)
 		})
 	}
 }
@@ -48,6 +56,13 @@ func Test_IntProperty(t *testing.T) {
 			var out int32
 			binary.Read(bytes.NewBuffer(prop.Data()), binary.LittleEndian, &out)
 			assert.Equal(t, int32(tc.value), out)
+
+			b, err := json.Marshal(prop)
+			assert.Nil(t, err)
+
+			var ip metadata.Int32Property
+			assert.Nil(t, json.Unmarshal(b, &ip))
+			assert.Equal(t, prop, ip)
 		})
 	}
 }
@@ -71,6 +86,13 @@ func Test_Float32Property(t *testing.T) {
 			var out float32
 			binary.Read(bytes.NewBuffer(prop.Data()), binary.LittleEndian, &out)
 			assert.Equal(t, tc.value, out)
+
+			b, err := json.Marshal(prop)
+			assert.Nil(t, err)
+
+			var fp metadata.Float32Property
+			assert.Nil(t, json.Unmarshal(b, &fp))
+			assert.Equal(t, prop, fp)
 		})
 	}
 }
@@ -93,6 +115,13 @@ func Test_BoolProperty(t *testing.T) {
 			assert.Equal(t, tc.stringVal, prop.String())
 			assert.Equal(t, tc.value, prop.Value())
 			assert.Len(t, prop.Data(), 0)
+
+			b, err := json.Marshal(prop)
+			assert.Nil(t, err)
+
+			var bp metadata.BoolProperty
+			assert.Nil(t, json.Unmarshal(b, &bp))
+			assert.Equal(t, prop, bp)
 		})
 	}
 }
@@ -115,6 +144,13 @@ func Test_ByteProperty(t *testing.T) {
 			assert.Equal(t, tc.stringVal, prop.String())
 			assert.Equal(t, tc.value, prop.Value())
 			assert.Equal(t, []byte{tc.value}, prop.Data())
+
+			b, err := json.Marshal(prop)
+			assert.Nil(t, err)
+
+			var bp metadata.ByteProperty
+			assert.Nil(t, json.Unmarshal(b, &bp))
+			assert.Equal(t, prop, bp)
 		})
 	}
 }

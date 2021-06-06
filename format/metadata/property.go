@@ -3,6 +3,9 @@ package metadata
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,6 +13,8 @@ import (
 	"github.com/EliCDavis/vector"
 	rapbin "github.com/recolude/rap/internal/io/binary"
 )
+
+const HEX_PREFIX = "0x"
 
 type Property interface {
 	Code() byte
@@ -41,6 +46,25 @@ func (sp StringProperty) Data() []byte {
 	return rapbin.StringToBytes(sp.str)
 }
 
+// func (sp StringProperty) UnmarshalProperty(data interface{}) error {
+// 	err := json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, data)), &sp)
+// 	sp.str = sp.str
+// 	return err
+// }
+
+func (sp *StringProperty) UnmarshalJSON(b []byte) error {
+	var data string
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	sp.str = data
+	return nil
+}
+
+func (sp StringProperty) MarshalJSON() ([]byte, error) {
+	return json.Marshal(sp.str)
+}
+
 // INT32 ======================================================================
 
 type Int32Property struct {
@@ -67,15 +91,39 @@ func (ip Int32Property) Data() []byte {
 	return buf.Bytes()
 }
 
+func UnmarshalNewInt32Property(b []byte) (Int32Property, error) {
+	var p Int32Property
+	err := json.Unmarshal(b, &p)
+	return p, err
+}
+
+func (ip Int32Property) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`%v`, data)), &ip)
+	return err
+}
+
+func (ip *Int32Property) UnmarshalJSON(b []byte) error {
+	var data int32
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	ip.i = data
+	return nil
+}
+
+func (ip Int32Property) MarshalJSON() ([]byte, error) {
+	return json.Marshal(ip.i)
+}
+
 // FLOAT32 ====================================================================
 
 type Float32Property struct {
-	i float32
+	f float32
 }
 
-func NewFloat32Property(i float32) Float32Property {
+func NewFloat32Property(f float32) Float32Property {
 	return Float32Property{
-		i: i,
+		f: f,
 	}
 }
 
@@ -84,13 +132,37 @@ func (fp Float32Property) Code() byte {
 }
 
 func (fp Float32Property) String() string {
-	return fmt.Sprintf("%f", fp.i)
+	return fmt.Sprintf("%f", fp.f)
 }
 
 func (fp Float32Property) Data() []byte {
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, fp.i)
+	binary.Write(buf, binary.LittleEndian, fp.f)
 	return buf.Bytes()
+}
+
+func UnmarshalNewFloat32Property(b []byte) (Float32Property, error) {
+	var p Float32Property
+	err := json.Unmarshal(b, &p)
+	return p, err
+}
+
+func (fp Float32Property) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`%v`, data)), &fp)
+	return err
+}
+
+func (fp *Float32Property) UnmarshalJSON(b []byte) error {
+	var data float32
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	fp.f = data
+	return nil
+}
+
+func (fp Float32Property) MarshalJSON() ([]byte, error) {
+	return json.Marshal(fp.f)
 }
 
 // BOOL =======================================================================
@@ -127,6 +199,30 @@ func (bp BoolProperty) Value() bool {
 	return bp.b
 }
 
+func UnmarshalNewBoolProperty(b []byte) (BoolProperty, error) {
+	var p BoolProperty
+	err := json.Unmarshal(b, &p)
+	return p, err
+}
+
+func (bp BoolProperty) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`%v`, data)), &bp)
+	return err
+}
+
+func (bp *BoolProperty) UnmarshalJSON(b []byte) error {
+	var data bool
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	bp.b = data
+	return nil
+}
+
+func (bp BoolProperty) MarshalJSON() ([]byte, error) {
+	return json.Marshal(bp.b)
+}
+
 // BYTE =======================================================================
 
 type ByteProperty struct {
@@ -153,6 +249,34 @@ func (bp ByteProperty) Data() []byte {
 
 func (bp ByteProperty) Value() byte {
 	return bp.b
+}
+
+func UnmarshalNewByteProperty(b []byte) (ByteProperty, error) {
+	var p ByteProperty
+	err := json.Unmarshal(b, &p)
+	return p, err
+}
+
+func (bp ByteProperty) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, data)), &bp)
+	return err
+}
+
+func (bp *ByteProperty) UnmarshalJSON(b []byte) error {
+	var data string
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	b, err := hex.DecodeString(strings.TrimPrefix(data, HEX_PREFIX))
+	if err != nil {
+		return err
+	}
+	bp.b = b[0]
+	return nil
+}
+
+func (bp ByteProperty) MarshalJSON() ([]byte, error) {
+	return json.Marshal(HEX_PREFIX + hex.EncodeToString(bp.Data()))
 }
 
 // VECTOR2 ====================================================================
@@ -182,6 +306,41 @@ func (v2p Vector2Property) Data() []byte {
 	binary.Write(buf, binary.LittleEndian, v2p.x)
 	binary.Write(buf, binary.LittleEndian, v2p.y)
 	return buf.Bytes()
+}
+
+func UnmarshalNewVector2Property(b []byte) (Vector2Property, error) {
+	var p Vector2Property
+	err := json.Unmarshal(b, &p)
+	return p, err
+}
+
+func (v2p Vector2Property) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, data)), &v2p)
+	return err
+}
+
+func (v2p *Vector2Property) UnmarshalJSON(b []byte) error {
+	var data struct {
+		X float64 `json:"x"`
+		Y float64 `json:"y"`
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	v2p.x = data.X
+	v2p.y = data.Y
+	return nil
+}
+
+func (v2p Vector2Property) MarshalJSON() ([]byte, error) {
+	data := struct {
+		X float64 `json:"x"`
+		Y float64 `json:"y"`
+	}{
+		v2p.x,
+		v2p.y,
+	}
+	return json.Marshal(data)
 }
 
 // VECTOR3 ====================================================================
@@ -216,6 +375,45 @@ func (v3p Vector3Property) Data() []byte {
 	return buf.Bytes()
 }
 
+func UnmarshalNewVector3Property(b []byte) (Vector3Property, error) {
+	var p Vector3Property
+	err := json.Unmarshal(b, &p)
+	return p, err
+}
+
+func (v3p Vector3Property) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`%v`, data)), &v3p)
+	return err
+}
+
+func (v3p *Vector3Property) UnmarshalJSON(b []byte) error {
+	var data struct {
+		X float64 `json:"x"`
+		Y float64 `json:"y"`
+		Z float64 `json:"z"`
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	v3p.x = data.X
+	v3p.y = data.Y
+	v3p.z = data.Z
+	return nil
+}
+
+func (v3p Vector3Property) MarshalJSON() ([]byte, error) {
+	data := struct {
+		X float64 `json:"x"`
+		Y float64 `json:"y"`
+		Z float64 `json:"z"`
+	}{
+		v3p.x,
+		v3p.y,
+		v3p.z,
+	}
+	return json.Marshal(data)
+}
+
 // METADATA ===================================================================
 
 type MetadataProperty struct {
@@ -226,7 +424,7 @@ func NewMetadataProperty(block Block) MetadataProperty {
 	return MetadataProperty{block}
 }
 
-func (m4p MetadataProperty) Code() byte {
+func (mp MetadataProperty) Code() byte {
 	return 11
 }
 
@@ -264,6 +462,38 @@ func (mp MetadataProperty) Data() []byte {
 	return buf.Bytes()
 }
 
+func UnmarshalNewMetadataProperty(b []byte) (MetadataProperty, error) {
+	var p MetadataProperty
+	err := json.Unmarshal(b, &p)
+	return p, err
+}
+
+func (mp MetadataProperty) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, data)), &mp)
+	return err
+}
+
+func (mp *MetadataProperty) UnmarshalJSON(b []byte) error {
+	var data map[string]interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	prop, err := getProperties(data)
+	if err != nil {
+		return err
+	}
+	newMp, ok := prop.(MetadataProperty)
+	if !ok {
+		return errors.New("unable to unmarshal MetadataProperty")
+	}
+	mp.block.mapping = newMp.block.mapping
+	return nil
+}
+
+func (mp MetadataProperty) MarshalJSON() ([]byte, error) {
+	return json.Marshal(mp.block.Mapping())
+}
+
 // Time =======================================================================
 
 type TimeProperty struct {
@@ -290,6 +520,34 @@ func (tp TimeProperty) Data() []byte {
 	return buf.Bytes()
 }
 
+func UnmarshalNewTimeProperty(b []byte) (TimeProperty, error) {
+	var p TimeProperty
+	err := json.Unmarshal(b, &p)
+	return p, err
+}
+
+func (tp TimeProperty) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, data)), &tp)
+	return err
+}
+
+func (tp *TimeProperty) UnmarshalJSON(b []byte) error {
+	var data string
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	t, err := time.Parse(time.RFC3339Nano, data)
+	if err != nil {
+		return err
+	}
+	tp.nanoseconds = t.UnixNano()
+	return nil
+}
+
+func (tp TimeProperty) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Unix(0, tp.nanoseconds).Format(time.RFC3339Nano))
+}
+
 // ARRAY =====================================================================
 
 type ArrayProperty struct {
@@ -304,25 +562,52 @@ func newArrayProperty(originalBaseCode byte, props []Property) ArrayProperty {
 	}
 }
 
-func (sp ArrayProperty) Code() byte {
-	return 13 + sp.originalBaseCode
+func (ap ArrayProperty) Code() byte {
+	return 13 + ap.originalBaseCode
 }
 
-func (sp ArrayProperty) String() string {
-	return fmt.Sprintf("Type %d Array of %d elements", sp.originalBaseCode, len(sp.props))
+func (ap ArrayProperty) String() string {
+	return fmt.Sprintf("Type %d Array of %d elements", ap.originalBaseCode, len(ap.props))
 }
 
-func (sp ArrayProperty) Data() []byte {
+func (ap ArrayProperty) Data() []byte {
 	buf := bytes.Buffer{}
 
 	numBinaries := make([]byte, binary.MaxVarintLen64)
-	read := binary.PutUvarint(numBinaries, uint64(len(sp.props)))
+	read := binary.PutUvarint(numBinaries, uint64(len(ap.props)))
 	buf.Write(numBinaries[:read])
 
-	for _, prop := range sp.props {
+	for _, prop := range ap.props {
 		buf.Write(prop.Data())
 	}
 	return buf.Bytes()
+}
+
+func (ap ArrayProperty) UnmarshalProperty(data interface{}) error {
+	err := json.Unmarshal([]byte(fmt.Sprintf(`%v`, data)), &ap)
+	return err
+}
+
+func (ap *ArrayProperty) UnmarshalJSON(b []byte) error {
+	var data []interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	prop, err := getProperties(data)
+	if err != nil {
+		return err
+	}
+	newAp, ok := prop.(ArrayProperty)
+	if !ok {
+		return errors.New("unable to unmarshal MetadataProperty")
+	}
+	ap.props = newAp.props
+	ap.originalBaseCode = newAp.originalBaseCode
+	return nil
+}
+
+func (ap ArrayProperty) MarshalJSON() ([]byte, error) {
+	return json.Marshal(ap.props)
 }
 
 func NewStringArrayProperty(strs []string) ArrayProperty {
@@ -389,16 +674,61 @@ type ArrayPropertyRaw struct {
 	divison          int
 }
 
-func (sp ArrayPropertyRaw) Code() byte {
-	return 13 + sp.originalBaseCode
+func (apr ArrayPropertyRaw) Code() byte {
+	return 13 + apr.originalBaseCode
 }
 
-func (sp ArrayPropertyRaw) String() string {
-	return fmt.Sprintf("Type %d Array of %d elements", sp.originalBaseCode, len(sp.data)/sp.divison)
+func (apr ArrayPropertyRaw) String() string {
+	return fmt.Sprintf("Type %d Array of %d elements", apr.originalBaseCode, len(apr.data)/apr.divison)
 }
 
-func (sp ArrayPropertyRaw) Data() []byte {
-	return sp.data
+func (apr ArrayPropertyRaw) Data() []byte {
+	return apr.data
+}
+
+func (apr *ArrayPropertyRaw) UnmarshalJSON(b []byte) error {
+	var data interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	prop, err := getProperties(data)
+	if err != nil {
+		return err
+	}
+	newApr, ok := prop.(ArrayPropertyRaw)
+	if !ok {
+		return errors.New("unable to unmarshal MetadataProperty")
+	}
+	apr.data = newApr.data
+	apr.originalBaseCode = newApr.originalBaseCode
+	apr.divison = newApr.divison
+	return nil
+}
+
+func (apr ArrayPropertyRaw) MarshalJSON() ([]byte, error) {
+	switch apr.originalBaseCode {
+	case 5:
+		br, _, err := rapbin.ReadBytesArray(bytes.NewBuffer(apr.data))
+		if err != nil {
+			return nil, err
+		}
+		return json.Marshal(HEX_PREFIX + hex.EncodeToString(br))
+	case 3:
+		br, _, err := rapbin.ReadBytesArray(bytes.NewBuffer(apr.data))
+		if err != nil {
+			return nil, err
+		}
+		bools := make([]bool, 0, len(br)/2)
+		for _, b := range br {
+			if b&1 == 1 {
+				bools = append(bools, true)
+				continue
+			}
+			bools = append(bools, false)
+		}
+		return json.Marshal(bools)
+	}
+	return nil, nil
 }
 
 func NewBinaryArrayProperty(binarr []byte) ArrayPropertyRaw {
