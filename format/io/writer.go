@@ -74,11 +74,12 @@ func NewRecoludeWriter(out io.Writer) Writer {
 }
 
 // NewWriter builds a new writer using the encoders provided.
-func NewWriter(encoders []encoding.Encoder, compress bool, out io.Writer) Writer {
+func NewWriter(encoders []encoding.Encoder, compress bool, out io.Writer, timeStorageTechnique TimeStorageTechnique) Writer {
 	return Writer{
-		encoders: encoders,
-		out:      out,
-		compress: compress,
+		encoders:             encoders,
+		out:                  out,
+		compress:             compress,
+		timeStorageTechnique: timeStorageTechnique,
 	}
 }
 

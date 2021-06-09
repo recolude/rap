@@ -49,6 +49,7 @@ func main() {
 		},
 		true,
 		f,
+		io.BST16,
 	)
 
 	// Writes a recording in 1,258 bytes

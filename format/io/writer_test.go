@@ -26,7 +26,7 @@ func Test_ErrorsWithNoValidEncoders(t *testing.T) {
 	rec.EXPECT().BinaryReferences().AnyTimes().Return([]format.BinaryReference{})
 	rec.EXPECT().Binaries().AnyTimes().Return([]format.Binary{})
 
-	w := io.NewWriter(nil, false, nil)
+	w := io.NewWriter(nil, false, nil, io.Raw64)
 
 	// ACT ====================================================================
 	_, err := w.Write(rec)
@@ -37,7 +37,7 @@ func Test_ErrorsWithNoValidEncoders(t *testing.T) {
 
 func Test_PanicsWithNilRecording(t *testing.T) {
 	// ARRANGE ================================================================
-	w := io.NewWriter(nil, false, nil)
+	w := io.NewWriter(nil, false, nil, io.Raw64)
 
 	// ACT/ASSERT =============================================================
 	assert.PanicsWithError(t, "can not write nil recording", func() { w.Write(nil) })

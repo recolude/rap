@@ -131,7 +131,7 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 	}
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -189,7 +189,7 @@ func Test_HandlesBinaryReference(t *testing.T) {
 		"a": metadata.NewStringProperty("b"),
 	}))
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -240,7 +240,7 @@ func Test_HandlesBinaryData(t *testing.T) {
 	binaryFile.EXPECT().Data().Return(bytes.NewBufferString("My Data!!!"))
 	binaryFile.EXPECT().Data().Return(bytes.NewBufferString("My Data!!!"))
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -276,7 +276,7 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 	}
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -332,7 +332,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 	}
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -425,7 +425,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 		enumEncoding.NewEncoder(),
 	}
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -491,7 +491,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 		enumEncoding.NewEncoder(),
 	}
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -647,7 +647,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 		enumEncoding.NewEncoder(),
 	}
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	childRec := format.NewRecording(
@@ -757,7 +757,7 @@ func Test_Uprade(t *testing.T) {
 	}
 	fileData := new(bytes.Buffer)
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	// ACT ====================================================================
@@ -778,7 +778,7 @@ func Test_Metadata(t *testing.T) {
 
 	encoders := []encoding.Encoder{}
 
-	w := io.NewWriter(encoders, true, fileData)
+	w := io.NewWriter(encoders, true, fileData, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 
 	recIn := format.NewRecording(
@@ -845,8 +845,8 @@ func Test_OptionallyCompressesRecording(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 	}
 
-	wCompress := io.NewWriter(encoders, true, fileData)
-	wNonComress := io.NewWriter(encoders, false, fileData2)
+	wCompress := io.NewWriter(encoders, true, fileData, io.Raw64)
+	wNonComress := io.NewWriter(encoders, false, fileData2, io.Raw64)
 	r := io.NewReader(encoders, fileData)
 	r2 := io.NewReader(encoders, fileData2)
 

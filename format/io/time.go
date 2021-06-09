@@ -86,10 +86,6 @@ func encodeTimeBST16(out io.Writer, captures []format.Capture) error {
 
 		// Read back quantized time to fix drifting
 		totalledQuantizedDuration += rapbinary.BytesToUnisngedFloatBST(0, maxTimeDifference, buffer2Byes)
-		err := binary.Write(out, binary.LittleEndian, float32(captures[i].Time()))
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
