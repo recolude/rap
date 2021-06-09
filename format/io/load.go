@@ -27,6 +27,6 @@ func Load(in io.Reader) (format.Recording, int, error) {
 		event.NewEncoder(event.Raw32),
 		position.NewEncoder(position.Oct48),
 		euler.NewEncoder(euler.Raw32),
-		enum.NewEncoder(enum.Raw32),
+		enum.NewEncoder(),
 	}, in).Read()
 }

@@ -166,8 +166,8 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 	// ASSERT =================================================================
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
-	assert.Equal(t, n, nOut)
 	assertRecordingsMatch(t, recIn, recOut)
+	assert.Equal(t, n, nOut)
 }
 
 func Test_HandlesBinaryReference(t *testing.T) {
@@ -422,7 +422,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(enumEncoding.Raw32),
+		enumEncoding.NewEncoder(),
 	}
 
 	w := io.NewWriter(encoders, true, fileData)
@@ -488,7 +488,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(enumEncoding.Raw32),
+		enumEncoding.NewEncoder(),
 	}
 
 	w := io.NewWriter(encoders, true, fileData)
@@ -644,7 +644,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(enumEncoding.Raw32),
+		enumEncoding.NewEncoder(),
 	}
 
 	w := io.NewWriter(encoders, true, fileData)
@@ -753,7 +753,7 @@ func Test_Uprade(t *testing.T) {
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
 		eventEncoding.NewEncoder(eventEncoding.Raw64),
-		enumEncoding.NewEncoder(enumEncoding.Raw32),
+		enumEncoding.NewEncoder(),
 	}
 	fileData := new(bytes.Buffer)
 

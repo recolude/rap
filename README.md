@@ -2,7 +2,7 @@
 
 **RAP is in Beta**
 
-Recolude's official recording file format.
+Recolude's official recording file format. Ain't no kill like overkill.
 
 ## Install
 

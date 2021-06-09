@@ -10,24 +10,10 @@ import (
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
-type StorageTechnique int
+type Encoder struct{}
 
-const (
-	// Raw64 encodes time with 64 bit precision
-	Raw64 StorageTechnique = iota
-
-	// Raw32 encodes time with 32 bit precision
-	Raw32
-)
-
-type Encoder struct {
-	storageTechnique StorageTechnique
-}
-
-func NewEncoder(storageTechnique StorageTechnique) Encoder {
-	return Encoder{
-		storageTechnique: storageTechnique,
-	}
+func NewEncoder() Encoder {
+	return Encoder{}
 }
 
 func (p Encoder) Accepts(stream format.CaptureCollection) bool {
@@ -52,25 +38,10 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 		enmstr := stream.(enum.Collection)
 		streamDataBuffers[bufferIndex].Write(rapbinary.StringArrayToBytes(enmstr.EnumMembers()))
 
-		// Write technique
-		streamDataBuffers[bufferIndex].WriteByte(byte(p.storageTechnique))
-
-		// Write Num Captures
-		numCaptures := make([]byte, binary.MaxVarintLen64)
-		read := binary.PutUvarint(numCaptures, uint64(len(stream.Captures())))
-		streamDataBuffers[bufferIndex].Write(numCaptures[:read])
-
 		for _, c := range stream.Captures() {
 			enumCapture, ok := c.(enum.Capture)
 			if !ok {
 				return nil, nil, errors.New("capture is not of type enum")
-			}
-
-			switch p.storageTechnique {
-			case Raw64:
-				binary.Write(&streamDataBuffers[bufferIndex], binary.LittleEndian, enumCapture.Time())
-			case Raw32:
-				binary.Write(&streamDataBuffers[bufferIndex], binary.LittleEndian, float32(enumCapture.Time()))
 			}
 
 			valueBuf := make([]byte, binary.MaxVarintLen64)
@@ -87,7 +58,7 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 	return nil, streamData, nil
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollection, error) {
+func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
 	buf := bytes.NewBuffer(streamData)
 
 	// Read Name
@@ -101,38 +72,13 @@ func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollect
 		return nil, err
 	}
 
-	// Read Storage Technique
-	typeByte, err := buf.ReadByte()
-	if err != nil {
-		return nil, err
-	}
-	encodingTechnique := StorageTechnique(typeByte)
-
-	// Read Num Captures
-	numCaptures, err := binary.ReadUvarint(buf)
-	if err != nil {
-		return nil, err
-	}
-
-	captures := make([]enum.Capture, numCaptures)
-	for i := 0; i < int(numCaptures); i++ {
-		var time float64
-
-		switch encodingTechnique {
-		case Raw64:
-			binary.Read(buf, binary.LittleEndian, &time)
-
-		case Raw32:
-			var time32 float32
-			binary.Read(buf, binary.LittleEndian, &time32)
-			time = float64(time32)
-		}
-
+	captures := make([]enum.Capture, len(times))
+	for i := 0; i < len(times); i++ {
 		value, err := binary.ReadUvarint(buf)
 		if err != nil {
 			return nil, err
 		}
-		captures[i] = enum.NewCapture(time, int(value))
+		captures[i] = enum.NewCapture(times[i], int(value))
 	}
 
 	return enum.NewCollection(streamName, enumMembers, captures), nil

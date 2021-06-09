@@ -145,7 +145,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 						event.NewEncoder(event.Raw32),
 						position.NewEncoder(position.Oct24),
 						euler.NewEncoder(euler.Raw16),
-						enum.NewEncoder(enum.Raw32),
+						enum.NewEncoder(),
 					}
 
 					recordingWriter := rapio.NewWriter(encoders, true, c.App.Writer)

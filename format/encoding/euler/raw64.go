@@ -12,12 +12,8 @@ func encodeRaw64(captures []euler.Capture) []byte {
 	streamData := new(bytes.Buffer)
 
 	buf := make([]byte, binary.MaxVarintLen64)
-	size := binary.PutUvarint(buf, uint64(len(captures)))
-	streamData.Write(buf[:size])
 
 	for _, capture := range captures {
-		binary.LittleEndian.PutUint64(buf, math.Float64bits(capture.Time()))
-		streamData.Write(buf)
 		binary.LittleEndian.PutUint64(buf, math.Float64bits(capture.EulerZXY().X()))
 		streamData.Write(buf)
 		binary.LittleEndian.PutUint64(buf, math.Float64bits(capture.EulerZXY().Y()))
@@ -28,24 +24,13 @@ func encodeRaw64(captures []euler.Capture) []byte {
 	return streamData.Bytes()
 }
 
-func decodeRaw64(streamData *bytes.Reader) ([]euler.Capture, error) {
+func decodeRaw64(streamData *bytes.Reader, times []float64) ([]euler.Capture, error) {
 	// streamData := bytes.NewReader(captureData)
 
-	numCaptures, err := binary.ReadUvarint(streamData)
-	if err != nil {
-		return nil, err
-	}
-
-	captures := make([]euler.Capture, numCaptures)
+	captures := make([]euler.Capture, len(times))
 	buf := make([]byte, binary.MaxVarintLen64)
-	for i := 0; i < int(numCaptures); i++ {
-		_, err = streamData.Read(buf)
-		if err != nil {
-			return nil, err
-		}
-		time := math.Float64frombits(binary.LittleEndian.Uint64(buf))
-
-		_, err = streamData.Read(buf)
+	for i := 0; i < len(times); i++ {
+		_, err := streamData.Read(buf)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +48,7 @@ func decodeRaw64(streamData *bytes.Reader) ([]euler.Capture, error) {
 		}
 		z := math.Float64frombits(binary.LittleEndian.Uint64(buf))
 
-		captures[i] = euler.NewEulerZXYCapture(time, x, y, z)
+		captures[i] = euler.NewEulerZXYCapture(times[i], x, y, z)
 	}
 
 	return captures, nil

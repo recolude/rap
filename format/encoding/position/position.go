@@ -91,7 +91,7 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 	return nil, allStreamData, nil
 }
 
-func decode(data []byte) (format.CaptureCollection, error) {
+func decode(data []byte, times []float64) (format.CaptureCollection, error) {
 	reader := bytes.NewReader(data)
 
 	name, _, err := rapbinary.ReadString(reader)
@@ -108,28 +108,28 @@ func decode(data []byte) (format.CaptureCollection, error) {
 
 	switch encodingTechnique {
 	case Raw64:
-		captures, err := decodeRaw64(reader)
+		captures, err := decodeRaw64(reader, times)
 		if err != nil {
 			return nil, err
 		}
 		return position.NewCollection(name, captures), nil
 
 	case Raw32:
-		captures, err := decodeRaw32(reader)
+		captures, err := decodeRaw32(reader, times)
 		if err != nil {
 			return nil, err
 		}
 		return position.NewCollection(name, captures), nil
 
 	case Oct24:
-		captures, err := decodeOct24(reader)
+		captures, err := decodeOct24(reader, times)
 		if err != nil {
 			return nil, err
 		}
 		return position.NewCollection(name, captures), nil
 
 	case Oct48:
-		captures, err := decodeOct48(reader)
+		captures, err := decodeOct48(reader, times)
 		if err != nil {
 			return nil, err
 		}
@@ -139,8 +139,8 @@ func decode(data []byte) (format.CaptureCollection, error) {
 	return nil, fmt.Errorf("Unknown positional encoding technique: %d", int(encodingTechnique))
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollection, error) {
-	return decode(streamData)
+func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
+	return decode(streamData, times)
 }
 
 func (p Encoder) Accepts(stream format.CaptureCollection) bool {

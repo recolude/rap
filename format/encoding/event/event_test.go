@@ -15,6 +15,7 @@ func Test_SingleEvent(t *testing.T) {
 	tests := map[string]struct {
 		streamName string
 		captures   []eventStream.Capture
+		times      []float64
 	}{
 		"nil events": {streamName: "", captures: nil},
 		"0-events":   {streamName: "empty stream", captures: []eventStream.Capture{}},
@@ -30,6 +31,7 @@ func Test_SingleEvent(t *testing.T) {
 					}),
 				),
 			},
+			times: []float64{1.2},
 		},
 		"2-events": {
 			streamName: "ahhhh",
@@ -51,6 +53,7 @@ func Test_SingleEvent(t *testing.T) {
 					}),
 				),
 			},
+			times: []float64{1.2, 1.6},
 		},
 	}
 
@@ -80,7 +83,7 @@ func Test_SingleEvent(t *testing.T) {
 
 				// ACT ====================================================================
 				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-				streamOut, decodeErr := encoder.Decode(header, streamsData[0])
+				streamOut, decodeErr := encoder.Decode(header, streamsData[0], tc.times)
 
 				// ASSERT =================================================================
 				assert.NoError(t, encodeErr)

@@ -16,8 +16,6 @@ func encodeRaw64(captures []position.Capture) []byte {
 	streamData.Write(buf[:size])
 
 	for _, capture := range captures {
-		binary.LittleEndian.PutUint64(buf, math.Float64bits(capture.Time()))
-		streamData.Write(buf)
 		binary.LittleEndian.PutUint64(buf, math.Float64bits(capture.Position().X()))
 		streamData.Write(buf)
 		binary.LittleEndian.PutUint64(buf, math.Float64bits(capture.Position().Y()))
@@ -28,9 +26,7 @@ func encodeRaw64(captures []position.Capture) []byte {
 	return streamData.Bytes()
 }
 
-func decodeRaw64(streamData *bytes.Reader) ([]position.Capture, error) {
-	// streamData := bytes.NewReader(captureData)
-
+func decodeRaw64(streamData *bytes.Reader, times []float64) ([]position.Capture, error) {
 	numCaptures, err := binary.ReadUvarint(streamData)
 	if err != nil {
 		return nil, err
@@ -39,12 +35,6 @@ func decodeRaw64(streamData *bytes.Reader) ([]position.Capture, error) {
 	captures := make([]position.Capture, numCaptures)
 	buf := make([]byte, binary.MaxVarintLen64)
 	for i := 0; i < int(numCaptures); i++ {
-		_, err = streamData.Read(buf)
-		if err != nil {
-			return nil, err
-		}
-		time := math.Float64frombits(binary.LittleEndian.Uint64(buf))
-
 		_, err = streamData.Read(buf)
 		if err != nil {
 			return nil, err
@@ -63,7 +53,7 @@ func decodeRaw64(streamData *bytes.Reader) ([]position.Capture, error) {
 		}
 		z := math.Float64frombits(binary.LittleEndian.Uint64(buf))
 
-		captures[i] = position.NewCapture(time, x, y, z)
+		captures[i] = position.NewCapture(times[i], x, y, z)
 	}
 
 	return captures, nil

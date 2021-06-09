@@ -51,9 +51,10 @@ type encoderCollectionMapping struct {
 }
 
 type Writer struct {
-	encoders []encoding.Encoder
-	compress bool
-	out      io.Writer
+	encoders             []encoding.Encoder
+	timeStorageTechnique TimeStorageTechnique
+	compress             bool
+	out                  io.Writer
 }
 
 // NewRecoludeWriter builds a new recording writer with default recolude
@@ -64,10 +65,11 @@ func NewRecoludeWriter(out io.Writer) Writer {
 			event.NewEncoder(event.Raw32),
 			position.NewEncoder(position.Oct48),
 			euler.NewEncoder(euler.Raw32),
-			enum.NewEncoder(enum.Raw32),
+			enum.NewEncoder(),
 		},
-		compress: true,
-		out:      out,
+		compress:             true,
+		timeStorageTechnique: BST16,
+		out:                  out,
 	}
 }
 
@@ -238,7 +240,7 @@ func writeEncoders(out io.Writer, encoders []encoderCollectionMapping) (int, err
 	return totalWritten, err
 }
 
-func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappingToIndex map[string]int, encodingBlocks [][]byte, streamIndexToEncoderUsedIndex []int, offset int) (int, int, error) {
+func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappingToIndex map[string]int, encodingBlocks [][]byte, streamIndexToEncoderUsedIndex []int, offset int, tech TimeStorageTechnique) (int, int, error) {
 	ew := &errWriter{Writer: out}
 
 	// Write id
@@ -261,6 +263,8 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 		numStreams := make([]byte, binary.MaxVarintLen64)
 		read := binary.PutUvarint(numStreams, uint64(streamIndexToEncoderUsedIndex[offset+streamIndex]))
 		ew.Write(numStreams[:read])
+
+		encodeTime(tech, ew, recording.CaptureCollections()[streamIndex].Captures())
 
 		// Write stream data
 		ew.Write(rapbinary.BytesArrayToBytes(encodingBlocks[offset+streamIndex]))
@@ -312,7 +316,7 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 	// Write all child recordings
 	newOffset := offset + len(recording.CaptureCollections())
 	for _, rec := range recording.Recordings() {
-		_, updatedOffset, err := recurseRecordingToBytes(ew, rec, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, newOffset)
+		_, updatedOffset, err := recurseRecordingToBytes(ew, rec, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, newOffset, tech)
 		if err != nil {
 			return ew.TotalWritten(), -1, err
 		}
@@ -440,7 +444,7 @@ func (w Writer) Write(recording format.Recording) (int, error) {
 	}
 
 	// Write out all recordings
-	written, _, err = recurseRecordingToBytes(compressWriter, recording, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, 0)
+	written, _, err = recurseRecordingToBytes(compressWriter, recording, keyMappingToIndex, encodingBlocks, streamIndexToEncoderUsedIndex, 0, w.timeStorageTechnique)
 	totalBytesWritten += written
 	if err != nil {
 		return totalBytesWritten, err

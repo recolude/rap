@@ -128,7 +128,7 @@ func readHeader(header []byte) (names []string, metadataKeys []string, err error
 	return
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte) (format.CaptureCollection, error) {
+func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
 	buf := bufio.NewReader(bytes.NewReader(streamData))
 
 	eventNames, metadataKeys, err := readHeader(header)

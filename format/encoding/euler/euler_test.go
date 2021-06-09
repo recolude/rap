@@ -13,8 +13,10 @@ import (
 
 func Test_Euler(t *testing.T) {
 	continuousCaptures := make([]eulerCollection.Capture, 1000)
+	continuousTimes := make([]float64, len(continuousCaptures))
 	curTime := 1.0
 	for i := 0; i < len(continuousCaptures); i++ {
+		continuousTimes[i] = curTime
 		continuousCaptures[i] = eulerCollection.NewEulerZXYCapture(
 			curTime,
 			(rand.Float64() * 360),
@@ -26,43 +28,47 @@ func Test_Euler(t *testing.T) {
 
 	tests := map[string]struct {
 		captures []eulerCollection.Capture
+		times    []float64
 	}{
 		"nil rotations": {captures: nil},
 		"0-rotations":   {captures: []eulerCollection.Capture{}},
-		"1-rotations":   {captures: []eulerCollection.Capture{eulerCollection.NewEulerZXYCapture(1.2, 1, 1, 1)}},
-		"2-rotations":   {captures: []eulerCollection.Capture{eulerCollection.NewEulerZXYCapture(1.2, 1, 1, 1), eulerCollection.NewEulerZXYCapture(1.3, 4, 5, 6)}},
+		"1-rotations": {
+			captures: []eulerCollection.Capture{eulerCollection.NewEulerZXYCapture(1.2, 1, 1, 1)},
+			times:    []float64{1.2},
+		},
+		"2-rotations": {
+			captures: []eulerCollection.Capture{eulerCollection.NewEulerZXYCapture(1.2, 1, 1, 1), eulerCollection.NewEulerZXYCapture(1.3, 4, 5, 6)},
+			times:    []float64{1.2, 1.3},
+		},
 		"3-rotations": {
 			captures: []eulerCollection.Capture{
 				eulerCollection.NewEulerZXYCapture(1.2, 1, 1, 1),
 				eulerCollection.NewEulerZXYCapture(1.3, 4, 5, 6),
 				eulerCollection.NewEulerZXYCapture(1.4, 4.1, 5.7, 6.0),
 			},
+			times: []float64{1.2, 1.3, 1.4},
 		},
-		"1000-rotations": {captures: continuousCaptures},
+		"1000-rotations": {captures: continuousCaptures, times: continuousTimes},
 	}
 
 	storageTechniques := []struct {
 		displayName        string
 		technique          euler.StorageTechnique
-		timeTollerance     float64
 		positionTollerance float64
 	}{
 		{
 			displayName:        "Raw64",
 			technique:          euler.Raw64,
-			timeTollerance:     0,
 			positionTollerance: 0,
 		},
 		{
 			displayName:        "Raw32",
 			technique:          euler.Raw32,
-			timeTollerance:     0.0005,
 			positionTollerance: 0.0003,
 		},
 		{
 			displayName:        "Raw16",
 			technique:          euler.Raw16,
-			timeTollerance:     0.01,
 			positionTollerance: 0.04,
 		},
 	}
@@ -76,7 +82,7 @@ func Test_Euler(t *testing.T) {
 
 				// ACT ====================================================================
 				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-				streamOut, decodeErr := encoder.Decode(header, streamsData[0])
+				streamOut, decodeErr := encoder.Decode(header, streamsData[0], tc.times)
 
 				// ASSERT =================================================================
 				assert.NoError(t, encodeErr)
@@ -92,7 +98,7 @@ func Test_Euler(t *testing.T) {
 								break
 							}
 
-							assert.InDelta(t, tc.captures[i].Time(), positioniCapture.Time(), technique.timeTollerance, "times are not equal: %.2f != %.2f", tc.captures[i].Time(), positioniCapture.Time())
+							assert.Equal(t, tc.captures[i].Time(), positioniCapture.Time(), "times are not equal: %.2f != %.2f", tc.captures[i].Time(), positioniCapture.Time())
 							if assert.InDelta(
 								t,
 								tc.captures[i].EulerZXY().X(),
@@ -172,7 +178,7 @@ func Test_EulerRaw16Wrapping(t *testing.T) {
 
 	// ACT ====================================================================
 	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-	streamOut, decodeErr := encoder.Decode(header, streamsData[0])
+	streamOut, decodeErr := encoder.Decode(header, streamsData[0], []float64{0, 1, 2, 3, 4, 5})
 
 	// ASSERT =================================================================
 	assert.NoError(t, encodeErr)
