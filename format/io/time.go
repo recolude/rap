@@ -44,6 +44,10 @@ func encodeTime32(out io.Writer, captures []format.Capture) error {
 }
 
 func encodeTimeBST16(out io.Writer, captures []format.Capture) error {
+	if len(captures) == 0 {
+		return nil
+	}
+
 	startingTime := math.Inf(1)
 	endingTime := math.Inf(-1)
 	maxTimeDifference := math.Inf(-1)
@@ -63,10 +67,6 @@ func encodeTimeBST16(out io.Writer, captures []format.Capture) error {
 			}
 		}
 
-	}
-
-	if len(captures) == 0 {
-		return nil
 	}
 
 	binary.Write(out, binary.LittleEndian, float32(startingTime))
@@ -151,7 +151,7 @@ func decodeTime32(in io.Reader, numCaptures int) ([]float64, error) {
 	return times, nil
 }
 
-func denodeTimeBST16(in io.Reader, numCaptures int) ([]float64, error) {
+func decodeTimeBST16(in io.Reader, numCaptures int) ([]float64, error) {
 	if numCaptures == 0 {
 		return make([]float64, 0), nil
 	}
@@ -173,6 +173,7 @@ func denodeTimeBST16(in io.Reader, numCaptures int) ([]float64, error) {
 	}
 
 	captures := make([]float64, numCaptures)
+	captures[0] = float64(startTime)
 	buffer := make([]byte, 2)
 	currentTime := float64(startTime)
 
@@ -211,7 +212,7 @@ func decodeTime(in io.Reader) ([]float64, error) {
 		return decodeTime32(in, int(numCaptures))
 
 	case BST16:
-		return denodeTimeBST16(in, int(numCaptures))
+		return decodeTimeBST16(in, int(numCaptures))
 	}
 
 	return nil, fmt.Errorf("unrecognized time encoding: %d", encodingTechnique)

@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording) bool {
+func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording, timeDelta float64) bool {
 	if recExpected != nil && recActual == nil {
 		t.Error("Expected recording to not be nil, but it was")
 		return false
@@ -87,7 +87,7 @@ func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording
 	}
 
 	for i, childRec := range recActual.Recordings() {
-		if assertRecordingsMatch(t, recExpected.Recordings()[i], childRec) == false {
+		if assertRecordingsMatch(t, recExpected.Recordings()[i], childRec, timeDelta) == false {
 			return false
 		}
 	}
@@ -112,15 +112,156 @@ func assertRecordingsMatch(t *testing.T, recExpected, recActual format.Recording
 		return false
 	}
 
-	for streamIndex, stream := range recExpected.CaptureCollections() {
-		assert.Equal(t, stream.Name(), recActual.CaptureCollections()[streamIndex].Name())
+	for streamIndex, correctStream := range recExpected.CaptureCollections() {
+		assert.Equal(t, correctStream.Name(), recActual.CaptureCollections()[streamIndex].Name())
 
-		for i, correctCapture := range recExpected.CaptureCollections()[streamIndex].Captures() {
-			assert.Equal(t, correctCapture.Time(), recActual.CaptureCollections()[streamIndex].Captures()[i].Time())
+		if assert.Len(t, recActual.CaptureCollections()[streamIndex].Captures(), len(correctStream.Captures())) {
+			for i, correctCapture := range correctStream.Captures() {
+				assert.InDelta(t, correctCapture.Time(), recActual.CaptureCollections()[streamIndex].Captures()[i].Time(), timeDelta)
+			}
 		}
+
 	}
 
 	return true
+}
+
+func Test_HandlesOneRecordingOneStreamBST16(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+	}
+
+	w := io.NewWriter(encoders, true, fileData, io.BST16)
+	r := io.NewReader(encoders, fileData)
+
+	recIn := format.NewRecording(
+		"44",
+		"Test Recording",
+		[]format.CaptureCollection{
+			position.NewCollection(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+		},
+		nil,
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
+			},
+		),
+		nil,
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assertRecordingsMatch(t, recIn, recOut, 0.001)
+	assert.Equal(t, n, nOut)
+}
+
+func Test_HandlesOneRecordingOneStreamFloat32Time(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+	}
+
+	w := io.NewWriter(encoders, true, fileData, io.Raw32)
+	r := io.NewReader(encoders, fileData)
+
+	recIn := format.NewRecording(
+		"44",
+		"Test Recording",
+		[]format.CaptureCollection{
+			position.NewCollection(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+					position.NewCapture(7, 10, 11, 12),
+				},
+			),
+		},
+		nil,
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
+			},
+		),
+		nil,
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assertRecordingsMatch(t, recIn, recOut, 0.00001)
+	assert.Equal(t, n, nOut)
+}
+
+func Test_HandlesOneRecordingOneStreamOneCaptureBST16(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+	}
+
+	w := io.NewWriter(encoders, true, fileData, io.BST16)
+	r := io.NewReader(encoders, fileData)
+
+	recIn := format.NewRecording(
+		"44",
+		"Test Recording",
+		[]format.CaptureCollection{
+			position.NewCollection(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(2, 4, 5, 6),
+				},
+			),
+		},
+		nil,
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
+			},
+		),
+		nil,
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assertRecordingsMatch(t, recIn, recOut, 0.001)
+	assert.Equal(t, n, nOut)
 }
 
 func Test_HandlesOneRecordingOneStream(t *testing.T) {
@@ -166,7 +307,7 @@ func Test_HandlesOneRecordingOneStream(t *testing.T) {
 	// ASSERT =================================================================
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 	assert.Equal(t, n, nOut)
 }
 
@@ -214,7 +355,7 @@ func Test_HandlesBinaryReference(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 }
 
 func Test_HandlesBinaryData(t *testing.T) {
@@ -265,7 +406,7 @@ func Test_HandlesBinaryData(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 }
 
 func Test_HandlesOneRecordingTwoStream(t *testing.T) {
@@ -321,7 +462,7 @@ func Test_HandlesOneRecordingTwoStream(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 }
 
 func Test_HandlesNestedRecordings(t *testing.T) {
@@ -411,7 +552,7 @@ func Test_HandlesNestedRecordings(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 }
 
 func Test_EncodersWithHeaders(t *testing.T) {
@@ -477,7 +618,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 }
 
 func Test_HandlesMultipleEncoders(t *testing.T) {
@@ -633,7 +774,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 }
 
 func Test_HandlesManyChildren(t *testing.T) {
@@ -735,7 +876,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 }
 
 func Test_Uprade(t *testing.T) {
@@ -769,7 +910,7 @@ func Test_Uprade(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, rec, recOut)
+	assertRecordingsMatch(t, rec, recOut, 0)
 }
 
 func Test_Metadata(t *testing.T) {
@@ -833,7 +974,7 @@ func Test_Metadata(t *testing.T) {
 	assert.NoError(t, errWrite)
 	assert.NoError(t, errRead)
 	assert.Equal(t, n, nOut)
-	assertRecordingsMatch(t, recIn, recOut)
+	assertRecordingsMatch(t, recIn, recOut, 0)
 }
 
 func Test_OptionallyCompressesRecording(t *testing.T) {
@@ -932,6 +1073,6 @@ func Test_OptionallyCompressesRecording(t *testing.T) {
 	assert.NoError(t, errRead2)
 	assert.Equal(t, n, nOut)
 	assert.Equal(t, n2, nOut2)
-	assertRecordingsMatch(t, recIn, recOut)
-	assertRecordingsMatch(t, recIn, recOut2)
+	assertRecordingsMatch(t, recIn, recOut, 0)
+	assertRecordingsMatch(t, recIn, recOut2, 0)
 }
