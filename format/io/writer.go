@@ -62,7 +62,7 @@ type Writer struct {
 func NewRecoludeWriter(out io.Writer) Writer {
 	return Writer{
 		encoders: []encoding.Encoder{
-			event.NewEncoder(event.Raw32),
+			event.NewEncoder(),
 			position.NewEncoder(position.Oct48),
 			euler.NewEncoder(euler.Raw32),
 			enum.NewEncoder(),
@@ -261,10 +261,11 @@ func recurseRecordingToBytes(out io.Writer, recording format.Recording, keyMappi
 	// Write all streams
 	for streamIndex := range recording.CaptureCollections() {
 		// Write index of the encoder used to encode stream
-		numStreams := make([]byte, binary.MaxVarintLen64)
-		read := binary.PutUvarint(numStreams, uint64(streamIndexToEncoderUsedIndex[offset+streamIndex]))
-		ew.Write(numStreams[:read])
+		encoderIndex := make([]byte, binary.MaxVarintLen64)
+		read := binary.PutUvarint(encoderIndex, uint64(streamIndexToEncoderUsedIndex[offset+streamIndex]))
+		ew.Write(encoderIndex[:read])
 
+		ew.Write(rapbinary.StringToBytes(recording.CaptureCollections()[streamIndex].Name()))
 		encodeTime(tech, ew, recording.CaptureCollections()[streamIndex].Captures())
 
 		// Write stream data

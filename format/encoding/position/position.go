@@ -6,7 +6,6 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/position"
-	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
 type StorageTechnique int
@@ -39,8 +38,6 @@ func NewEncoder(technique StorageTechnique) Encoder {
 
 func (p Encoder) encode(stream format.CaptureCollection) ([]byte, error) {
 	streamData := new(bytes.Buffer)
-
-	streamData.Write(rapbinary.StringToBytes(stream.Name()))
 
 	castedCaptureData := make([]position.Capture, len(stream.Captures()))
 	for i, c := range stream.Captures() {
@@ -91,13 +88,8 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 	return nil, allStreamData, nil
 }
 
-func decode(data []byte, times []float64) (format.CaptureCollection, error) {
+func decode(streamName string, data []byte, times []float64) (format.CaptureCollection, error) {
 	reader := bytes.NewReader(data)
-
-	name, _, err := rapbinary.ReadString(reader)
-	if err != nil {
-		return nil, err
-	}
 
 	typeByte, err := reader.ReadByte()
 	if err != nil {
@@ -112,35 +104,35 @@ func decode(data []byte, times []float64) (format.CaptureCollection, error) {
 		if err != nil {
 			return nil, err
 		}
-		return position.NewCollection(name, captures), nil
+		return position.NewCollection(streamName, captures), nil
 
 	case Raw32:
 		captures, err := decodeRaw32(reader, times)
 		if err != nil {
 			return nil, err
 		}
-		return position.NewCollection(name, captures), nil
+		return position.NewCollection(streamName, captures), nil
 
 	case Oct24:
 		captures, err := decodeOct24(reader, times)
 		if err != nil {
 			return nil, err
 		}
-		return position.NewCollection(name, captures), nil
+		return position.NewCollection(streamName, captures), nil
 
 	case Oct48:
 		captures, err := decodeOct48(reader, times)
 		if err != nil {
 			return nil, err
 		}
-		return position.NewCollection(name, captures), nil
+		return position.NewCollection(streamName, captures), nil
 	}
 
 	return nil, fmt.Errorf("Unknown positional encoding technique: %d", int(encodingTechnique))
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
-	return decode(streamData, times)
+func (p Encoder) Decode(streamName string, header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
+	return decode(streamName, streamData, times)
 }
 
 func (p Encoder) Accepts(stream format.CaptureCollection) bool {

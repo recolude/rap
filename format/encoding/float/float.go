@@ -8,7 +8,6 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/float"
-	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
 type StorageTechnique int
@@ -114,16 +113,9 @@ func encode32(out io.Writer, captures []format.Capture) error {
 func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, error) {
 	streamDataBuffers := make([]bytes.Buffer, len(streams))
 	for bufferIndex, stream := range streams {
-		// Write Stream Name
-		streamDataBuffers[bufferIndex].Write(rapbinary.StringToBytes(stream.Name()))
 
 		// Write technique
 		streamDataBuffers[bufferIndex].WriteByte(byte(p.technique))
-
-		// Write Num Captures
-		numCaptures := make([]byte, binary.MaxVarintLen64)
-		read := binary.PutUvarint(numCaptures, uint64(len(stream.Captures())))
-		streamDataBuffers[bufferIndex].Write(numCaptures[:read])
 
 		switch p.technique {
 		case Raw64:
@@ -150,14 +142,8 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 	return nil, streamData, nil
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
+func (p Encoder) Decode(name string, header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
 	buf := bytes.NewBuffer(streamData)
-
-	// Read Name
-	streamName, _, err := rapbinary.ReadString(buf)
-	if err != nil {
-		return nil, err
-	}
 
 	// Read Storage Technique
 	typeByte, err := buf.ReadByte()
@@ -166,14 +152,8 @@ func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (form
 	}
 	encodingTechnique := StorageTechnique(typeByte)
 
-	// Read Num Captures
-	numCaptures, err := binary.ReadUvarint(buf)
-	if err != nil {
-		return nil, err
-	}
-
-	captures := make([]float.Capture, numCaptures)
-	for i := 0; i < int(numCaptures); i++ {
+	captures := make([]float.Capture, len(times))
+	for i := 0; i < len(times); i++ {
 		var time float64
 		var value float64
 
@@ -194,5 +174,5 @@ func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (form
 		captures[i] = float.NewCapture(time, value)
 	}
 
-	return float.NewCollection(streamName, captures), nil
+	return float.NewCollection(name, captures), nil
 }

@@ -1,7 +1,6 @@
 package event_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/recolude/rap/format"
@@ -57,61 +56,41 @@ func Test_SingleEvent(t *testing.T) {
 		},
 	}
 
-	storageTechniques := []struct {
-		displayName    string
-		technique      event.StorageTechnique
-		timeTollerance float64
-	}{
-		{
-			displayName:    "Raw64",
-			technique:      event.Raw64,
-			timeTollerance: 0,
-		},
-		{
-			displayName:    "Raw32",
-			technique:      event.Raw32,
-			timeTollerance: 0.0005,
-		},
-	}
+	encoder := event.NewEncoder()
 
 	for name, tc := range tests {
-		for _, technique := range storageTechniques {
-			t.Run(fmt.Sprintf("%s/%s", name, technique.displayName), func(t *testing.T) {
-				streamIn := eventStream.NewCollection(tc.streamName, tc.captures)
+		t.Run(name, func(t *testing.T) {
+			streamIn := eventStream.NewCollection(tc.streamName, tc.captures)
 
-				encoder := event.NewEncoder(technique.technique)
+			// ACT ====================================================================
+			header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
+			streamOut, decodeErr := encoder.Decode(tc.streamName, header, streamsData[0], tc.times)
 
-				// ACT ====================================================================
-				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-				streamOut, decodeErr := encoder.Decode(header, streamsData[0], tc.times)
+			// ASSERT =================================================================
+			assert.NoError(t, encodeErr)
+			assert.NoError(t, decodeErr)
+			assert.NotNil(t, streamOut)
+			assert.Len(t, streamsData, 1)
+			assert.Equal(t, tc.streamName, streamOut.Name())
+			if assert.NotNil(t, streamOut) {
+				assert.Equal(t, streamIn.Name(), streamOut.Name())
+				if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
+					for i, c := range streamOut.Captures() {
+						eventCapture, ok := c.(eventStream.Capture)
+						if assert.True(t, ok) == false {
+							break
+						}
 
-				// ASSERT =================================================================
-				assert.NoError(t, encodeErr)
-				assert.NoError(t, decodeErr)
-				assert.NotNil(t, streamOut)
-				assert.Len(t, streamsData, 1)
-				assert.Equal(t, tc.streamName, streamOut.Name())
-				if assert.NotNil(t, streamOut) {
-					assert.Equal(t, streamIn.Name(), streamOut.Name())
-					if assert.Len(t, streamOut.Captures(), len(streamIn.Captures())) {
-						for i, c := range streamOut.Captures() {
-							eventCapture, ok := c.(eventStream.Capture)
-							if assert.True(t, ok) == false {
-								break
-							}
+						assert.Equal(t, tc.captures[i].Time(), eventCapture.Time(), "times are not equal: %.2f != %.2f", tc.captures[i].Time(), eventCapture.Time())
+						assert.Equal(t, tc.captures[i].Name(), eventCapture.Name())
 
-							assert.InDelta(t, tc.captures[i].Time(), eventCapture.Time(), technique.timeTollerance, "times are not equal: %.2f != %.2f", tc.captures[i].Time(), eventCapture.Time())
-							assert.Equal(t, tc.captures[i].Name(), eventCapture.Name())
-
-							assert.Len(t, eventCapture.Metadata().Mapping(), len(tc.captures[i].Metadata().Mapping()))
-							for key, val := range tc.captures[i].Metadata().Mapping() {
-								assert.Equal(t, val, eventCapture.Metadata().Mapping()[key])
-							}
-
+						assert.Len(t, eventCapture.Metadata().Mapping(), len(tc.captures[i].Metadata().Mapping()))
+						for key, val := range tc.captures[i].Metadata().Mapping() {
+							assert.Equal(t, val, eventCapture.Metadata().Mapping()[key])
 						}
 					}
 				}
-			})
-		}
+			}
+		})
 	}
 }

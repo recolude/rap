@@ -15,14 +15,14 @@ import (
 func Test_Oct24_EmptyStream(t *testing.T) {
 	// ARRANGE ================================================================
 	captures := []positionCollection.Capture{}
-
-	streamIn := positionCollection.NewCollection("Pos", captures)
+	streamName := "Pos"
+	streamIn := positionCollection.NewCollection(streamName, captures)
 
 	encoder := position.NewEncoder(position.Oct24)
 
 	// ACT ====================================================================
 	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-	streamOut, decodeErr := encoder.Decode(header, streamsData[0], nil)
+	streamOut, decodeErr := encoder.Decode(streamName, header, streamsData[0], nil)
 
 	// ASSERT =================================================================
 	assert.NoError(t, encodeErr)
@@ -110,13 +110,13 @@ func Test_Positions(t *testing.T) {
 	for name, tc := range tests {
 		for _, technique := range storageTechniques {
 			t.Run(fmt.Sprintf("%s/%s", name, technique.displayName), func(t *testing.T) {
-				streamIn := positionCollection.NewCollection("Pos", tc.captures)
+				streamIn := positionCollection.NewCollection(technique.displayName, tc.captures)
 
 				encoder := position.NewEncoder(technique.technique)
 
 				// ACT ====================================================================
 				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-				streamOut, decodeErr := encoder.Decode(header, streamsData[0], tc.time)
+				streamOut, decodeErr := encoder.Decode(technique.displayName, header, streamsData[0], tc.time)
 
 				// ASSERT =================================================================
 				assert.NoError(t, encodeErr)
@@ -204,8 +204,8 @@ func Test_Oct24_MultipleStreams(t *testing.T) {
 
 	// ACT ====================================================================
 	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn, streamIn2})
-	streamOut, decodeErr := encoder.Decode(header, streamsData[0], captureTimes)
-	streamOut2, decodeErr2 := encoder.Decode(header, streamsData[1], capture2Times)
+	streamOut, decodeErr := encoder.Decode("Pos", header, streamsData[0], captureTimes)
+	streamOut2, decodeErr2 := encoder.Decode("Pos2", header, streamsData[1], capture2Times)
 
 	// ASSERT =================================================================
 	assert.NoError(t, encodeErr)
@@ -260,6 +260,7 @@ func Test_Oct24_Continuous(t *testing.T) {
 	// ARRANGE ================================================================
 	captures := make([]positionCollection.Capture, 1000)
 	capturetimes := make([]float64, len(captures))
+	streamName := "Pos"
 	curTime := 1.0
 	curPos := vector.Vector3Zero()
 	for i := 0; i < len(captures); i++ {
@@ -273,13 +274,13 @@ func Test_Oct24_Continuous(t *testing.T) {
 		curPos = curPos.Add(vector.NewVector3(rand.Float64()*10, rand.Float64()*10, rand.Float64()*10))
 		curTime += rand.Float64() * 10.0
 	}
-	streamIn := positionCollection.NewCollection("Pos", captures)
+	streamIn := positionCollection.NewCollection(streamName, captures)
 
 	encoder := position.NewEncoder(position.Oct24)
 
 	// ACT ====================================================================
 	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-	streamOut, decodeErr := encoder.Decode(header, streamsData[0], capturetimes)
+	streamOut, decodeErr := encoder.Decode(streamName, header, streamsData[0], capturetimes)
 
 	// ASSERT =================================================================
 	assert.NoError(t, encodeErr)

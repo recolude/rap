@@ -76,13 +76,13 @@ func Test_Euler(t *testing.T) {
 	for name, tc := range tests {
 		for _, technique := range storageTechniques {
 			t.Run(fmt.Sprintf("%s/%s", name, technique.displayName), func(t *testing.T) {
-				streamIn := eulerCollection.NewCollection("Pos", tc.captures)
+				streamIn := eulerCollection.NewCollection("Rot", tc.captures)
 
 				encoder := euler.NewEncoder(technique.technique)
 
 				// ACT ====================================================================
 				header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-				streamOut, decodeErr := encoder.Decode(header, streamsData[0], tc.times)
+				streamOut, decodeErr := encoder.Decode("Rot", header, streamsData[0], tc.times)
 
 				// ASSERT =================================================================
 				assert.NoError(t, encodeErr)
@@ -178,7 +178,7 @@ func Test_EulerRaw16Wrapping(t *testing.T) {
 
 	// ACT ====================================================================
 	header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})
-	streamOut, decodeErr := encoder.Decode(header, streamsData[0], []float64{0, 1, 2, 3, 4, 5})
+	streamOut, decodeErr := encoder.Decode("Rot", header, streamsData[0], []float64{0, 1, 2, 3, 4, 5})
 
 	// ASSERT =================================================================
 	assert.NoError(t, encodeErr)

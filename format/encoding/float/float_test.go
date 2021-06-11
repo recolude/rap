@@ -27,6 +27,7 @@ func Test_Float(t *testing.T) {
 	tests := map[string]struct {
 		streamName string
 		captures   []floatCollection.Capture
+		times      []float64
 	}{
 		"nil floats": {streamName: "", captures: nil},
 		"0-float":    {streamName: "empty stream", captures: []floatCollection.Capture{}},
@@ -35,6 +36,7 @@ func Test_Float(t *testing.T) {
 			captures: []floatCollection.Capture{
 				floatCollection.NewCapture(1.2, 1),
 			},
+			times: []float64{1.2},
 		},
 		"2-floats": {
 			streamName: "222",
@@ -42,6 +44,7 @@ func Test_Float(t *testing.T) {
 				floatCollection.NewCapture(-1.2, 0),
 				floatCollection.NewCapture(0, 1.3),
 			},
+			times: []float64{-1.2, 0},
 		},
 		"3-floats": {
 			streamName: "ahhhh",
@@ -50,6 +53,7 @@ func Test_Float(t *testing.T) {
 				floatCollection.NewCapture(1.2, -1),
 				floatCollection.NewCapture(1.3, 1.3),
 			},
+			times: []float64{-1.2, 1.2, 1.3},
 		},
 		// "2000-continuous-floats": {captures: continuousCaptures},
 	}
@@ -86,7 +90,7 @@ func Test_Float(t *testing.T) {
 
 				// ACT ====================================================================
 				header, collectionData, encodeErr := encoder.Encode([]format.CaptureCollection{collectionIn})
-				collectionOut, decodeErr := encoder.Decode(header, collectionData[0], nil)
+				collectionOut, decodeErr := encoder.Decode(tc.streamName, header, collectionData[0], tc.times)
 
 				// ASSERT =================================================================
 				assert.NoError(t, encodeErr)
@@ -102,10 +106,8 @@ func Test_Float(t *testing.T) {
 							if assert.True(t, ok) == false {
 								break
 							}
-
 							assert.InDelta(t, tc.captures[i].Time(), capture.Time(), technique.timeTollerance, "times are not equal: %.2f != %.2f", tc.captures[i].Time(), capture.Time())
 							assert.InDelta(t, tc.captures[i].Value(), capture.Value(), technique.timeTollerance, "values are not equal: %.2f != %.2f", tc.captures[i].Value(), capture.Value())
-
 						}
 					}
 				}

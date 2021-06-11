@@ -132,9 +132,12 @@ func recursiveBuidRecordings(inStream io.Reader, metadataKeys []string, encoders
 	allStreams := make([]format.CaptureCollection, numStreams)
 	for i := 0; i < int(numStreams); i++ {
 		encoderIndex, _, _ := binary.ReadUvarint(er)
+
+		streamName, _, _ := binary.ReadString(er)
+
 		times, _ := decodeTime(er)
 		captureBody, _, _ := binary.ReadBytesArray(er)
-		stream, _ := encoders[encoderIndex].Decode(headers[encoderIndex], captureBody, times)
+		stream, _ := encoders[encoderIndex].Decode(streamName, headers[encoderIndex], captureBody, times)
 		allStreams[i] = stream
 	}
 

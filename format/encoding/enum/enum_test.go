@@ -36,7 +36,7 @@ func Test_Singleenum(t *testing.T) {
 
 			// ACT ====================================================================
 			header, collectionData, encodeErr := encoder.Encode([]format.CaptureCollection{collectionIn})
-			collectionOut, decodeErr := encoder.Decode(header, collectionData[0], tc.times)
+			collectionOut, decodeErr := encoder.Decode(tc.streamName, header, collectionData[0], tc.times)
 
 			// ASSERT =================================================================
 			assert.NoError(t, encodeErr)

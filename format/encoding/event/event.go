@@ -12,22 +12,10 @@ import (
 	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
-type StorageTechnique int
+type Encoder struct{}
 
-const (
-	// Raw64 encodes time with 64 bit precision
-	Raw64 StorageTechnique = iota
-
-	// Raw32 encodes time with 32 bit precision
-	Raw32
-)
-
-type Encoder struct {
-	technique StorageTechnique
-}
-
-func NewEncoder(technique StorageTechnique) Encoder {
-	return Encoder{technique}
+func NewEncoder() Encoder {
+	return Encoder{}
 }
 
 func (p Encoder) Accepts(stream format.CaptureCollection) bool {
@@ -48,29 +36,10 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 
 	streamDataBuffers := make([]bytes.Buffer, len(streams))
 	for bufferIndex, stream := range streams {
-
-		// Write Stream Name
-		streamDataBuffers[bufferIndex].Write(rapbinary.StringToBytes(stream.Name()))
-
-		// Write technique
-		streamDataBuffers[bufferIndex].WriteByte(byte(p.technique))
-
-		// Write Num Captures
-		numCaptures := make([]byte, binary.MaxVarintLen64)
-		read := binary.PutUvarint(numCaptures, uint64(len(stream.Captures())))
-		streamDataBuffers[bufferIndex].Write(numCaptures[:read])
-
 		for _, c := range stream.Captures() {
 			eventCapture, ok := c.(event.Capture)
 			if !ok {
 				return nil, nil, errors.New("capture is not of type event")
-			}
-
-			switch p.technique {
-			case Raw64:
-				binary.Write(&streamDataBuffers[bufferIndex], binary.LittleEndian, eventCapture.Time())
-			case Raw32:
-				binary.Write(&streamDataBuffers[bufferIndex], binary.LittleEndian, float32(eventCapture.Time()))
 			}
 
 			if _, ok := eventNamesSet[eventCapture.Name()]; !ok {
@@ -128,7 +97,7 @@ func readHeader(header []byte) (names []string, metadataKeys []string, err error
 	return
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
+func (p Encoder) Decode(name string, header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
 	buf := bufio.NewReader(bytes.NewReader(streamData))
 
 	eventNames, metadataKeys, err := readHeader(header)
@@ -136,39 +105,8 @@ func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (form
 		return nil, err
 	}
 
-	// Read Name
-	streamName, _, err := rapbinary.ReadString(buf)
-	if err != nil {
-		return nil, err
-	}
-
-	// Read Storage Technique
-	typeByte, err := buf.ReadByte()
-	if err != nil {
-		return nil, err
-	}
-	encodingTechnique := StorageTechnique(typeByte)
-
-	// Read Num Captures
-	numCaptures, err := binary.ReadUvarint(buf)
-	if err != nil {
-		return nil, err
-	}
-
-	captures := make([]event.Capture, numCaptures)
-	for i := 0; i < int(numCaptures); i++ {
-		var time float64
-
-		switch encodingTechnique {
-		case Raw64:
-			binary.Read(buf, binary.LittleEndian, &time)
-
-		case Raw32:
-			var time32 float32
-			binary.Read(buf, binary.LittleEndian, &time32)
-			time = float64(time32)
-		}
-
+	captures := make([]event.Capture, len(times))
+	for i := 0; i < len(times); i++ {
 		eventNameIndex, err := binary.ReadUvarint(buf)
 		if err != nil {
 			return nil, err
@@ -192,8 +130,8 @@ func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (form
 			}
 			block[metadataKeys[metadataIndeces[metadataIndex]]] = prop
 		}
-		captures[i] = event.NewCapture(time, eventNames[int(eventNameIndex)], metadata.NewBlock(block))
+		captures[i] = event.NewCapture(times[i], eventNames[int(eventNameIndex)], metadata.NewBlock(block))
 	}
 
-	return event.NewCollection(streamName, captures), nil
+	return event.NewCollection(name, captures), nil
 }

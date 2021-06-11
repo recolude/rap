@@ -63,7 +63,7 @@ func main() {
 					fmt.Fprintf(c.App.Writer, "Original Size: %s\n\n", kb(originalBytesRead))
 
 					encoders := []encoding.Encoder{
-						event.NewEncoder(event.Raw32),
+						event.NewEncoder(),
 						position.NewEncoder(position.Oct48),
 						euler.NewEncoder(euler.Raw32),
 						enum.NewEncoder(),

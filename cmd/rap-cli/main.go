@@ -142,7 +142,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 					}
 
 					encoders := []encoding.Encoder{
-						event.NewEncoder(event.Raw32),
+						event.NewEncoder(),
 						position.NewEncoder(position.Oct24),
 						euler.NewEncoder(euler.Raw16),
 						enum.NewEncoder(),

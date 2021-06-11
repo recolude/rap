@@ -31,9 +31,6 @@ func (p Encoder) Version() uint {
 func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, error) {
 	streamDataBuffers := make([]bytes.Buffer, len(streams))
 	for bufferIndex, stream := range streams {
-		// Write Stream Name
-		streamDataBuffers[bufferIndex].Write(rapbinary.StringToBytes(stream.Name()))
-
 		// Write Enum Members
 		enmstr := stream.(enum.Collection)
 		streamDataBuffers[bufferIndex].Write(rapbinary.StringArrayToBytes(enmstr.EnumMembers()))
@@ -58,14 +55,8 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 	return nil, streamData, nil
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
+func (p Encoder) Decode(name string, header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
 	buf := bytes.NewBuffer(streamData)
-
-	// Read Name
-	streamName, _, err := rapbinary.ReadString(buf)
-	if err != nil {
-		return nil, err
-	}
 
 	enumMembers, _, err := rapbinary.ReadStringArray(buf)
 	if err != nil {
@@ -81,5 +72,5 @@ func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (form
 		captures[i] = enum.NewCapture(times[i], int(value))
 	}
 
-	return enum.NewCollection(streamName, enumMembers, captures), nil
+	return enum.NewCollection(name, enumMembers, captures), nil
 }

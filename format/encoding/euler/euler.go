@@ -6,22 +6,21 @@ import (
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/euler"
-	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
 type StorageTechnique int
 
 const (
-	// Raw64 encodes all values at fullest precision, costing 256 bits per
+	// Raw64 encodes all values at fullest precision, costing 192 bits per
 	// capture
 	Raw64 StorageTechnique = iota
 
-	// Raw32 encodes all values at 32bit precision, costing 128 bits per
+	// Raw32 encodes all values at 32bit precision, costing 96 bits per
 	// capture
 	Raw32
 
-	// Raw16 stores all values at 16 bit precision, costiting 64 bits per
-	// capture (time is stored in 16 bits)
+	// Raw16 stores all values at 16 bit precision, costiting 48 bits per
+	// capture
 	Raw16
 )
 
@@ -35,8 +34,6 @@ func NewEncoder(technique StorageTechnique) Encoder {
 
 func (p Encoder) encode(stream format.CaptureCollection) ([]byte, error) {
 	streamData := new(bytes.Buffer)
-
-	streamData.Write(rapbinary.StringToBytes(stream.Name()))
 
 	castedCaptureData := make([]euler.Capture, len(stream.Captures()))
 	for i, c := range stream.Captures() {
@@ -74,13 +71,8 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 	return nil, allStreamData, nil
 }
 
-func decode(data []byte, times []float64) (format.CaptureCollection, error) {
+func decode(name string, data []byte, times []float64) (format.CaptureCollection, error) {
 	reader := bytes.NewReader(data)
-
-	name, _, err := rapbinary.ReadString(reader)
-	if err != nil {
-		return nil, err
-	}
 
 	typeByte, err := reader.ReadByte()
 	if err != nil {
@@ -115,8 +107,8 @@ func decode(data []byte, times []float64) (format.CaptureCollection, error) {
 	return nil, fmt.Errorf("Unknown euler encoding technique: %d", int(encodingTechnique))
 }
 
-func (p Encoder) Decode(header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
-	return decode(streamData, times)
+func (p Encoder) Decode(name string, header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
+	return decode(name, streamData, times)
 }
 
 func (p Encoder) Accepts(stream format.CaptureCollection) bool {

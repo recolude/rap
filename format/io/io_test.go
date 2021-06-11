@@ -562,7 +562,7 @@ func Test_EncodersWithHeaders(t *testing.T) {
 	encoders := []encoding.Encoder{
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
-		eventEncoding.NewEncoder(eventEncoding.Raw64),
+		eventEncoding.NewEncoder(),
 		enumEncoding.NewEncoder(),
 	}
 
@@ -628,7 +628,7 @@ func Test_HandlesMultipleEncoders(t *testing.T) {
 	encoders := []encoding.Encoder{
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
-		eventEncoding.NewEncoder(eventEncoding.Raw64),
+		eventEncoding.NewEncoder(),
 		enumEncoding.NewEncoder(),
 	}
 
@@ -784,7 +784,7 @@ func Test_HandlesManyChildren(t *testing.T) {
 	encoders := []encoding.Encoder{
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
-		eventEncoding.NewEncoder(eventEncoding.Raw64),
+		eventEncoding.NewEncoder(),
 		enumEncoding.NewEncoder(),
 	}
 
@@ -893,7 +893,7 @@ func Test_Uprade(t *testing.T) {
 	encoders := []encoding.Encoder{
 		positionEncoding.NewEncoder(positionEncoding.Raw64),
 		eulerEncoding.NewEncoder(eulerEncoding.Raw64),
-		eventEncoding.NewEncoder(eventEncoding.Raw64),
+		eventEncoding.NewEncoder(),
 		enumEncoding.NewEncoder(),
 	}
 	fileData := new(bytes.Buffer)
