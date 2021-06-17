@@ -94,7 +94,7 @@ func main() {
 		f,
 	)
 
-	// Writes a recording in 1,257 bytes
+	// Writes a recording in 1,171 bytes
 	recordingWriter.Write(rec)
 }
 

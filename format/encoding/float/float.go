@@ -5,9 +5,11 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"math"
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/float"
+	rapbinary "github.com/recolude/rap/internal/io/binary"
 )
 
 type StorageTechnique int
@@ -49,7 +51,6 @@ func encode64(out io.Writer, captures []format.Capture) error {
 		if !ok {
 			return errors.New("capture is not of type float")
 		}
-		binary.Write(out, binary.LittleEndian, floatCapture.Time())
 		binary.Write(out, binary.LittleEndian, floatCapture.Value())
 	}
 	return nil
@@ -61,54 +62,41 @@ func encode32(out io.Writer, captures []format.Capture) error {
 		if !ok {
 			return errors.New("capture is not of type float")
 		}
-		binary.Write(out, binary.LittleEndian, float32(floatCapture.Time()))
 		binary.Write(out, binary.LittleEndian, float32(floatCapture.Value()))
 	}
 	return nil
 }
 
-// func encodeBST16(out io.Writer, captures []format.Capture) error {
-// 	minTime := math.Inf(1)
-// 	maxTime := math.Inf(-1)
-// 	minVal := math.Inf(1)
-// 	maxVal := math.Inf(-1)
-// 	for _, c := range captures {
-// 		floatCapture, ok := c.(float.Capture)
-// 		if !ok {
-// 			return errors.New("capture is not of type float")
-// 		}
-// 		if floatCapture.Time() > maxTime {
-// 			maxTime = floatCapture.Time()
-// 		}
-// 		if floatCapture.Time() < minTime {
-// 			minTime = floatCapture.Time()
-// 		}
+func encodeBST16(out io.Writer, captures []format.Capture) error {
+	minVal := math.Inf(1)
+	maxVal := math.Inf(-1)
+	for _, c := range captures {
+		floatCapture, ok := c.(float.Capture)
+		if !ok {
+			return errors.New("capture is not of type float")
+		}
 
-// 		if floatCapture.Value() > maxVal {
-// 			maxVal = floatCapture.Value()
-// 		}
-// 		if floatCapture.Value() < minVal {
-// 			minVal = floatCapture.Value()
-// 		}
+		if floatCapture.Value() > maxVal {
+			maxVal = floatCapture.Value()
+		}
+		if floatCapture.Value() < minVal {
+			minVal = floatCapture.Value()
+		}
+	}
+	binary.Write(out, binary.LittleEndian, float32(minVal))
+	binary.Write(out, binary.LittleEndian, float32(maxVal))
 
-// 		binary.Write(out, binary.LittleEndian, float32(floatCapture.Time()))
-// 		binary.Write(out, binary.LittleEndian, float32(floatCapture.Value()))
-// 	}
-
-// 	totalledQuantizedDuration := minTime
-// 	for _, c := range captures {
-// 		capture := c.(float.Capture)
-
-// 		// Write Time
-// 		duration := capture.Time() - totalledQuantizedDuration
-// 		rapbinary.UnsignedFloatBSTToBytes(duration, 0, maxTimeDifference, timeBuffer)
-// 		_, err := collectionData.Write(timeBuffer)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 	}
-// 	return nil
-// }
+	valBuffer := make([]byte, 2)
+	for _, c := range captures {
+		capture := c.(float.Capture)
+		rapbinary.UnsignedFloatBSTToBytes(capture.Value(), minVal, maxVal-minVal, valBuffer)
+		_, err := out.Write(valBuffer)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, error) {
 	streamDataBuffers := make([]bytes.Buffer, len(streams))
@@ -131,6 +119,13 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 				return nil, nil, err
 			}
 			break
+
+		case BST16:
+			err := encodeBST16(&streamDataBuffers[bufferIndex], stream.Captures())
+			if err != nil {
+				return nil, nil, err
+			}
+			break
 		}
 	}
 
@@ -140,6 +135,58 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 	}
 
 	return nil, streamData, nil
+}
+
+func decodeBST16(in io.Reader, times []float64) ([]float.Capture, error) {
+	var min float32
+	var max float32
+
+	err := binary.Read(in, binary.LittleEndian, &min)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Read(in, binary.LittleEndian, &max)
+	if err != nil {
+		return nil, err
+	}
+
+	captures := make([]float.Capture, len(times))
+
+	buffer := make([]byte, 2)
+	for i, time := range times {
+		in.Read(buffer)
+		value := rapbinary.BytesToUnisngedFloatBST(float64(min), float64(max-min), buffer)
+		captures[i] = float.NewCapture(time, value)
+	}
+
+	return captures, nil
+}
+
+func decodeRaw64(in io.Reader, times []float64) ([]float.Capture, error) {
+	captures := make([]float.Capture, len(times))
+	var value float64
+	for i, time := range times {
+		err := binary.Read(in, binary.LittleEndian, &value)
+		if err != nil {
+			return nil, err
+		}
+		captures[i] = float.NewCapture(time, value)
+	}
+	return captures, nil
+}
+
+func decodeRaw32(in io.Reader, times []float64) ([]float.Capture, error) {
+	captures := make([]float.Capture, len(times))
+	var value32 float32
+	for i, time := range times {
+		err := binary.Read(in, binary.LittleEndian, &value32)
+		if err != nil {
+			return nil, err
+		}
+		captures[i] = float.NewCapture(time, float64(value32))
+	}
+	return captures, nil
 }
 
 func (p Encoder) Decode(name string, header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
@@ -152,26 +199,25 @@ func (p Encoder) Decode(name string, header []byte, streamData []byte, times []f
 	}
 	encodingTechnique := StorageTechnique(typeByte)
 
-	captures := make([]float.Capture, len(times))
-	for i := 0; i < len(times); i++ {
-		var time float64
-		var value float64
-
-		switch encodingTechnique {
-		case Raw64:
-			binary.Read(buf, binary.LittleEndian, &time)
-			binary.Read(buf, binary.LittleEndian, &value)
-
-		case Raw32:
-			var time32 float32
-			binary.Read(buf, binary.LittleEndian, &time32)
-			time = float64(time32)
-			var value32 float32
-			binary.Read(buf, binary.LittleEndian, &value32)
-			value = float64(value32)
+	var captures []float.Capture
+	switch encodingTechnique {
+	case Raw64:
+		captures, err = decodeRaw64(buf, times)
+		if err != nil {
+			return nil, err
 		}
 
-		captures[i] = float.NewCapture(time, value)
+	case Raw32:
+		captures, err = decodeRaw32(buf, times)
+		if err != nil {
+			return nil, err
+		}
+
+	case BST16:
+		captures, err = decodeBST16(buf, times)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return float.NewCollection(name, captures), nil

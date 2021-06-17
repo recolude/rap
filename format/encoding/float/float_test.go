@@ -13,6 +13,7 @@ import (
 
 func Test_Float(t *testing.T) {
 	continuousCaptures := make([]floatCollection.Capture, 2000)
+	continuousTimes := make([]float64, len(continuousCaptures))
 	curTime := -1000.0
 	curPos := -1000.0
 	for i := 0; i < len(continuousCaptures); i++ {
@@ -20,6 +21,7 @@ func Test_Float(t *testing.T) {
 			curTime,
 			curPos,
 		)
+		continuousTimes[i] = curTime
 		curPos += rand.Float64() * 10.0
 		curTime += rand.Float64() * 10.0
 	}
@@ -55,7 +57,7 @@ func Test_Float(t *testing.T) {
 			},
 			times: []float64{-1.2, 1.2, 1.3},
 		},
-		// "2000-continuous-floats": {captures: continuousCaptures},
+		"2000-continuous-floats": {captures: continuousCaptures, times: continuousTimes},
 	}
 
 	storageTechniques := []struct {
@@ -74,11 +76,11 @@ func Test_Float(t *testing.T) {
 			technique:      float.Raw32,
 			timeTollerance: 0.0005,
 		},
-		// {
-		// 	displayName:    "BST16",
-		// 	technique:      float.BST16,
-		// 	timeTollerance: 0.0005,
-		// },
+		{
+			displayName:    "BST16",
+			technique:      float.BST16,
+			timeTollerance: 0.1,
+		},
 	}
 
 	for name, tc := range tests {
