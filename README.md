@@ -1,5 +1,7 @@
 # RAP
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/recolude/rap)](https://goreportcard.com/report/github.com/recolude/rap)
+
 **RAP is in Beta**
 
 Recolude's official recording file format. Ain't no kill like overkill.
@@ -92,8 +94,8 @@ func main() {
 		},
 		true,
 		f,
+		io.BST16,
 	)
-
 	// Writes a recording in 1,171 bytes
 	recordingWriter.Write(rec)
 }

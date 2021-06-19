@@ -21,7 +21,7 @@ func main() {
 	start := time.Now()
 	for i := 0; i < iterations; i++ {
 		currentTime := float64(i)
-		positions[i] = position.NewCapture(currentTime, 0, math.Sin(currentTime), 0)
+		positions[i] = position.NewCapture(currentTime, 0, math.Sin(currentTime/10.0), 0)
 	}
 	duration := time.Since(start)
 
@@ -52,6 +52,6 @@ func main() {
 		io.BST16,
 	)
 
-	// Writes a recording in 1,258 bytes
+	// Writes a recording in 1,171 bytes
 	recordingWriter.Write(rec)
 }

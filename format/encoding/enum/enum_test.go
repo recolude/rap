@@ -26,6 +26,15 @@ func Test_Singleenum(t *testing.T) {
 			},
 			times: []float64{1.2},
 		},
+		"2-enums": {
+			streamName:  "ahhhh",
+			enumMembers: []string{"a", "b"},
+			captures: []enumCollection.Capture{
+				enumCollection.NewCapture(1.2, 1),
+				enumCollection.NewCapture(1.3, 0),
+			},
+			times: []float64{1.2, 1.3},
+		},
 	}
 
 	for name, tc := range tests {
@@ -68,5 +77,63 @@ func Test_Singleenum(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func Test_MultipleStreamsAtOnce(t *testing.T) {
+	timesIn := [][]float64{
+		{1},
+		{2},
+		{3},
+		{4},
+		{5},
+	}
+
+	collectionsIn := []format.CaptureCollection{
+		enumCollection.NewCollection("first", []string{"a"}, []enumCollection.Capture{enumCollection.NewCapture(1, 0)}),
+		enumCollection.NewCollection("second", []string{"a"}, []enumCollection.Capture{enumCollection.NewCapture(2, 0)}),
+		enumCollection.NewCollection("third", []string{"a", "b"}, []enumCollection.Capture{enumCollection.NewCapture(3, 0)}),
+		enumCollection.NewCollection("first", []string{"ccc", "dddd"}, []enumCollection.Capture{enumCollection.NewCapture(4, 0)}),
+		enumCollection.NewCollection("first", []string{"a"}, []enumCollection.Capture{enumCollection.NewCapture(5, 0)}),
+	}
+	encoder := enum.NewEncoder()
+
+	// ACT ====================================================================
+	header, collectionData, encodeErr := encoder.Encode(collectionsIn)
+	assert.NoError(t, encodeErr)
+
+	for collectionIndex, expectedCollection := range collectionsIn {
+		expectedEnumCollection := expectedCollection.(enumCollection.Collection)
+
+		collectionActuall, decodeErr := encoder.Decode(expectedCollection.Name(), header, collectionData[collectionIndex], timesIn[collectionIndex])
+
+		// ASSERT =================================================================
+		assert.NoError(t, decodeErr)
+
+		if assert.NotNil(t, collectionActuall) {
+			assert.Equal(t, expectedCollection.Name(), collectionActuall.Name())
+
+			if assert.Len(t, collectionActuall.Captures(), len(expectedCollection.Captures())) {
+
+				enmstr := collectionActuall.(enumCollection.Collection)
+				if assert.Len(t, enmstr.EnumMembers(), len(expectedEnumCollection.EnumMembers())) {
+					for i, mem := range expectedEnumCollection.EnumMembers() {
+						assert.Equal(t, mem, enmstr.EnumMembers()[i])
+					}
+				}
+
+				for i, c := range collectionActuall.Captures() {
+					enumCapture, ok := c.(enumCollection.Capture)
+					expectedEnumCapture, ok := expectedEnumCollection.Captures()[i].(enumCollection.Capture)
+					if assert.True(t, ok) == false {
+						break
+					}
+
+					assert.Equal(t, expectedCollection.Captures()[i].Time(), enumCapture.Time(), "times are not equal: %.2f != %.2f", expectedCollection.Captures()[i].Time(), enumCapture.Time())
+					assert.Equal(t, expectedEnumCapture.Value(), enumCapture.Value())
+
+				}
+			}
+		}
 	}
 }
