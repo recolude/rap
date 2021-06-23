@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"math"
 	"os"
 	"time"
@@ -39,8 +38,6 @@ func main() {
 		nil,
 		nil,
 	)
-
-	log.Print(duration.String())
 
 	f, _ := os.Create("sin demo.rap")
 	recordingWriter := io.NewWriter(

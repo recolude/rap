@@ -1,6 +1,6 @@
 # RAP
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/recolude/rap)](https://goreportcard.com/report/github.com/recolude/rap)
+[![Build Status](https://travis-ci.com/recolude/rap.svg?branch=main)](https://travis-ci.com/recolude/rap) [![Go Report Card](https://goreportcard.com/badge/github.com/recolude/rap)](https://goreportcard.com/report/github.com/recolude/rap)
 
 **RAP is in Beta**
 

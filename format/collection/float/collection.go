@@ -31,3 +31,13 @@ func (s Collection) Captures() []format.Capture {
 func (Collection) Signature() string {
 	return "recolude.float"
 }
+
+func (c Collection) Slice(beginning, end float64) format.CaptureCollection {
+	slicedCaptures := make([]Capture, 0)
+	for _, c := range c.captures {
+		if c.Time() >= beginning && c.Time() < end {
+			slicedCaptures = append(slicedCaptures, c)
+		}
+	}
+	return NewCollection(c.Name(), slicedCaptures)
+}
