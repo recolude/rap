@@ -9,6 +9,7 @@ dist: trusty
 sudo: false
 install: true
 before_script:
+ - go get github.com/golang/mock/mockgen
  - go get ./...
  - go generate ./...
 script:
