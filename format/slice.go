@@ -67,3 +67,9 @@ func Slice(rec Recording, options ...SliceOption) Recording {
 
 	return outRec
 }
+
+// CaptureFallsWithin returns true whenever the captures time falls within the
+// range: beginning <= time < end
+func CaptureFallsWithin(c Capture, beginning, end float64) bool {
+	return c.Time() >= beginning && c.Time() < end
+}

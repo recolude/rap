@@ -35,7 +35,7 @@ func (c Collection) Captures() []format.Capture {
 func (c Collection) Slice(beginning, end float64) format.CaptureCollection {
 	slicedCaptures := make([]Capture, 0)
 	for _, c := range c.captures {
-		if c.Time() >= beginning && c.Time() < end {
+		if format.CaptureFallsWithin(c, beginning, end) {
 			slicedCaptures = append(slicedCaptures, c)
 		}
 	}
