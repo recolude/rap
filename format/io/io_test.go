@@ -173,6 +173,69 @@ func Test_HandlesOneRecordingOneStreamBST16(t *testing.T) {
 	assert.Equal(t, n, nOut)
 }
 
+func Test_BST16_Length0_1_2_3CollectionSizes(t *testing.T) {
+	// ARRANGE ================================================================
+	fileData := new(bytes.Buffer)
+
+	encoders := []encoding.Encoder{
+		positionEncoding.NewEncoder(positionEncoding.Raw64),
+	}
+
+	w := io.NewWriter(encoders, true, fileData, io.BST16)
+	r := io.NewReader(encoders, fileData)
+
+	recIn := format.NewRecording(
+		"44",
+		"Test Recording",
+		[]format.CaptureCollection{
+			position.NewCollection(
+				"Position",
+				[]position.Capture{},
+			),
+			position.NewCollection(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(4, 7, 8, 9),
+				},
+			),
+			position.NewCollection(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(4, 7, 8, 9),
+				},
+			),
+			position.NewCollection(
+				"Position",
+				[]position.Capture{
+					position.NewCapture(1, 1, 2, 3),
+					position.NewCapture(2, 4, 5, 6),
+					position.NewCapture(4, 7, 8, 9),
+				},
+			),
+		},
+		nil,
+		metadata.NewBlock(
+			map[string]metadata.Property{
+				"a":  metadata.NewStringProperty("bee"),
+				"ce": metadata.NewStringProperty("dee"),
+			},
+		),
+		nil,
+		nil,
+	)
+
+	// ACT ====================================================================
+	n, errWrite := w.Write(recIn)
+	recOut, nOut, errRead := r.Read()
+
+	// ASSERT =================================================================
+	assert.NoError(t, errWrite)
+	assert.NoError(t, errRead)
+	assertRecordingsMatch(t, recIn, recOut, 0.001)
+	assert.Equal(t, n, nOut)
+}
+
 func Test_HandlesOneRecordingOneStreamFloat32Time(t *testing.T) {
 	// ARRANGE ================================================================
 	fileData := new(bytes.Buffer)

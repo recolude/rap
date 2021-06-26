@@ -155,7 +155,7 @@ func ReadRecording(file io.Reader) (format.Recording, int, error) {
 	}
 
 	if numberOfRecordings != 1 {
-		return nil, bytesReadNumberRec, fmt.Errorf("Can only upload one recording at a time, recieved %d", numberOfRecordings)
+		return nil, bytesReadNumberRec, fmt.Errorf("Can only upload one recording at a time, received %d", numberOfRecordings)
 	}
 
 	recordingSize := make([]byte, 8)

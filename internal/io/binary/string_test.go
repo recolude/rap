@@ -40,7 +40,7 @@ func Test_StringArrayToBytes(t *testing.T) {
 		"array of single letters":        {input: []string{"a", "b"}},
 		"array of words":                 {input: []string{"apple", "bannanna", "kiwi"}},
 		"array of words 2":               {input: []string{"apple", "", "kiwi"}},
-		"array of words wtih empty":      {input: []string{"apple", "", ""}},
+		"array of words with empty":      {input: []string{"apple", "", ""}},
 	}
 
 	for name, tc := range tests {

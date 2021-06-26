@@ -671,7 +671,7 @@ func NewTimestampArrayProperty(entries []time.Time) ArrayProperty {
 type ArrayPropertyRaw struct {
 	originalBaseCode byte
 	data             []byte
-	divison          int
+	division         int
 }
 
 func (apr ArrayPropertyRaw) Code() byte {
@@ -679,7 +679,7 @@ func (apr ArrayPropertyRaw) Code() byte {
 }
 
 func (apr ArrayPropertyRaw) String() string {
-	return fmt.Sprintf("Type %d Array of %d elements", apr.originalBaseCode, len(apr.data)/apr.divison)
+	return fmt.Sprintf("Type %d Array of %d elements", apr.originalBaseCode, len(apr.data)/apr.division)
 }
 
 func (apr ArrayPropertyRaw) Data() []byte {
@@ -701,7 +701,7 @@ func (apr *ArrayPropertyRaw) UnmarshalJSON(b []byte) error {
 	}
 	apr.data = newApr.data
 	apr.originalBaseCode = newApr.originalBaseCode
-	apr.divison = newApr.divison
+	apr.division = newApr.division
 	return nil
 }
 
@@ -735,7 +735,7 @@ func NewBinaryArrayProperty(binarr []byte) ArrayPropertyRaw {
 	return ArrayPropertyRaw{
 		data:             rapbin.BytesArrayToBytes(binarr),
 		originalBaseCode: 5,
-		divison:          1,
+		division:         1,
 	}
 }
 
@@ -752,6 +752,6 @@ func NewBoolArrayProperty(boolArr []bool) ArrayPropertyRaw {
 	return ArrayPropertyRaw{
 		data:             rapbin.BytesArrayToBytes(data),
 		originalBaseCode: 3,
-		divison:          1,
+		division:         1,
 	}
 }
