@@ -122,7 +122,7 @@ func readPropData(b io.Reader, propertyType byte) (Property, error) {
 		return ArrayPropertyRaw{
 			data:             rapbin.BytesArrayToBytes(allbytes),
 			originalBaseCode: 3,
-			divison:          1,
+			division:         1,
 		}, err
 
 	case 18:
