@@ -1,11 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"sort"
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/encoding"
@@ -19,35 +19,6 @@ import (
 
 func kb(byteCount int) string {
 	return fmt.Sprintf("%d kb", byteCount/1024)
-}
-
-func toJson(out io.Writer, recording format.Recording) {
-	fmt.Fprintf(out, "{ \"name\": \"%s\", ", recording.Name())
-
-	fmt.Fprint(out, "\"collections\": [")
-	for i, collection := range recording.CaptureCollections() {
-		fmt.Fprintf(out, "{ \"name\": \"%s\", ", collection.Name())
-		fmt.Fprintf(out, " \"signature\" : \"%s\" }", collection.Signature())
-		if i < len(recording.CaptureCollections())-1 {
-			fmt.Fprintf(out, ",")
-		}
-	}
-	fmt.Fprint(out, "],")
-
-	fmt.Fprint(out, "\"recordings\": [")
-	for i, rec := range recording.Recordings() {
-		if rec == nil {
-			fmt.Fprintf(out, "null")
-		} else {
-			toJson(out, rec)
-		}
-		if i < len(recording.Recordings())-1 {
-			fmt.Fprintf(out, ",")
-		}
-	}
-	fmt.Fprint(out, "]")
-
-	fmt.Fprint(out, "}")
 }
 
 func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
@@ -98,24 +69,36 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 					&cli.StringFlag{
 						Name:     "file",
 						Aliases:  []string{"f"},
-						Required: true,
+						Required: false,
 						Usage:    "File to turn to JSON",
 					},
 				},
 				Usage: "Transforms a file to json",
 				Action: func(c *cli.Context) error {
-					fileToLoad := c.String("file")
-					file, err := os.Open(fileToLoad)
-					if err != nil {
-						return err
-					}
-					recording, _, err := rapio.Load(file)
-					if err != nil {
-						return err
-					}
-					toJson(c.App.Writer, recording)
+					var recording format.Recording
 
-					return nil
+					if c.IsSet("file") {
+						file, err := os.Open(c.String("file"))
+						if err != nil {
+							return err
+						}
+						recording, _, err = rapio.Load(file)
+						if err != nil {
+							return err
+						}
+					} else {
+						var err error
+						recording, _, err = rapio.Load(c.App.Reader)
+						if err != nil {
+							return err
+						}
+					}
+
+					if recording == nil {
+						return errors.New("can not build json from nil recording")
+					}
+
+					return toJson(c.App.Writer, recording, 0)
 				},
 			},
 			{
@@ -191,12 +174,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 
 func main() {
 	app := BuildApp(os.Stdin, os.Stdout, os.Stderr)
-
-	sort.Sort(cli.FlagsByName(app.Flags))
-	sort.Sort(cli.CommandsByName(app.Commands))
-
-	err := app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
 }

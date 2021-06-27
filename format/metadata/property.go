@@ -109,7 +109,6 @@ func (ip Int32Property) MarshalJSON() ([]byte, error) {
 }
 
 // FLOAT32 ====================================================================
-
 type Float32Property struct {
 	f float32
 }
@@ -159,7 +158,6 @@ func (fp Float32Property) MarshalJSON() ([]byte, error) {
 }
 
 // BOOL =======================================================================
-
 type BoolProperty struct {
 	b bool
 }
@@ -217,7 +215,6 @@ func (bp BoolProperty) MarshalJSON() ([]byte, error) {
 }
 
 // BYTE =======================================================================
-
 type ByteProperty struct {
 	b byte
 }
@@ -273,7 +270,6 @@ func (bp ByteProperty) MarshalJSON() ([]byte, error) {
 }
 
 // VECTOR2 ====================================================================
-
 type Vector2Property struct {
 	x float64
 	y float64

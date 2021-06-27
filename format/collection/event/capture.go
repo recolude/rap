@@ -33,5 +33,5 @@ func (c Capture) Time() float64 {
 }
 
 func (c Capture) String() string {
-	return fmt.Sprintf("[%.2f] %s", c.time, c.name)
+	return fmt.Sprintf("[%.2f] %s", c.Time(), c.Name())
 }
