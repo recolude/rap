@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -23,7 +24,6 @@ type Property interface {
 }
 
 // STRING =====================================================================
-
 type StringProperty struct {
 	str string
 }
@@ -46,12 +46,6 @@ func (sp StringProperty) Data() []byte {
 	return rapbin.StringToBytes(sp.str)
 }
 
-// func (sp StringProperty) UnmarshalProperty(data interface{}) error {
-// 	err := json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, data)), &sp)
-// 	sp.str = sp.str
-// 	return err
-// }
-
 func (sp *StringProperty) UnmarshalJSON(b []byte) error {
 	var data string
 	if err := json.Unmarshal(b, &data); err != nil {
@@ -66,7 +60,6 @@ func (sp StringProperty) MarshalJSON() ([]byte, error) {
 }
 
 // INT32 ======================================================================
-
 type Int32Property struct {
 	i int32
 }
@@ -344,7 +337,6 @@ func (v2p Vector2Property) MarshalJSON() ([]byte, error) {
 }
 
 // VECTOR3 ====================================================================
-
 type Vector3Property struct {
 	x float64
 	y float64
@@ -382,8 +374,7 @@ func UnmarshalNewVector3Property(b []byte) (Vector3Property, error) {
 }
 
 func (v3p Vector3Property) UnmarshalProperty(data interface{}) error {
-	err := json.Unmarshal([]byte(fmt.Sprintf(`%v`, data)), &v3p)
-	return err
+	return json.Unmarshal([]byte(fmt.Sprintf(`%v`, data)), &v3p)
 }
 
 func (v3p *Vector3Property) UnmarshalJSON(b []byte) error {
@@ -415,7 +406,6 @@ func (v3p Vector3Property) MarshalJSON() ([]byte, error) {
 }
 
 // METADATA ===================================================================
-
 type MetadataProperty struct {
 	block Block
 }
@@ -424,19 +414,25 @@ func NewMetadataProperty(block Block) MetadataProperty {
 	return MetadataProperty{block}
 }
 
+func (mp MetadataProperty) Block() Block {
+	return mp.block
+}
+
 func (mp MetadataProperty) Code() byte {
 	return 11
 }
 
 func (mp MetadataProperty) String() string {
+	keys := make([]string, 0, len(mp.block.Mapping()))
+	for k := range mp.block.Mapping() {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	out := strings.Builder{}
-	out.WriteString("{")
-	i := 0
-	for key, prop := range mp.block.Mapping() {
-		fmt.Fprintf(&out, " \"%s\": %s", key, prop.String())
-		if i < len(mp.block.Mapping())-1 {
-			out.WriteString(", ")
-		}
+	out.WriteString("{\n")
+	for _, key := range keys {
+		fmt.Fprintf(&out, "\t\"%s\": %s;\n", key, mp.block.Mapping()[key].String())
 	}
 	out.WriteString("}")
 	return out.String()
@@ -469,8 +465,7 @@ func UnmarshalNewMetadataProperty(b []byte) (MetadataProperty, error) {
 }
 
 func (mp MetadataProperty) UnmarshalProperty(data interface{}) error {
-	err := json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, data)), &mp)
-	return err
+	return json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, data)), &mp)
 }
 
 func (mp *MetadataProperty) UnmarshalJSON(b []byte) error {
@@ -495,7 +490,6 @@ func (mp MetadataProperty) MarshalJSON() ([]byte, error) {
 }
 
 // Time =======================================================================
-
 type TimeProperty struct {
 	nanoseconds int64
 }
@@ -549,7 +543,6 @@ func (tp TimeProperty) MarshalJSON() ([]byte, error) {
 }
 
 // ARRAY =====================================================================
-
 type ArrayProperty struct {
 	originalBaseCode byte
 	props            []Property

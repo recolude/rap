@@ -48,7 +48,7 @@ func getProperties(data interface{}) (Property, error) {
 		}
 		return ArrayProperty{props: props, originalBaseCode: props[0].Code()}, nil
 	case string:
-		if strings.HasPrefix(d, HEX_PREFIX) && len(d) == 2 {
+		if strings.HasPrefix(d, HEX_PREFIX) && len(d) == 4 {
 			var p ByteProperty
 			if err := json.Unmarshal([]byte(fmt.Sprintf(`"%v"`, d)), &p); err != nil {
 				return nil, err
@@ -93,8 +93,6 @@ func getProperties(data interface{}) (Property, error) {
 			return nil, err
 		}
 		return p, nil
-	default:
-		return nil, nil
 	}
 	return nil, nil
 }
