@@ -298,3 +298,71 @@ func Test_MetadataByteArrayProperty_MarshalJSON(t *testing.T) {
 	assert.Equal(t, byte(18), empty.Code())
 	assert.Equal(t, binArrProp, empty)
 }
+
+func Test_MetadataByteProperty_MarshalJSON(t *testing.T) {
+	// ARRANGE ================================================================
+	byteProp := metadata.NewByteProperty(33)
+
+	// ACT ====================================================================
+	jsonMarshal, errMarsh := byteProp.MarshalJSON()
+	unmarshalByteProp, unmarshErr := metadata.UnmarshalNewByteProperty(jsonMarshal)
+
+	// ASSERT =================================================================
+	assert.NoError(t, errMarsh)
+	assert.NoError(t, unmarshErr)
+
+	assert.Equal(t, byte(5), unmarshalByteProp.Code())
+	assert.Equal(t, byteProp, unmarshalByteProp)
+	assert.Equal(t, "33", unmarshalByteProp.String())
+}
+
+func Test_MetadataBoolTrueProperty_MarshalJSON(t *testing.T) {
+	// ARRANGE ================================================================
+	byteProp := metadata.NewBoolProperty(true)
+
+	// ACT ====================================================================
+	jsonMarshal, errMarsh := byteProp.MarshalJSON()
+	unmarshalByteProp, unmarshErr := metadata.UnmarshalNewBoolProperty(jsonMarshal)
+
+	// ASSERT =================================================================
+	assert.NoError(t, errMarsh)
+	assert.NoError(t, unmarshErr)
+
+	assert.Equal(t, byte(3), unmarshalByteProp.Code())
+	assert.Equal(t, byteProp, unmarshalByteProp)
+	assert.Equal(t, "true", unmarshalByteProp.String())
+}
+
+func Test_MetadataBoolFalseProperty_MarshalJSON(t *testing.T) {
+	// ARRANGE ================================================================
+	byteProp := metadata.NewBoolProperty(false)
+
+	// ACT ====================================================================
+	jsonMarshal, errMarsh := byteProp.MarshalJSON()
+	unmarshalByteProp, unmarshErr := metadata.UnmarshalNewBoolProperty(jsonMarshal)
+
+	// ASSERT =================================================================
+	assert.NoError(t, errMarsh)
+	assert.NoError(t, unmarshErr)
+
+	assert.Equal(t, byte(4), unmarshalByteProp.Code())
+	assert.Equal(t, byteProp, unmarshalByteProp)
+	assert.Equal(t, "false", unmarshalByteProp.String())
+}
+
+func Test_Float32_MarshalJSON(t *testing.T) {
+	// ARRANGE ================================================================
+	floatProp := metadata.NewFloat32Property(556677.112233)
+
+	// ACT ====================================================================
+	jsonMarshal, errMarsh := floatProp.MarshalJSON()
+	unmarshalByteProp, unmarshErr := metadata.UnmarshalNewFloat32Property(jsonMarshal)
+
+	// ASSERT =================================================================
+	assert.NoError(t, errMarsh)
+	assert.NoError(t, unmarshErr)
+
+	assert.Equal(t, byte(2), unmarshalByteProp.Code())
+	assert.Equal(t, floatProp, unmarshalByteProp)
+	assert.Equal(t, "556677.125000", unmarshalByteProp.String())
+}

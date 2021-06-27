@@ -40,8 +40,10 @@ func Test_Singleenum(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			collectionIn := enumCollection.NewCollection(tc.streamName, tc.enumMembers, tc.captures)
-
 			encoder := enum.NewEncoder()
+			assert.Equal(t, "recolude.enum", encoder.Signature())
+			assert.Equal(t, uint(0), encoder.Version())
+			assert.True(t, encoder.Accepts(collectionIn))
 
 			// ACT ====================================================================
 			header, collectionData, encodeErr := encoder.Encode([]format.CaptureCollection{collectionIn})
@@ -72,7 +74,6 @@ func Test_Singleenum(t *testing.T) {
 
 						assert.Equal(t, tc.captures[i].Time(), enumCapture.Time(), "times are not equal: %.2f != %.2f", tc.captures[i].Time(), enumCapture.Time())
 						assert.Equal(t, tc.captures[i].Value(), enumCapture.Value())
-
 					}
 				}
 			}

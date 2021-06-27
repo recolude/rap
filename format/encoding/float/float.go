@@ -137,20 +137,12 @@ func (p Encoder) Encode(streams []format.CaptureCollection) ([]byte, [][]byte, e
 	return nil, streamData, nil
 }
 
-func decodeBST16(in io.Reader, times []float64) ([]float.Capture, error) {
+func decodeBST16(in io.Reader, times []float64) []float.Capture {
 	var min float32
 	var max float32
 
-	err := binary.Read(in, binary.LittleEndian, &min)
-	if err != nil {
-		return nil, err
-	}
-
-	err = binary.Read(in, binary.LittleEndian, &max)
-	if err != nil {
-		return nil, err
-	}
-
+	binary.Read(in, binary.LittleEndian, &min)
+	binary.Read(in, binary.LittleEndian, &max)
 	captures := make([]float.Capture, len(times))
 
 	buffer := make([]byte, 2)
@@ -160,33 +152,27 @@ func decodeBST16(in io.Reader, times []float64) ([]float.Capture, error) {
 		captures[i] = float.NewCapture(time, value)
 	}
 
-	return captures, nil
+	return captures
 }
 
-func decodeRaw64(in io.Reader, times []float64) ([]float.Capture, error) {
+func decodeRaw64(in io.Reader, times []float64) []float.Capture {
 	captures := make([]float.Capture, len(times))
 	var value float64
 	for i, time := range times {
-		err := binary.Read(in, binary.LittleEndian, &value)
-		if err != nil {
-			return nil, err
-		}
+		binary.Read(in, binary.LittleEndian, &value)
 		captures[i] = float.NewCapture(time, value)
 	}
-	return captures, nil
+	return captures
 }
 
-func decodeRaw32(in io.Reader, times []float64) ([]float.Capture, error) {
+func decodeRaw32(in io.Reader, times []float64) []float.Capture {
 	captures := make([]float.Capture, len(times))
 	var value32 float32
 	for i, time := range times {
-		err := binary.Read(in, binary.LittleEndian, &value32)
-		if err != nil {
-			return nil, err
-		}
+		binary.Read(in, binary.LittleEndian, &value32)
 		captures[i] = float.NewCapture(time, float64(value32))
 	}
-	return captures, nil
+	return captures
 }
 
 func (p Encoder) Decode(name string, header []byte, streamData []byte, times []float64) (format.CaptureCollection, error) {
@@ -198,27 +184,22 @@ func (p Encoder) Decode(name string, header []byte, streamData []byte, times []f
 		return nil, err
 	}
 	encodingTechnique := StorageTechnique(typeByte)
+	errReader := rapbinary.NewErrReader(buf)
 
 	var captures []float.Capture
 	switch encodingTechnique {
 	case Raw64:
-		captures, err = decodeRaw64(buf, times)
-		if err != nil {
-			return nil, err
-		}
+		captures = decodeRaw64(errReader, times)
+		break
 
 	case Raw32:
-		captures, err = decodeRaw32(buf, times)
-		if err != nil {
-			return nil, err
-		}
+		captures = decodeRaw32(errReader, times)
+		break
 
 	case BST16:
-		captures, err = decodeBST16(buf, times)
-		if err != nil {
-			return nil, err
-		}
+		captures = decodeBST16(errReader, times)
+		break
 	}
 
-	return float.NewCollection(name, captures), nil
+	return float.NewCollection(name, captures), errReader.Error()
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/recolude/rap/format"
 	floatCollection "github.com/recolude/rap/format/collection/float"
+	"github.com/recolude/rap/format/collection/position"
 	"github.com/recolude/rap/format/encoding/float"
 	"github.com/stretchr/testify/assert"
 )
@@ -89,6 +90,9 @@ func Test_Float(t *testing.T) {
 				collectionIn := floatCollection.NewCollection(tc.streamName, tc.captures)
 
 				encoder := float.NewEncoder(technique.technique)
+				assert.Equal(t, "recolude.float", encoder.Signature())
+				assert.Equal(t, uint(0), encoder.Version())
+				assert.True(t, encoder.Accepts(collectionIn))
 
 				// ACT ====================================================================
 				header, collectionData, encodeErr := encoder.Encode([]format.CaptureCollection{collectionIn})
@@ -115,5 +119,41 @@ func Test_Float(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func Test_Deals_WithBadCapture(t *testing.T) {
+	storageTechniques := []struct {
+		displayName string
+		technique   float.StorageTechnique
+	}{
+		{
+			displayName: "Raw64",
+			technique:   float.Raw64,
+		},
+		{
+			displayName: "Raw32",
+			technique:   float.Raw32,
+		},
+		{
+			displayName: "BST16",
+			technique:   float.BST16,
+		},
+	}
+
+	for _, technique := range storageTechniques {
+		t.Run(technique.displayName, func(t *testing.T) {
+			collectionIn := position.NewCollection(technique.displayName, []position.Capture{position.NewCapture(1, 2, 3, 4)})
+
+			encoder := float.NewEncoder(technique.technique)
+
+			// ACT ====================================================================
+			header, collectionData, encodeErr := encoder.Encode([]format.CaptureCollection{collectionIn})
+
+			// ASSERT =================================================================
+			assert.EqualError(t, encodeErr, "capture is not of type float")
+			assert.Len(t, header, 0)
+			assert.Len(t, collectionData, 0)
+		})
 	}
 }

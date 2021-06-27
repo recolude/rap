@@ -84,12 +84,9 @@ func (p Encoder) Decode(name string, header []byte, streamData []byte, times []f
 		return nil, err
 	}
 
-	buf := bytes.NewBuffer(streamData)
+	reader := rapbinary.NewErrReader(bytes.NewBuffer(streamData))
 
-	enumMemberIndexes, _, err := rapbinary.ReadUvarIntArray(buf)
-	if err != nil {
-		return nil, err
-	}
+	enumMemberIndexes, _, _ := rapbinary.ReadUvarIntArray(reader)
 
 	enumMembers := make([]string, len(enumMemberIndexes))
 	for i, indeces := range enumMemberIndexes {
@@ -98,12 +95,9 @@ func (p Encoder) Decode(name string, header []byte, streamData []byte, times []f
 
 	captures := make([]enum.Capture, len(times))
 	for i := 0; i < len(times); i++ {
-		value, err := binary.ReadUvarint(buf)
-		if err != nil {
-			return nil, err
-		}
+		value, _ := binary.ReadUvarint(reader)
 		captures[i] = enum.NewCapture(times[i], int(value))
 	}
 
-	return enum.NewCollection(name, enumMembers, captures), nil
+	return enum.NewCollection(name, enumMembers, captures), reader.Error()
 }

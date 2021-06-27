@@ -117,11 +117,6 @@ func (p Encoder) Decode(name string, header []byte, streamData []byte, times []f
 			return nil, err
 		}
 
-		// metadataValues, _, err := rapbinary.ReadStringArray(buf)
-		// if err != nil {
-		// 	return nil, err
-		// }
-
 		block := make(map[string]metadata.Property)
 		for metadataIndex := 0; metadataIndex < len(metadataIndeces); metadataIndex++ {
 			prop, err := metadata.ReadProperty(buf)

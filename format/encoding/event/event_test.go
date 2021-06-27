@@ -57,10 +57,13 @@ func Test_SingleEvent(t *testing.T) {
 	}
 
 	encoder := event.NewEncoder()
+	assert.Equal(t, "recolude.event", encoder.Signature())
+	assert.Equal(t, uint(0), encoder.Version())
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			streamIn := eventStream.NewCollection(tc.streamName, tc.captures)
+			assert.True(t, encoder.Accepts(streamIn))
 
 			// ACT ====================================================================
 			header, streamsData, encodeErr := encoder.Encode([]format.CaptureCollection{streamIn})

@@ -12,28 +12,6 @@ import (
 	"github.com/recolude/rap/internal/io/rapv1"
 )
 
-// https://dave.cheney.net/2019/01/27/eliminate-error-handling-by-eliminating-errors
-type errReader struct {
-	io.Reader
-	err error
-	n   int
-}
-
-func (e *errReader) Read(p []byte) (int, error) {
-	if e.err != nil {
-		return 0, e.err
-	}
-
-	var n int
-	n, e.err = io.ReadFull(e.Reader, p)
-	e.n += n
-	return n, e.err
-}
-
-func (e *errReader) TotalRead() int {
-	return e.n
-}
-
 type Reader struct {
 	encoders []encoding.Encoder
 	in       io.Reader
@@ -111,7 +89,7 @@ func readRecordingMetadataBlock(in io.Reader, metadataKeys []string) (metadata.B
 
 func recursiveBuidRecordings(inStream io.Reader, metadataKeys []string, encoders []encoding.Encoder, headers [][]byte) (format.Recording, int, error) {
 	// in := bytes.NewReader(recordingData)
-	er := &errReader{Reader: inStream}
+	er := binary.NewErrReader(inStream)
 
 	// Read Recording id
 	recordingID, _, err := binary.ReadString(er)
@@ -184,7 +162,7 @@ func recursiveBuidRecordings(inStream io.Reader, metadataKeys []string, encoders
 		allChildRecordings[i] = childRec
 	}
 
-	return format.NewRecording(recordingID, recordingName, allStreams, allChildRecordings, recordingMetadataBlock, binaries, binReferences), er.TotalRead(), er.err
+	return format.NewRecording(recordingID, recordingName, allStreams, allChildRecordings, recordingMetadataBlock, binaries, binReferences), er.TotalRead(), er.Error()
 }
 
 func (r Reader) Read() (format.Recording, int, error) {
