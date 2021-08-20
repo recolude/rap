@@ -35,8 +35,8 @@ func getNumberOfRecordings(file io.Reader) (int, int, error) {
 }
 
 func oldToNewEvents(oldEvents []*CustomEventCapture) event.Collection {
-	customEventCaptures := make([]event.Capture, 0)
-	for _, customEvent := range oldEvents {
+	customEventCaptures := make([]event.Capture, len(oldEvents))
+	for eventIndex, customEvent := range oldEvents {
 		eventDict := customEvent.GetData()
 		dictToUse := make(map[string]metadata.Property)
 		// Older files did not have dictionaries associated with their
@@ -51,16 +51,14 @@ func oldToNewEvents(oldEvents []*CustomEventCapture) event.Collection {
 				} else {
 					dictToUse[key] = metadata.NewStringProperty(val)
 				}
+				dictToUse[key] = metadata.NewStringProperty(val)
 			}
 		}
 
-		customEventCaptures = append(
-			customEventCaptures,
-			event.NewCapture(
-				float64(customEvent.Time),
-				customEvent.GetName(),
-				metadata.NewBlock(dictToUse),
-			),
+		customEventCaptures[eventIndex] = event.NewCapture(
+			float64(customEvent.Time),
+			customEvent.GetName(),
+			metadata.NewBlock(dictToUse),
 		)
 	}
 	return event.NewCollection("Custom Event", customEventCaptures)
@@ -82,51 +80,43 @@ func convertMetadata(original map[string]string) metadata.Block {
 }
 
 func protobufToStd(inRec *Recording) (format.Recording, error) {
-	subjectRecordings := make([]format.Recording, 0)
-	for _, rec := range inRec.GetSubjects() {
-		positionCaptures := make([]position.Capture, 0)
-		rotationCaptures := make([]euler.Capture, 0)
-		lifeCycleCaptures := make([]enum.Capture, 0)
+	subjectRecordings := make([]format.Recording, len(inRec.GetSubjects()))
+	lifecycleEnumMembers := []string{"START", "ENABLE", "DISABLE", "DESTROY"}
+	for subjectIndex, rec := range inRec.GetSubjects() {
+		positionCaptures := make([]position.Capture, len(rec.GetCapturedPositions()))
+		rotationCaptures := make([]euler.Capture, len(rec.GetCapturedRotations()))
+		lifeCycleCaptures := make([]enum.Capture, len(rec.GetLifecycleEvents()))
 
-		for _, pos := range rec.GetCapturedPositions() {
-			positionCaptures = append(
-				positionCaptures,
-				position.NewCapture(
-					float64(pos.GetTime()),
-					float64(pos.GetX()),
-					float64(pos.GetY()),
-					float64(pos.GetZ()),
-				),
+		for posIndex, pos := range rec.GetCapturedPositions() {
+			positionCaptures[posIndex] = position.NewCapture(
+				float64(pos.GetTime()),
+				float64(pos.GetX()),
+				float64(pos.GetY()),
+				float64(pos.GetZ()),
 			)
 		}
 
-		for _, rot := range rec.GetCapturedRotations() {
-			rotationCaptures = append(
-				rotationCaptures,
-				euler.NewEulerZXYCapture(
-					float64(rot.GetTime()),
-					float64(rot.GetX()),
-					float64(rot.GetY()),
-					float64(rot.GetZ()),
-				),
+		for rotIndex, rot := range rec.GetCapturedRotations() {
+			rotationCaptures[rotIndex] = euler.NewEulerZXYCapture(
+				float64(rot.GetTime()),
+				float64(rot.GetX()),
+				float64(rot.GetY()),
+				float64(rot.GetZ()),
 			)
 		}
 
-		for _, lifeEvent := range rec.GetLifecycleEvents() {
-			lifeCycleCaptures = append(
-				lifeCycleCaptures,
-				enum.NewCapture(
-					float64(lifeEvent.GetTime()),
-					int(lifeEvent.Type),
-				),
+		for lifeIndex, lifeEvent := range rec.GetLifecycleEvents() {
+			lifeCycleCaptures[lifeIndex] = enum.NewCapture(
+				float64(lifeEvent.GetTime()),
+				int(lifeEvent.Type),
 			)
 		}
 
 		positionStream := position.NewCollection("Position", positionCaptures)
 		rotationStream := euler.NewCollection("Rotation", rotationCaptures)
-		lifeStream := enum.NewCollection("Life Cycle", []string{"START", "ENABLE", "DISABLE", "DESTROY"}, lifeCycleCaptures)
+		lifeStream := enum.NewCollection("Life Cycle", lifecycleEnumMembers, lifeCycleCaptures)
 
-		subjectRecordings = append(subjectRecordings, &recordingV1{
+		subjectRecordings[subjectIndex] = &recordingV1{
 			id:   fmt.Sprint(rec.GetId()),
 			name: rec.GetName(),
 			captureStreams: []format.CaptureCollection{
@@ -136,7 +126,7 @@ func protobufToStd(inRec *Recording) (format.Recording, error) {
 				lifeStream,
 			},
 			metadata: convertMetadata(rec.GetMetadata()),
-		})
+		}
 	}
 
 	return &recordingV1{

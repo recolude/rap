@@ -110,3 +110,10 @@ You need to generate mocks before you can run parts of the test suite.
 ```
 go generate ./...
 ```
+
+There are also benchmark(s)
+
+```
+go test ./format/io -bench=. -cpuprofile cpu.prof
+go tool pprof -svg cpu.prof > cpu.svg
+```

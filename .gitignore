@@ -1,3 +1,7 @@
 temp/*
 
 internal/mocks/*.go
+
+*.exe
+
+*prof

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"time"
 
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/encoding"
@@ -50,6 +51,7 @@ func main() {
 				Usage:   "Run benchmark",
 				Action: func(c *cli.Context) error {
 					fileToLoad := c.String("file")
+					timeLoadStarted := time.Now()
 					file, err := os.Open(fileToLoad)
 					if err != nil {
 						panic(err)
@@ -58,6 +60,7 @@ func main() {
 					if err != nil {
 						panic(err)
 					}
+					fmt.Fprintf(c.App.Writer, "Time to read in: %s\n", time.Now().Sub(timeLoadStarted))
 					printRecording(c.App.Writer, recording, 0)
 
 					fmt.Fprintf(c.App.Writer, "Original Size: %s\n\n", kb(originalBytesRead))
@@ -78,13 +81,15 @@ func main() {
 						panic(err)
 					}
 
+					newSize := kb((len(recBuf.Bytes())))
+
 					recBack, _, err := recordingReader.Read()
 					if err != nil {
 						panic(err)
 					}
 					printRecording(c.App.Writer, recBack, 0)
 
-					fmt.Fprintf(c.App.Writer, "New Size: %s\n", kb((len(recBuf.Bytes()))))
+					fmt.Fprintf(c.App.Writer, "New Size: %s\n", newSize)
 
 					return nil
 				},
