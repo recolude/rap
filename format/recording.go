@@ -34,6 +34,7 @@ type CaptureCollection interface {
 	Slice(beginning, end float64) CaptureCollection
 	Start() float64
 	End() float64
+	Length() int
 }
 
 type Recording interface {

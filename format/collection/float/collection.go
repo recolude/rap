@@ -49,3 +49,7 @@ func (c Collection) Start() float64 {
 func (c Collection) End() float64 {
 	return c.captures[len(c.captures)-1].Time()
 }
+
+func (c Collection) Length() int {
+	return len(c.captures)
+}
