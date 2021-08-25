@@ -32,6 +32,8 @@ type CaptureCollection interface {
 	Captures() []Capture
 	Signature() string
 	Slice(beginning, end float64) CaptureCollection
+	Start() float64
+	End() float64
 }
 
 type Recording interface {

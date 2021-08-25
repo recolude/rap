@@ -47,3 +47,11 @@ func (c Collection) Slice(beginning, end float64) format.CaptureCollection {
 	}
 	return NewCollection(c.Name(), c.EnumMembers(), slicedCaptures)
 }
+
+func (c Collection) Start() float64 {
+	return c.captures[0].Time()
+}
+
+func (c Collection) End() float64 {
+	return c.captures[len(c.captures)-1].Time()
+}
