@@ -35,6 +35,7 @@ type CaptureCollection interface {
 	Start() float64
 	End() float64
 	Length() int
+	CaptureAt(index int) Capture
 }
 
 type Recording interface {

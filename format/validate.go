@@ -36,12 +36,12 @@ func Validate(rec Recording, options ...ValidateOption) error {
 
 	if finalOpts.requireChronologicalCapture {
 		for _, col := range rec.CaptureCollections() {
-			if len(col.Captures()) < 2 {
+			if col.Length() < 2 {
 				continue
 			}
 
-			for i := 1; i < len(col.Captures()); i++ {
-				if col.Captures()[i].Time() < col.Captures()[i-1].Time() {
+			for i := 1; i < col.Length(); i++ {
+				if col.CaptureAt(i).Time() < col.CaptureAt(i-1).Time() {
 					return fmt.Errorf("[%s] %s: %s capture collection violates chronological event validator", rec.ID(), rec.Name(), col.Name())
 				}
 			}

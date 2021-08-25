@@ -34,15 +34,15 @@ func summarize(recording format.Recording) summary {
 	for _, collection := range recording.CaptureCollections() {
 		switch v := collection.(type) {
 		case event.Collection:
-			curSummary.eventCaptureCount += len(v.Captures())
+			curSummary.eventCaptureCount += v.Length()
 		case position.Collection:
-			curSummary.positionCaptureCount += len(v.Captures())
+			curSummary.positionCaptureCount += v.Length()
 		case enum.Collection:
-			curSummary.enumCaptureCount += len(v.Captures())
+			curSummary.enumCaptureCount += v.Length()
 		case euler.Collection:
-			curSummary.eulerCaptureCount += len(v.Captures())
+			curSummary.eulerCaptureCount += v.Length()
 		default:
-			curSummary.otherCaptureCount += len(collection.Captures())
+			curSummary.otherCaptureCount += collection.Length()
 		}
 	}
 

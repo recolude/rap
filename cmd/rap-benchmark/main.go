@@ -29,7 +29,7 @@ func printRecording(out io.Writer, recording format.Recording, depth int) {
 	for _, collection := range recording.CaptureCollections() {
 		fmt.Fprintf(out, "  Name: %s\n", collection.Name())
 		fmt.Fprintf(out, "  Signature: %s\n", collection.Signature())
-		fmt.Fprintf(out, "  Captures: %d\n", len(collection.Captures()))
+		fmt.Fprintf(out, "  Captures: %d\n", collection.Length())
 	}
 	fmt.Fprintf(out, "Sub Recordings: %d\n", len(recording.Recordings()))
 }

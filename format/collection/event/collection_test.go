@@ -9,6 +9,7 @@ import (
 )
 
 func Test_Collection(t *testing.T) {
+	// ARRANGE ================================================================
 	block := metadata.NewBlock(map[string]metadata.Property{
 		"a": metadata.NewStringProperty("b"),
 		"c": metadata.NewStringProperty("d"),
@@ -32,4 +33,25 @@ func Test_Collection(t *testing.T) {
 	// assert.Equal(t, "Event 1", captures[0].)
 
 	assert.Len(t, slicedCaptures.Captures(), 2)
+}
+
+func Test_CanIterate(t *testing.T) {
+	// ARRANGE ================================================================
+	block := metadata.NewBlock(map[string]metadata.Property{
+		"a": metadata.NewStringProperty("b"),
+		"c": metadata.NewStringProperty("d"),
+	})
+
+	event1 := event.NewCapture(1, "Event 1", block)
+	event2 := event.NewCapture(2, "Event 2", block)
+	event3 := event.NewCapture(3, "Event 3", block)
+	event4 := event.NewCapture(4, "Event 4", block)
+	events := []event.Capture{event1, event2, event3, event4}
+	name := "Custom Events"
+	collection := event.NewCollection(name, events)
+
+	// ACT / ASSERT ===========================================================
+	for i := 0; i < collection.Length(); i++ {
+		assert.Equal(t, events[i], collection.CaptureAt(i))
+	}
 }

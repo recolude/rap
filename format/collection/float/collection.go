@@ -53,3 +53,7 @@ func (c Collection) End() float64 {
 func (c Collection) Length() int {
 	return len(c.captures)
 }
+
+func (c Collection) CaptureAt(index int) format.Capture {
+	return c.captures[index]
+}
