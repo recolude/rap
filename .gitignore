@@ -1,6 +1,6 @@
 temp/*
 
-internal/mocks/*.go
+# internal/mocks/*.go
 
 *.exe
 
