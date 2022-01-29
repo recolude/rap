@@ -107,12 +107,12 @@ func readPropData(b io.Reader, propertyType byte) (Property, error) {
 		return NewMetadataProperty(metadataBlock), nil
 
 	case 12:
-		var unixTime int64
-		err := binary.Read(b, binary.LittleEndian, &unixTime)
+		var unixTimeMicro int64
+		err := binary.Read(b, binary.LittleEndian, &unixTimeMicro)
 		if err != nil {
 			return nil, err
 		}
-		return NewTimeProperty(time.Unix(0, unixTime)), nil
+		return NewTimeProperty(time.UnixMicro(unixTimeMicro)), nil
 
 	case 16:
 		allbytes, _, err := rapbin.ReadBytesArray(b)

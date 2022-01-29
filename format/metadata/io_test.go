@@ -23,6 +23,7 @@ func Test_BasicIO(t *testing.T) {
 		"byte test":     metadata.NewByteProperty(22),
 		"vec2 test":     metadata.NewVector2Property(1.2, 3.4),
 		"vec3 test":     metadata.NewVector3Property(1.2, 3.4, 5.6),
+		"time":          metadata.NewTimeProperty(time.Date(1, time.February, 3, 4, 5, 6, 7, time.UTC)),
 		"block test": metadata.NewMetadataProperty(metadata.NewBlock(
 			map[string]metadata.Property{
 				"nested prop 1":    metadata.NewStringProperty("God kill me"),
@@ -59,6 +60,8 @@ func Test_BasicIO(t *testing.T) {
 			assert.NoError(t, err)
 
 			assert.Equal(t, tc, propBack)
+			assert.Equal(t, len(tc.Data()), len(propBack.Data()))
+			assert.Equal(t, tc.String(), propBack.String())
 		})
 	}
 }

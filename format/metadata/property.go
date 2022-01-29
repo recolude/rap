@@ -487,12 +487,12 @@ func (mp MetadataProperty) MarshalJSON() ([]byte, error) {
 
 // Time =======================================================================
 type TimeProperty struct {
-	nanoseconds int64
+	microseconds int64
 }
 
 func NewTimeProperty(t time.Time) TimeProperty {
 	return TimeProperty{
-		nanoseconds: t.UnixNano(),
+		microseconds: t.UnixMicro(),
 	}
 }
 
@@ -501,12 +501,12 @@ func (tp TimeProperty) Code() byte {
 }
 
 func (tp TimeProperty) String() string {
-	return fmt.Sprintf("%d ns", tp.nanoseconds)
+	return fmt.Sprintf("%d μs", tp.microseconds)
 }
 
 func (tp TimeProperty) Data() []byte {
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, tp.nanoseconds)
+	binary.Write(buf, binary.LittleEndian, tp.microseconds)
 	return buf.Bytes()
 }
 
@@ -530,12 +530,12 @@ func (tp *TimeProperty) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	tp.nanoseconds = t.UnixNano()
+	tp.microseconds = t.UnixMicro()
 	return nil
 }
 
 func (tp TimeProperty) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Unix(0, tp.nanoseconds).Format(time.RFC3339Nano))
+	return json.Marshal(time.Unix(0, tp.microseconds*1000).Format(time.RFC3339Nano))
 }
 
 // ARRAY =====================================================================

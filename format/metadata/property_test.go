@@ -225,7 +225,7 @@ func Test_MetadataBlockProperty_MarshalJSON(t *testing.T) {
 	"FLOAT32_ARR": Type 2 Array of 3 elements;
 	"INT32": 888888;
 	"STR": Meeee;
-	"TIME": 1234567000000000 ns;
+	"TIME": 1234567000000 μs;
 	"VEC2": 999.000000, 444.000000;
 	"VEC3": 999.000000, 444.000000, 222.000000;
 }`, empty.String())
