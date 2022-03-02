@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/collection/event"
 	"github.com/recolude/rap/format/metadata"
 )
 
@@ -42,7 +43,36 @@ func toJson(out io.Writer, recording format.Recording, depth int) error {
 	for i, collection := range recording.CaptureCollections() {
 		fmt.Fprintf(out, "%s{\n", subsubIndentation)
 		fmt.Fprintf(out, "%s\t\"name\": \"%s\",\n", subsubIndentation, collection.Name())
-		fmt.Fprintf(out, "%s\t\"signature\" : \"%s\"\n", subsubIndentation, collection.Signature())
+		fmt.Fprintf(out, "%s\t\"signature\" : \"%s\",\n", subsubIndentation, collection.Signature())
+		fmt.Fprintf(out, "%s\t\"count\" : %d", subsubIndentation, collection.Length())
+		if collection.Signature() == "recolude.event" {
+			fmt.Fprintf(out, ",\n%s\t\"captures\": [\n", subsubIndentation)
+			eventCollection, ok := collection.(event.Collection)
+			if ok {
+				for capIndex := 0; capIndex < eventCollection.Length(); capIndex++ {
+					event := eventCollection.CaptureAt(capIndex).(event.Capture)
+
+					eventJSONData, err := metadata.NewMetadataProperty(event.Metadata()).MarshalJSON()
+					if err != nil {
+						return err
+					}
+
+					fmt.Fprintf(out, "%s\t\t{\n", subsubIndentation)
+					fmt.Fprintf(out, "%s\t\t\t\"time\": %f,\n", subsubIndentation, event.Time())
+					fmt.Fprintf(out, "%s\t\t\t\"name\": \"%s\",\n", subsubIndentation, event.Name())
+					fmt.Fprintf(out, "%s\t\t\t\"data\": %s\n", subsubIndentation, string(eventJSONData))
+					fmt.Fprintf(out, "%s\t\t}", subsubIndentation)
+					if capIndex < eventCollection.Length()-1 {
+						fmt.Fprintf(out, ",\n")
+					} else {
+						fmt.Fprintf(out, "\n")
+					}
+				}
+			}
+			fmt.Fprintf(out, "%s\t]\n", subsubIndentation)
+		} else {
+			fmt.Fprint(out, "\n")
+		}
 		fmt.Fprintf(out, "%s}", subsubIndentation)
 
 		if i < len(recording.CaptureCollections())-1 {

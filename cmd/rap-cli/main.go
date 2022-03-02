@@ -49,6 +49,13 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 				Usage: "Summarizes a file",
 				Action: func(c *cli.Context) error {
 					fileToLoad := c.String("file")
+
+					fi, err := os.Stat(fileToLoad)
+					if err != nil {
+						return err
+					}
+					size := fi.Size()
+
 					file, err := os.Open(fileToLoad)
 					if err != nil {
 						return err
@@ -59,7 +66,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 						return err
 					}
 
-					printSummary(c.App.Writer, recording)
+					printSummary(c.App.Writer, recording, size)
 					return nil
 				},
 			},

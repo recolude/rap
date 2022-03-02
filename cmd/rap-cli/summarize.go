@@ -53,13 +53,29 @@ func summarize(recording format.Recording) summary {
 	return curSummary
 }
 
-func printSummary(out io.Writer, recording format.Recording) {
+func printSize(size int64) string {
+	if size < 1024 {
+		return fmt.Sprintf("%db", size)
+	}
+
+	editedSize := float64(size) / 1024.0
+	if editedSize < 1024 {
+		return fmt.Sprintf("%.2fkb", editedSize)
+	}
+
+	editedSize = editedSize / 1024.0
+	return fmt.Sprintf("%.2fmb", editedSize)
+}
+
+func printSummary(out io.Writer, recording format.Recording, size int64) {
 	displayName := recording.Name()
 	if displayName == "" {
 		displayName = "[No Name]"
 	}
 
 	fmt.Fprintf(out, "Name:                    %s\n", displayName)
+	fmt.Fprintf(out, "File Size:               %s\n", printSize(size))
+	fmt.Fprintf(out, "Duration:                %.2fs\n", format.RecordingDuration(recording))
 	fmt.Fprintf(out, "Sub Recordings:          %d\n", len(recording.Recordings()))
 
 	recSummary := summarize(recording)

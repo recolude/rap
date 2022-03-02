@@ -83,6 +83,8 @@ func Test_Summarize(t *testing.T) {
 
 	answerBuilder := strings.Builder{}
 	answerBuilder.WriteString("Name:                    Test Recording\n")
+	answerBuilder.WriteString("File Size:               0b\n")
+	answerBuilder.WriteString("Duration:                6.00s\n")
 	answerBuilder.WriteString("Sub Recordings:          1\n")
 	answerBuilder.WriteString("Total Position Captures: 16\n")
 	answerBuilder.WriteString("Total Euler Captures:    0\n")
@@ -93,7 +95,7 @@ func Test_Summarize(t *testing.T) {
 	out := bytes.Buffer{}
 
 	// ACT ====================================================================
-	printSummary(&out, recIn)
+	printSummary(&out, recIn, 0)
 
 	// ASSERT =================================================================
 	assert.Equal(t, answerBuilder.String(), out.String())

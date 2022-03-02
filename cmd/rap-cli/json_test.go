@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/collection/event"
 	"github.com/recolude/rap/format/collection/position"
 	"github.com/recolude/rap/format/io"
 	"github.com/recolude/rap/format/metadata"
@@ -31,6 +32,17 @@ func Test_JSON(t *testing.T) {
 					"Position",
 					[]position.Capture{
 						position.NewCapture(1, 2, 3, 4),
+					},
+				),
+				event.NewCollection(
+					"My Events",
+					[]event.Capture{
+						event.NewCapture(3.0, "some event", metadata.NewBlock(map[string]metadata.Property{
+							"criss-cross": metadata.NewStringProperty("apple sauce"),
+						})),
+						event.NewCapture(4.0, "another event", metadata.NewBlock(map[string]metadata.Property{
+							"damage": metadata.NewFloat32Property(6.9),
+						})),
 					},
 				),
 			},
@@ -73,7 +85,7 @@ func Test_JSON(t *testing.T) {
 	// ASSERT =================================================================
 	assert.NoError(t, err)
 	assert.NoError(t, writeErr)
-	assert.Equal(t, "", string(appErrOut.Bytes()))
+	assert.Equal(t, "", appErrOut.String())
 	assert.Equal(t, `{
 	"id": "",
 	"name": "parent",
@@ -81,7 +93,25 @@ func Test_JSON(t *testing.T) {
 	"collections": [
 		{
 			"name": "Position",
-			"signature" : "recolude.position"
+			"signature" : "recolude.position",
+			"count" : 1
+		},
+		{
+			"name": "My Events",
+			"signature" : "recolude.event",
+			"count" : 2,
+			"captures": [
+				{
+					"time": 3.000000,
+					"name": "some event",
+					"data": {"criss-cross":"apple sauce"}
+				},
+				{
+					"time": 3.999992,
+					"name": "another event",
+					"data": {"damage":6.9}
+				}
+			]
 		}
 	],
 	"recordings": [
@@ -99,15 +129,17 @@ func Test_JSON(t *testing.T) {
 			"collections": [
 				{
 					"name": "Position",
-					"signature" : "recolude.position"
+					"signature" : "recolude.position",
+					"count" : 1
 				},
 				{
 					"name": "Position2",
-					"signature" : "recolude.position"
+					"signature" : "recolude.position",
+					"count" : 1
 				}
 			],
 			"recordings": []
 		}
 	]
-}`, string(appOut.Bytes()))
+}`, appOut.String())
 }
