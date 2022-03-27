@@ -11,6 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+
 	"github.com/EliCDavis/vector"
 	rapbin "github.com/recolude/rap/internal/io/binary"
 )
@@ -57,6 +60,10 @@ func (sp *StringProperty) UnmarshalJSON(b []byte) error {
 
 func (sp StringProperty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(sp.str)
+}
+
+func (sp StringProperty) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(sp.str)
 }
 
 // INT32 ======================================================================
@@ -108,6 +115,10 @@ func (ip Int32Property) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ip.i)
 }
 
+func (ip Int32Property) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(ip.i)
+}
+
 // FLOAT32 ====================================================================
 type Float32Property struct {
 	f float32
@@ -155,6 +166,10 @@ func (fp *Float32Property) UnmarshalJSON(b []byte) error {
 
 func (fp Float32Property) MarshalJSON() ([]byte, error) {
 	return json.Marshal(fp.f)
+}
+
+func (fp Float32Property) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(fp.f)
 }
 
 // BOOL =======================================================================
@@ -214,6 +229,10 @@ func (bp BoolProperty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(bp.b)
 }
 
+func (bp BoolProperty) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(bp.b)
+}
+
 // BYTE =======================================================================
 type ByteProperty struct {
 	b byte
@@ -267,6 +286,10 @@ func (bp *ByteProperty) UnmarshalJSON(b []byte) error {
 
 func (bp ByteProperty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(HEX_PREFIX + hex.EncodeToString(bp.Data()))
+}
+
+func (bp ByteProperty) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(bp.b) // should we store this as hex string?
 }
 
 // VECTOR2 ====================================================================
@@ -330,6 +353,17 @@ func (v2p Vector2Property) MarshalJSON() ([]byte, error) {
 		v2p.y,
 	}
 	return json.Marshal(data)
+}
+
+func (v2p Vector2Property) MarshalBSON() ([]byte, error) {
+	data := struct {
+		X float64 `bson:"x"`
+		Y float64 `bson:"y"`
+	}{
+		v2p.x,
+		v2p.y,
+	}
+	return bson.Marshal(data)
 }
 
 // VECTOR3 ====================================================================
@@ -399,6 +433,19 @@ func (v3p Vector3Property) MarshalJSON() ([]byte, error) {
 		v3p.z,
 	}
 	return json.Marshal(data)
+}
+
+func (v3p Vector3Property) MarshalBSON() ([]byte, error) {
+	data := struct {
+		X float64 `bson:"x"`
+		Y float64 `bson:"y"`
+		Z float64 `bson:"z"`
+	}{
+		v3p.x,
+		v3p.y,
+		v3p.z,
+	}
+	return bson.Marshal(data)
 }
 
 // METADATA ===================================================================
@@ -485,6 +532,10 @@ func (mp MetadataProperty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(mp.block.Mapping())
 }
 
+func (mp MetadataProperty) MarshalBSON() ([]byte, error) {
+	return bson.Marshal(mp.block.Mapping())
+}
+
 // Time =======================================================================
 type TimeProperty struct {
 	microseconds int64
@@ -536,6 +587,10 @@ func (tp *TimeProperty) UnmarshalJSON(b []byte) error {
 
 func (tp TimeProperty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(time.Unix(0, tp.microseconds*1000).Format(time.RFC3339Nano))
+}
+
+func (tp TimeProperty) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(time.Unix(0, tp.microseconds*1000))
 }
 
 // ARRAY =====================================================================
@@ -597,6 +652,10 @@ func (ap *ArrayProperty) UnmarshalJSON(b []byte) error {
 
 func (ap ArrayProperty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ap.props)
+}
+
+func (ap ArrayProperty) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	return bson.MarshalValue(ap.props)
 }
 
 func NewStringArrayProperty(strs []string) ArrayProperty {
@@ -718,6 +777,29 @@ func (apr ArrayPropertyRaw) MarshalJSON() ([]byte, error) {
 		return json.Marshal(bools)
 	}
 	return nil, nil
+}
+
+func (apr ArrayPropertyRaw) MarshalBSONValue() (bsontype.Type, []byte, error) {
+	br, _, err := rapbin.ReadBytesArray(bytes.NewBuffer(apr.data))
+	if err != nil {
+		return bson.TypeUndefined, nil, err
+	}
+
+	switch apr.originalBaseCode {
+	case 5:
+		return bson.MarshalValue(br)
+	case 3:
+		bools := make([]bool, 0, len(br)/2)
+		for _, b := range br {
+			if b&1 == 1 {
+				bools = append(bools, true)
+				continue
+			}
+			bools = append(bools, false)
+		}
+		return bson.MarshalValue(bools)
+	}
+	return bson.TypeNull, nil, nil
 }
 
 func NewBinaryArrayProperty(binarr []byte) ArrayPropertyRaw {

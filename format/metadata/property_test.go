@@ -9,6 +9,8 @@ import (
 
 	"github.com/recolude/rap/format/metadata"
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func Test_StringProperty(t *testing.T) {
@@ -188,18 +190,18 @@ func Test_MetadataBlockProperty_MarshalJSON(t *testing.T) {
 			"BIN_ARR":     binArrProp,
 		},
 	))
-	empty := metadata.NewMetadataProperty(metadata.EmptyBlock())
+	mp := metadata.NewMetadataProperty(metadata.EmptyBlock())
 
 	// ACT ====================================================================
 	jsonMarshal, errMarsh := blockProp.MarshalJSON()
-	unmarshErr := empty.UnmarshalJSON(jsonMarshal)
-	resultingDataBlock := empty.Block()
+	unmarshErr := mp.UnmarshalJSON(jsonMarshal)
+	resultingDataBlock := mp.Block()
 
 	// ASSERT =================================================================
 	assert.NoError(t, errMarsh)
 	assert.NoError(t, unmarshErr)
 
-	assert.Equal(t, byte(11), empty.Code())
+	assert.Equal(t, byte(11), mp.Code())
 	assert.Len(t, resultingDataBlock.Mapping(), 13)
 	assert.Equal(t, strProp, resultingDataBlock.Mapping()["STR"])
 	assert.Equal(t, byteProp, resultingDataBlock.Mapping()["BYTE"])
@@ -228,7 +230,7 @@ func Test_MetadataBlockProperty_MarshalJSON(t *testing.T) {
 	"TIME": 1234567000000 μs;
 	"VEC2": 999.000000, 444.000000;
 	"VEC3": 999.000000, 444.000000, 222.000000;
-}`, empty.String())
+}`, mp.String())
 }
 
 func Test_MetadataArrayProperty_MarshalJSON(t *testing.T) {
@@ -365,4 +367,60 @@ func Test_Float32_MarshalJSON(t *testing.T) {
 	assert.Equal(t, byte(2), unmarshalByteProp.Code())
 	assert.Equal(t, floatProp, unmarshalByteProp)
 	assert.Equal(t, "556677.125000", unmarshalByteProp.String())
+}
+
+func Test_MetadataBlockProperty_MarshalBSON(t *testing.T) {
+	strProp := metadata.NewStringProperty("Meeee")
+	float32Prop := metadata.NewFloat32Property(1234.5678)
+	float32ArrProp := metadata.NewFloat32ArrayProperty([]float32{1.2, 3.4, 5.6})
+	byteProp := metadata.NewByteProperty(123)
+	byteProp2 := metadata.NewByteProperty(1)
+	boolProp := metadata.NewBoolProperty(true)
+	boolProp2 := metadata.NewBoolProperty(false)
+	boolArrProp := metadata.NewBoolArrayProperty([]bool{true, false, false})
+	timeProp := metadata.NewTimeProperty(time.Unix(1234567, 0))
+	vecProp := metadata.NewVector2Property(999, 444)
+	vec3Prop := metadata.NewVector3Property(999, 444, 222)
+	int32Prop := metadata.NewIntProperty(888888)
+	binArrProp := metadata.NewBinaryArrayProperty([]byte{1, 2, 3, 4, 5, 6})
+	blockProp := metadata.NewMetadataProperty(metadata.NewBlock(
+		map[string]metadata.Property{
+			"STR":         strProp,
+			"BYTE":        byteProp,
+			"BYTE2":       byteProp2,
+			"BOOL_ARR":    boolArrProp,
+			"FLOAT32":     float32Prop,
+			"FLOAT32_ARR": float32ArrProp,
+			"BOOL_TRUE":   boolProp,
+			"BOOL_FALSE":  boolProp2,
+			"TIME":        timeProp,
+			"VEC2":        vecProp,
+			"VEC3":        vec3Prop,
+			"INT32":       int32Prop,
+			"BIN_ARR":     binArrProp,
+		},
+	))
+
+	data, err := bson.Marshal(blockProp)
+	assert.NoError(t, err)
+
+	var doc bson.D
+	err = bson.Unmarshal(data, &doc)
+	assert.NoError(t, err)
+
+	docMap := doc.Map()
+
+	assert.Equal(t, "Meeee", docMap["STR"])
+	assert.Equal(t, int32(123), docMap["BYTE"])
+	assert.Equal(t, int32(1), docMap["BYTE2"])
+	assert.Equal(t, primitive.A{true, false, false}, docMap["BOOL_ARR"])
+	assert.InDelta(t, 1234.5678, docMap["FLOAT32"], .0001)
+	assert.InDeltaSlice(t, primitive.A{1.2, 3.4, 5.6}, docMap["FLOAT32_ARR"], .0001)
+	assert.Equal(t, true, docMap["BOOL_TRUE"])
+	assert.Equal(t, false, docMap["BOOL_FALSE"])
+	assert.Equal(t, primitive.NewDateTimeFromTime(time.Unix(1234567, 0)), docMap["TIME"])
+	assert.Equal(t, bson.D{{"x", 999.}, {"y", 444.}}, docMap["VEC2"])
+	assert.Equal(t, bson.D{{"x", 999.}, {"y", 444.}, {"z", 222.}}, docMap["VEC3"])
+	assert.Equal(t, int32(888888), docMap["INT32"])
+	assert.Equal(t, primitive.Binary{Subtype: 0x0, Data: []uint8{0x1, 0x2, 0x3, 0x4, 0x5, 0x6}}, docMap["BIN_ARR"])
 }
