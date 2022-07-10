@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/recolude/rap/format/encoding/event"
 	"github.com/recolude/rap/format/encoding/position"
 	rapio "github.com/recolude/rap/format/io"
+	"github.com/recolude/rap/format/parsing"
 	"github.com/urfave/cli/v2"
 )
 
@@ -71,7 +73,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 				},
 			},
 			{
-				Name: "json",
+				Name: "to-json",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "file",
@@ -106,6 +108,73 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 					}
 
 					return toJson(c.App.Writer, recording, 0)
+				},
+			},
+			{
+				Name: "from-json",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "in",
+						Aliases:  []string{"i"},
+						Required: false,
+						Usage:    "JSON file to build recording from",
+					},
+					&cli.StringFlag{
+						Name:     "out",
+						Aliases:  []string{"o"},
+						Required: false,
+						Usage:    "file to write recording too",
+					},
+				},
+				Usage: "Transforms json to RAP",
+				Action: func(c *cli.Context) error {
+					jsonStream := c.App.Reader
+					if c.IsSet("in") {
+						file, err := os.Open(c.String("in"))
+						if err != nil {
+							return err
+						}
+						jsonStream = file
+					}
+
+					jsonData, err := ioutil.ReadAll(jsonStream)
+					if err != nil {
+						return err
+					}
+
+					builtRecording, err := parsing.FromJSON(jsonData)
+					if err != nil {
+						return err
+					}
+
+					rapStream := c.App.Writer
+					if c.IsSet("out") {
+						outPath := c.String("out")
+
+						if _, err := os.Stat(outPath); err == nil {
+							e := os.Remove(outPath)
+							if e != nil {
+								return e
+							}
+						}
+
+						file, err := os.Create(outPath)
+						if err != nil {
+							return err
+						}
+						rapStream = file
+					}
+
+					encoders := []encoding.Encoder{
+						event.NewEncoder(),
+						position.NewEncoder(position.Oct24),
+						euler.NewEncoder(euler.Raw16),
+						enum.NewEncoder(),
+					}
+
+					recordingWriter := rapio.NewWriter(encoders, true, rapStream, rapio.BST16)
+					_, err = recordingWriter.Write(builtRecording)
+					return err
 				},
 			},
 			{

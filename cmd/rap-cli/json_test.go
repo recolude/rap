@@ -80,7 +80,7 @@ func Test_JSON(t *testing.T) {
 	)
 
 	// ACT ====================================================================
-	err := app.Run([]string{"rap-cli", "json"})
+	err := app.Run([]string{"rap-cli", "to-json"})
 
 	// ASSERT =================================================================
 	assert.NoError(t, err)

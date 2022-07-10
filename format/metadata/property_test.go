@@ -188,10 +188,10 @@ func Test_MetadataBlockProperty_MarshalJSON(t *testing.T) {
 			"BIN_ARR":     binArrProp,
 		},
 	))
-	empty := metadata.NewMetadataProperty(metadata.EmptyBlock())
 
 	// ACT ====================================================================
 	jsonMarshal, errMarsh := blockProp.MarshalJSON()
+	empty := metadata.NewMetadataProperty(metadata.EmptyBlock())
 	unmarshErr := empty.UnmarshalJSON(jsonMarshal)
 	resultingDataBlock := empty.Block()
 
