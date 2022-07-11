@@ -370,3 +370,445 @@ func Test_JSONObj_MetadataNotObject_Errs(t *testing.T) {
 	assert.EqualError(t, err, "metadata should be object")
 	assert.Nil(t, recording)
 }
+
+func Test_JSONObj_ReferencesNotArray_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": 6
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "references property should be an array")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_ReferencesNotArrayPt2_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": {}
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "references property should be an array")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_ReferencesArrayOfNonObjects_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": [6]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "references property should be array of reference objects")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_ReferenceObjWithoutName_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": [
+			{
+				"uri": "something"
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "reference requires name")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_ReferenceObjWithoutURI_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": [
+			{
+				"name": "something"
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "reference requires uri")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_ReferenceObjWithoutSize_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": [
+			{
+				"name": "something",
+				"uri": "something"
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "reference requires a size property")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_ReferenceObjFloatSize_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": [
+			{
+				"name": "something",
+				"uri": "something",
+				"size": 1.2
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "reference size must be int")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_ReferenceObjNegativeSize_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": [
+			{
+				"name": "something",
+				"uri": "something",
+				"size": -20
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "reference size must be non-negative")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_ReferenceObjMetadataNotObj_Errs(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": [
+			{
+				"name": "something",
+				"uri": "uri",
+				"metadata": 7
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "metadata should be object")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_SingleReferenceNoMetadata(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"references": [
+			{
+				"name": "ref 1",
+				"uri": "file:///C:/dev/yo/mama.fat",
+				"size": 200
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.Nil(t, err)
+	assert.NotNil(t, recording)
+
+	assert.Equal(t, "my id", recording.ID())
+	assert.Equal(t, "my name", recording.Name())
+
+	assert.Equal(t, 0, len(recording.Binaries()))
+	assert.Equal(t, 0, len(recording.CaptureCollections()))
+	assert.Equal(t, 0, len(recording.Recordings()))
+	assert.Equal(t, 0, len(recording.Metadata().Mapping()))
+
+	assert.Equal(t, 1, len(recording.BinaryReferences()))
+	assert.Equal(t, "ref 1", recording.BinaryReferences()[0].Name())
+	assert.Equal(t, uint64(200), recording.BinaryReferences()[0].Size())
+	assert.Equal(t, "file:///C:/dev/yo/mama.fat", recording.BinaryReferences()[0].URI())
+}
+
+func Test_JSONObj_EmptyCollectionsArray(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.Nil(t, err)
+	assert.NotNil(t, recording)
+
+	assert.Equal(t, "my id", recording.ID())
+	assert.Equal(t, "my name", recording.Name())
+
+	assert.Equal(t, 0, len(recording.Binaries()))
+	assert.Equal(t, 0, len(recording.CaptureCollections()))
+	assert.Equal(t, 0, len(recording.Recordings()))
+	assert.Equal(t, 0, len(recording.Metadata().Mapping()))
+	assert.Equal(t, 0, len(recording.BinaryReferences()))
+}
+
+func Test_JSONObj_PositionCollectionCaptures(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"type": "recolude.position",
+				"name": "Some Positions",
+				"captures": [
+					{
+						"time": 1.3,
+						"data": {
+							"x": 1.1,
+							"y": 2.2,
+							"z": 3.3
+						}
+					},
+					{
+						"time": 2.4,
+						"data": {
+							"x": 4.4,
+							"y": 5.5,
+							"z": 6.6
+						}
+					}
+				]
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.Nil(t, err)
+	assert.NotNil(t, recording)
+
+	assert.Equal(t, "my id", recording.ID())
+	assert.Equal(t, "my name", recording.Name())
+
+	assert.Equal(t, 0, len(recording.Binaries()))
+	assert.Equal(t, 0, len(recording.Recordings()))
+	assert.Equal(t, 0, len(recording.Metadata().Mapping()))
+	assert.Equal(t, 0, len(recording.BinaryReferences()))
+
+	assert.Equal(t, 1, len(recording.CaptureCollections()))
+	assert.Equal(t, "Some Positions", recording.CaptureCollections()[0].Name())
+	assert.Equal(t, "recolude.position", recording.CaptureCollections()[0].Signature())
+	assert.Equal(t, 2, len(recording.CaptureCollections()[0].Captures()))
+	assert.Equal(t, 1.3, recording.CaptureCollections()[0].Captures()[0].Time())
+	assert.Equal(t, 2.4, recording.CaptureCollections()[0].Captures()[1].Time())
+
+	assert.Equal(t, "[1.30] - 1.10, 2.20, 3.30", recording.CaptureCollections()[0].Captures()[0].String())
+	assert.Equal(t, "[2.40] - 4.40, 5.50, 6.60", recording.CaptureCollections()[0].Captures()[1].String())
+}
+
+func Test_JSONObj_PositionCollectionCaptureLackingZ_Errors(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"type": "recolude.position",
+				"name": "Some Positions",
+				"captures": [
+					{
+						"time": 1.3,
+						"data": {
+							"x": 1.1,
+							"y": 2.2
+						}
+					},
+					{
+						"time": 2.4,
+						"data": {
+							"x": 4.4,
+							"y": 5.5,
+							"z": 6.6
+						}
+					}
+				]
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "position capture requires z property")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_CollectionWithoutName_Errors(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"type": "recolude.position",
+				"captures": [
+					
+				]
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "collection requires name")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_CollectionWithoutType_Errors(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"name": "recolude.position",
+				"captures": [
+					
+				]
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "collection requires type")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_CollectionWithoutCaptures_Errors(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"name": "recolude.position",
+				"type": "recolude.position"
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "collection object requires captures property")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_CollectionCapturesAsNonArray_Errors(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"name": "recolude.position",
+				"type": "recolude.position",
+				"captures": {}
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "collection's captures property must be an array")
+	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_InvalidCollectionType_Errors(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"name": "recolude.position",
+				"type": "recolude.unknownType",
+				"captures": []
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.EqualError(t, err, "unrecognized collection type: 'recolude.unknownType'")
+	assert.Nil(t, recording)
+}
