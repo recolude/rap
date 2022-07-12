@@ -8,6 +8,9 @@ import (
 	"github.com/EliCDavis/vector"
 	"github.com/Jeffail/gabs"
 	"github.com/recolude/rap/format"
+	"github.com/recolude/rap/format/collection/enum"
+	"github.com/recolude/rap/format/collection/euler"
+	"github.com/recolude/rap/format/collection/event"
 	"github.com/recolude/rap/format/collection/position"
 	"github.com/recolude/rap/format/io"
 	"github.com/recolude/rap/format/metadata"
@@ -150,6 +153,20 @@ func parseRequiredStringKey(jsonObj *gabs.Container, thing string, key string) (
 	return id, nil
 }
 
+// func parseRequiredIntKey(jsonObj *gabs.Container, thing, key string) (int, error) {
+// 	intNode := jsonObj.Path(key)
+// 	if intNode == nil {
+// 		return 0, fmt.Errorf("%s requires %s", thing, key)
+// 	}
+
+// 	parsedInt, err := strconv.Atoi(intNode.String())
+// 	if err != nil {
+// 		return 0, fmt.Errorf("%s %s must be int", thing, key)
+// 	}
+
+// 	return parsedInt, nil
+// }
+
 func parseRequiredFloatKey(jsonObj *gabs.Container, thing string, key string) (float64, error) {
 	node := jsonObj.Path(key)
 	if node == nil {
@@ -217,6 +234,86 @@ func parsePositionCollection(name string, jsonCaptures []*gabs.Container) (forma
 	return position.NewCollection(name, captures), nil
 }
 
+func parseEulerCollection(name string, jsonCaptures []*gabs.Container) (format.CaptureCollection, error) {
+	captures := make([]euler.Capture, len(jsonCaptures))
+
+	for i, jsonCapture := range jsonCaptures {
+		time, err := parseCaptureTime(jsonCapture)
+		if err != nil {
+			return nil, err
+		}
+
+		pos, err := parseVector3(jsonCapture.Path("data"))
+		if err != nil {
+			return nil, err
+		}
+
+		captures[i] = euler.NewEulerZXYCapture(time, pos.X(), pos.Y(), pos.Z())
+	}
+
+	return euler.NewCollection(name, captures), nil
+}
+
+func parseEnumCollection(name string, jsonCaptures []*gabs.Container) (format.CaptureCollection, error) {
+	captures := make([]enum.Capture, len(jsonCaptures))
+
+	allEnumEntriesMapping := make(map[string]int)
+	allEnumEntries := make([]string, 0)
+
+	for i, jsonCapture := range jsonCaptures {
+		time, err := parseCaptureTime(jsonCapture)
+		if err != nil {
+			return nil, err
+		}
+
+		enumEntry, err := parseRequiredStringKey(jsonCapture, "enum capture", "data")
+		if err != nil {
+			return nil, err
+		}
+
+		enumIndex := len(allEnumEntriesMapping)
+		if val, ok := allEnumEntriesMapping[enumEntry]; ok {
+			enumIndex = val
+		} else {
+			allEnumEntries = append(allEnumEntries, enumEntry)
+		}
+
+		captures[i] = enum.NewCapture(time, enumIndex)
+	}
+
+	return enum.NewCollection(name, allEnumEntries, captures), nil
+}
+
+func parseEventCollection(name string, jsonCaptures []*gabs.Container) (format.CaptureCollection, error) {
+	captures := make([]event.Capture, len(jsonCaptures))
+
+	for i, jsonCapture := range jsonCaptures {
+		time, err := parseCaptureTime(jsonCapture)
+		if err != nil {
+			return nil, err
+		}
+
+		dataNode := jsonCapture.Path("data")
+		if dataNode == nil {
+			return nil, errors.New("event capture requires data property object")
+		}
+
+		name, err := parseRequiredStringKey(dataNode, "event capture", "name")
+		if err != nil {
+			return nil, err
+		}
+
+		parsedMetadata, err := parseMetadata(dataNode)
+		if err != nil {
+			return nil, err
+		}
+
+		captures[i] = event.NewCapture(time, name, parsedMetadata)
+	}
+
+	return event.NewCollection(name, captures), nil
+}
+
 func parseCollectionFromJSON(jsonObj *gabs.Container) (format.CaptureCollection, error) {
 	name, err := parseRequiredStringKey(jsonObj, "collection", "name")
 	if err != nil {
@@ -246,6 +343,15 @@ func parseCollectionFromJSON(jsonObj *gabs.Container) (format.CaptureCollection,
 	switch collectionType {
 	case "recolude.position":
 		return parsePositionCollection(name, childCaptures)
+
+	case "recolude.euler":
+		return parseEulerCollection(name, childCaptures)
+
+	case "recolude.event":
+		return parseEventCollection(name, childCaptures)
+
+	case "recolude.enum":
+		return parseEnumCollection(name, childCaptures)
 	}
 	return nil, fmt.Errorf("unrecognized collection type: '%s'", collectionType)
 }

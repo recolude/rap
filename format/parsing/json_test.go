@@ -3,6 +3,9 @@ package parsing_test
 import (
 	"testing"
 
+	"github.com/recolude/rap/format/collection/enum"
+	"github.com/recolude/rap/format/collection/event"
+	"github.com/recolude/rap/format/metadata"
 	"github.com/recolude/rap/format/parsing"
 
 	"github.com/stretchr/testify/assert"
@@ -811,4 +814,163 @@ func Test_JSONObj_InvalidCollectionType_Errors(t *testing.T) {
 	// ASSERT =================================================================
 	assert.EqualError(t, err, "unrecognized collection type: 'recolude.unknownType'")
 	assert.Nil(t, recording)
+}
+
+func Test_JSONObj_RotationCollectionCaptures(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"type": "recolude.euler",
+				"name": "Some Rotations",
+				"captures": [
+					{
+						"time": 1.3,
+						"data": {
+							"x": 1.1,
+							"y": 2.2,
+							"z": 3.3
+						}
+					},
+					{
+						"time": 2.4,
+						"data": {
+							"x": 4.4,
+							"y": 5.5,
+							"z": 6.6
+						}
+					}
+				]
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.Nil(t, err)
+	assert.NotNil(t, recording)
+
+	assert.Equal(t, "my id", recording.ID())
+	assert.Equal(t, "my name", recording.Name())
+
+	assert.Equal(t, 0, len(recording.Binaries()))
+	assert.Equal(t, 0, len(recording.Recordings()))
+	assert.Equal(t, 0, len(recording.Metadata().Mapping()))
+	assert.Equal(t, 0, len(recording.BinaryReferences()))
+
+	assert.Equal(t, 1, len(recording.CaptureCollections()))
+	assert.Equal(t, "Some Rotations", recording.CaptureCollections()[0].Name())
+	assert.Equal(t, "recolude.euler", recording.CaptureCollections()[0].Signature())
+	assert.Equal(t, 2, len(recording.CaptureCollections()[0].Captures()))
+	assert.Equal(t, 1.3, recording.CaptureCollections()[0].Captures()[0].Time())
+	assert.Equal(t, 2.4, recording.CaptureCollections()[0].Captures()[1].Time())
+
+	assert.Equal(t, "[1.30] Rotation - 1.10, 2.20, 3.30", recording.CaptureCollections()[0].Captures()[0].String())
+	assert.Equal(t, "[2.40] Rotation - 4.40, 5.50, 6.60", recording.CaptureCollections()[0].Captures()[1].String())
+}
+
+func Test_JSONObj_EventCollectionCaptures(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"type": "recolude.event",
+				"name": "Some Custom EVents",
+				"captures": [
+					{
+						"time": 1.3,
+						"data": {
+							"name": "Some event",
+							"metadata": {
+								"some key": 12
+							}
+						}
+					}
+				]
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.Nil(t, err)
+	assert.NotNil(t, recording)
+
+	assert.Equal(t, "my id", recording.ID())
+	assert.Equal(t, "my name", recording.Name())
+
+	assert.Equal(t, 0, len(recording.Binaries()))
+	assert.Equal(t, 0, len(recording.Recordings()))
+	assert.Equal(t, 0, len(recording.Metadata().Mapping()))
+	assert.Equal(t, 0, len(recording.BinaryReferences()))
+
+	assert.Equal(t, 1, len(recording.CaptureCollections()))
+	assert.Equal(t, "Some Custom EVents", recording.CaptureCollections()[0].Name())
+	assert.Equal(t, "recolude.event", recording.CaptureCollections()[0].Signature())
+	assert.Equal(t, 1, len(recording.CaptureCollections()[0].Captures()))
+	assert.Equal(t, 1.3, recording.CaptureCollections()[0].Captures()[0].Time())
+
+	event, isEvent := recording.CaptureCollections()[0].Captures()[0].(event.Capture)
+	assert.True(t, isEvent)
+
+	assert.Equal(t, "Some event", event.Name())
+	assert.Len(t, event.Metadata().Mapping(), 1)
+	assert.Equal(
+		t,
+		metadata.NewIntProperty(12),
+		event.Metadata().Mapping()["some key"],
+	)
+}
+
+func Test_JSONObj_EnumCollectionCaptures(t *testing.T) {
+	// ARRANGE ================================================================
+	payload := []byte(`{ 
+		"id": "my id", 
+		"name": "my name",
+		"collections": [
+			{
+				"type": "recolude.enum",
+				"name": "Some Enums",
+				"captures": [
+					{
+						"time": 1.3,
+						"data": "Test"
+					}
+				]
+			}
+		]
+	}`)
+
+	// ACT ====================================================================
+	recording, err := parsing.FromJSON(payload)
+
+	// ASSERT =================================================================
+	assert.Nil(t, err)
+	assert.NotNil(t, recording)
+
+	assert.Equal(t, "my id", recording.ID())
+	assert.Equal(t, "my name", recording.Name())
+
+	assert.Equal(t, 0, len(recording.Binaries()))
+	assert.Equal(t, 0, len(recording.Recordings()))
+	assert.Equal(t, 0, len(recording.Metadata().Mapping()))
+	assert.Equal(t, 0, len(recording.BinaryReferences()))
+
+	assert.Equal(t, 1, len(recording.CaptureCollections()))
+	assert.Equal(t, "Some Enums", recording.CaptureCollections()[0].Name())
+	assert.Equal(t, "recolude.enum", recording.CaptureCollections()[0].Signature())
+	assert.Equal(t, 1, len(recording.CaptureCollections()[0].Captures()))
+	assert.Equal(t, 1.3, recording.CaptureCollections()[0].Captures()[0].Time())
+
+	capture, isEnum := recording.CaptureCollections()[0].Captures()[0].(enum.Capture)
+	assert.True(t, isEnum)
+	assert.Equal(t, 0, capture.Value())
 }

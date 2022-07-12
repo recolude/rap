@@ -162,6 +162,7 @@ func BuildApp(in io.Reader, out io.Writer, errOut io.Writer) *cli.App {
 						if err != nil {
 							return err
 						}
+						defer file.Close()
 						rapStream = file
 					}
 
