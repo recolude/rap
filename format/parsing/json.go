@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/EliCDavis/vector"
+	"github.com/EliCDavis/vector/vector3"
 	"github.com/Jeffail/gabs"
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/enum"
@@ -195,23 +195,23 @@ func parseCaptureTime(jsonCapture *gabs.Container) (float64, error) {
 	return time, nil
 }
 
-func parseVector3(jsonObj *gabs.Container) (vector.Vector3, error) {
+func parseVector3(jsonObj *gabs.Container) (vector3.Float64, error) {
 	x, err := parseRequiredFloatKey(jsonObj, "position capture", "x")
 	if err != nil {
-		return vector.Vector3Zero(), err
+		return vector3.Zero[float64](), err
 	}
 
 	y, err := parseRequiredFloatKey(jsonObj, "position capture", "y")
 	if err != nil {
-		return vector.Vector3Zero(), err
+		return vector3.Zero[float64](), err
 	}
 
 	z, err := parseRequiredFloatKey(jsonObj, "position capture", "z")
 	if err != nil {
-		return vector.Vector3Zero(), err
+		return vector3.Zero[float64](), err
 	}
 
-	return vector.NewVector3(x, y, z), err
+	return vector3.New(x, y, z), err
 }
 
 func parsePositionCollection(name string, jsonCaptures []*gabs.Container) (format.CaptureCollection, error) {

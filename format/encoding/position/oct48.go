@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"math"
 
-	"github.com/EliCDavis/vector"
+	"github.com/EliCDavis/vector/vector3"
 	"github.com/recolude/rap/format/collection/position"
 )
 
@@ -104,8 +104,8 @@ func encodeOct48(captures []position.Capture) ([]byte, error) {
 		return collectionData.Bytes(), err
 	}
 
-	min := vector.NewVector3(math.Inf(1), math.Inf(1), math.Inf(1))
-	max := vector.NewVector3(math.Inf(-1), math.Inf(-1), math.Inf(-1))
+	min := vector3.New[float64](math.Inf(1), math.Inf(1), math.Inf(1))
+	max := vector3.New[float64](math.Inf(-1), math.Inf(-1), math.Inf(-1))
 	for i, capture := range captures {
 		if i > 0 {
 			distance := capture.Position().Sub(captures[i-1].Position())
@@ -202,9 +202,9 @@ func decodeOct48(collectionData *bytes.Reader, times []float64) ([]position.Capt
 	err = binary.Read(collectionData, binary.LittleEndian, &startingX)
 	err = binary.Read(collectionData, binary.LittleEndian, &startingY)
 	err = binary.Read(collectionData, binary.LittleEndian, &startingZ)
-	min := vector.NewVector3(float64(minX), float64(minY), float64(minZ))
-	max := vector.NewVector3(float64(maxX), float64(maxY), float64(maxZ))
-	starting := vector.NewVector3(float64(startingX), float64(startingY), float64(startingZ))
+	min := vector3.New[float64](float64(minX), float64(minY), float64(minZ))
+	max := vector3.New[float64](float64(maxX), float64(maxY), float64(maxZ))
+	starting := vector3.New[float64](float64(startingX), float64(startingY), float64(startingZ))
 
 	captures := make([]position.Capture, len(times))
 	octBuffer := make([]OctCell, 16)

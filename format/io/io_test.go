@@ -8,7 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EliCDavis/vector"
+	"github.com/EliCDavis/vector/vector2"
+	"github.com/EliCDavis/vector/vector3"
 	"github.com/golang/mock/gomock"
 	"github.com/recolude/rap/format"
 	"github.com/recolude/rap/format/collection/enum"
@@ -1013,8 +1014,8 @@ func Test_Metadata(t *testing.T) {
 				"Int Array":    metadata.NewIntArrayProperty([]int{1, 2, 3, 4}),
 				"time array":   metadata.NewTimestampArrayProperty([]time.Time{time.Now(), time.Now().Add(1)}),
 				"float array":  metadata.NewFloat32ArrayProperty([]float32{1.2, 3.4}),
-				"vec2 array":   metadata.NewVector2ArrayProperty([]vector.Vector2{vector.NewVector2(1, 2), vector.NewVector2(3, 4)}),
-				"vec3 array":   metadata.NewVector3ArrayProperty([]vector.Vector3{vector.NewVector3(1, 2, 3), vector.NewVector3(4, 5, 6)}),
+				"vec2 array":   metadata.NewVector2ArrayProperty([]vector2.Float64{vector2.New[float64](1, 2), vector2.New[float64](3, 4)}),
+				"vec3 array":   metadata.NewVector3ArrayProperty([]vector3.Float64{vector3.New[float64](1, 2, 3), vector3.New[float64](4, 5, 6)}),
 				"metadata array": metadata.NewMetadataArrayProperty([]metadata.Block{
 					metadata.EmptyBlock(),
 					metadata.NewBlock(map[string]metadata.Property{

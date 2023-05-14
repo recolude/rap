@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/EliCDavis/vector"
+	"github.com/EliCDavis/vector/vector3"
 	"github.com/recolude/rap/format"
 	positionCollection "github.com/recolude/rap/format/collection/position"
 	"github.com/recolude/rap/format/encoding/position"
@@ -37,7 +37,7 @@ func Test_Positions(t *testing.T) {
 	continuousCaptures := make([]positionCollection.Capture, 1000)
 	continuousTimes := make([]float64, len(continuousCaptures))
 	curTime := -1000.0
-	curPos := vector.Vector3Zero()
+	curPos := vector3.Zero[float64]()
 	for i := 0; i < len(continuousCaptures); i++ {
 		continuousCaptures[i] = positionCollection.NewCapture(
 			curTime,
@@ -46,7 +46,7 @@ func Test_Positions(t *testing.T) {
 			curPos.Z(),
 		)
 		continuousTimes[i] = curTime
-		curPos = curPos.Add(vector.NewVector3(rand.Float64()*10, rand.Float64()*10, rand.Float64()*10))
+		curPos = curPos.Add(vector3.New[float64](rand.Float64()*10, rand.Float64()*10, rand.Float64()*10))
 		curTime += rand.Float64() * 10.0
 	}
 
@@ -262,7 +262,7 @@ func Test_Oct24_Continuous(t *testing.T) {
 	capturetimes := make([]float64, len(captures))
 	streamName := "Pos"
 	curTime := 1.0
-	curPos := vector.Vector3Zero()
+	curPos := vector3.Zero[float64]()
 	for i := 0; i < len(captures); i++ {
 		captures[i] = positionCollection.NewCapture(
 			curTime,
@@ -271,7 +271,7 @@ func Test_Oct24_Continuous(t *testing.T) {
 			curPos.Z(),
 		)
 		capturetimes[i] = curTime
-		curPos = curPos.Add(vector.NewVector3(rand.Float64()*10, rand.Float64()*10, rand.Float64()*10))
+		curPos = curPos.Add(vector3.New[float64](rand.Float64()*10, rand.Float64()*10, rand.Float64()*10))
 		curTime += rand.Float64() * 10.0
 	}
 	streamIn := positionCollection.NewCollection(streamName, captures)

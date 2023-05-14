@@ -3,7 +3,7 @@ package position_test
 import (
 	"testing"
 
-	"github.com/EliCDavis/vector"
+	"github.com/EliCDavis/vector/vector3"
 	"github.com/recolude/rap/format/encoding/position"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,15 +12,15 @@ func Test_Vec3ToOctCells_TopRightForward(t *testing.T) {
 	cells := make([]position.OctCell, 1)
 
 	position.Vec3ToOctCells(
-		vector.NewVector3(0.75, 0.75, 0.75),
-		vector.Vector3Zero(),
-		vector.Vector3One(),
+		vector3.New(0.75, 0.75, 0.75),
+		vector3.Zero[float64](),
+		vector3.One[float64](),
 		cells,
 	)
 
 	pos := position.OctCellsToVec3(
-		vector.Vector3Zero(),
-		vector.Vector3One(),
+		vector3.Zero[float64](),
+		vector3.One[float64](),
 		cells,
 	)
 
@@ -32,8 +32,8 @@ func Test_Vec3ToOctCells_TopRightForward(t *testing.T) {
 func Test_Vec3ToOctCells_TopLeftForward(t *testing.T) {
 	cells := make([]position.OctCell, 1)
 
-	start := vector.Vector3Zero()
-	end := vector.Vector3One()
+	start := vector3.Zero[float64]()
+	end := vector3.One[float64]()
 
 	tests := map[string]struct {
 		x float64
@@ -53,7 +53,7 @@ func Test_Vec3ToOctCells_TopLeftForward(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			position.Vec3ToOctCells(vector.NewVector3(tc.x, tc.y, tc.z), start, end, cells)
+			position.Vec3ToOctCells(vector3.New(tc.x, tc.y, tc.z), start, end, cells)
 
 			pos := position.OctCellsToVec3(start, end, cells)
 
@@ -67,14 +67,14 @@ func Test_Vec3ToOctCells_TopLeftForward(t *testing.T) {
 func Test_Vec3ToOctCells_Weird(t *testing.T) {
 	cells := make([]position.OctCell, 8)
 
-	start := vector.NewVector3(2, 3, 4)
-	end := vector.NewVector3(7, 8, 9)
+	start := vector3.New[float64](2, 3, 4)
+	end := vector3.New[float64](7, 8, 9)
 
 	x := 4.
 	y := 5.
 	z := 6.
 
-	position.Vec3ToOctCells(vector.NewVector3(x, y, z), start, end, cells)
+	position.Vec3ToOctCells(vector3.New(x, y, z), start, end, cells)
 
 	pos := position.OctCellsToVec3(start, end, cells)
 

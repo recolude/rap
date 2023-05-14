@@ -1,6 +1,8 @@
 package position
 
-import "github.com/EliCDavis/vector"
+import (
+	"github.com/EliCDavis/vector/vector3"
+)
 
 type OctCell int
 
@@ -16,7 +18,7 @@ const (
 	BottomLeftBackward
 )
 
-func Vec3ToOctCells(v, min, max vector.Vector3, cells []OctCell) {
+func Vec3ToOctCells(v, min, max vector3.Float64, cells []OctCell) {
 	center := min.Add(max).DivByConstant(2.0)
 	crossSection := max.Sub(min)
 	incrementX := crossSection.X() / 4.0
@@ -45,14 +47,14 @@ func Vec3ToOctCells(v, min, max vector.Vector3, cells []OctCell) {
 			newZ = center.Z() - incrementZ
 		}
 		cells[cellIndex] = OctCell(topBit<<2 | rightBit<<1 | forwardBit)
-		center = vector.NewVector3(newX, newY, newZ)
+		center = vector3.New[float64](newX, newY, newZ)
 		incrementX /= 2.0
 		incrementY /= 2.0
 		incrementZ /= 2.0
 	}
 }
 
-func OctCellsToVec3(min, max vector.Vector3, cells []OctCell) vector.Vector3 {
+func OctCellsToVec3(min, max vector3.Float64, cells []OctCell) vector3.Float64 {
 	center := min.Add(max).DivByConstant(2.0)
 	crossSection := max.Sub(min)
 	incrementX := crossSection.X() / 4.0
@@ -74,7 +76,7 @@ func OctCellsToVec3(min, max vector.Vector3, cells []OctCell) vector.Vector3 {
 		if cells[cellIndex]&0b001 == 0 {
 			newZ = center.Z() + incrementZ
 		}
-		center = vector.NewVector3(newX, newY, newZ)
+		center = vector3.New[float64](newX, newY, newZ)
 		incrementX /= 2.0
 		incrementY /= 2.0
 		incrementZ /= 2.0

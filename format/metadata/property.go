@@ -14,7 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 
-	"github.com/EliCDavis/vector"
+	"github.com/EliCDavis/vector/vector2"
+	"github.com/EliCDavis/vector/vector3"
 	rapbin "github.com/recolude/rap/internal/io/binary"
 )
 
@@ -682,7 +683,7 @@ func NewFloat32ArrayProperty(entries []float32) ArrayProperty {
 	return newArrayProperty(2, strProps)
 }
 
-func NewVector2ArrayProperty(entries []vector.Vector2) ArrayProperty {
+func NewVector2ArrayProperty(entries []vector2.Float64) ArrayProperty {
 	strProps := make([]Property, len(entries))
 	for i, entry := range entries {
 		strProps[i] = NewVector2Property(entry.X(), entry.Y())
@@ -690,7 +691,7 @@ func NewVector2ArrayProperty(entries []vector.Vector2) ArrayProperty {
 	return newArrayProperty(6, strProps)
 }
 
-func NewVector3ArrayProperty(entries []vector.Vector3) ArrayProperty {
+func NewVector3ArrayProperty(entries []vector3.Float64) ArrayProperty {
 	strProps := make([]Property, len(entries))
 	for i, entry := range entries {
 		strProps[i] = NewVector3Property(entry.X(), entry.Y(), entry.Z())
